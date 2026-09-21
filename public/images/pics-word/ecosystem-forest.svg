@@ -1,0 +1,17 @@
+﻿<svg width="480" height="240" viewBox="0 0 480 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="480" y2="240" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#DCFCE7"/>
+      <stop offset="1" stop-color="#F0FDF4"/>
+    </linearGradient>
+  </defs>
+  <rect width="480" height="240" rx="20" fill="url(#bg)"/>
+  <rect x="18" y="18" width="444" height="204" rx="16" fill="white" fill-opacity="0.35"/>
+  <polygon points="180,154 210,86 240,154" fill="#166534" fill-opacity="0.85"/>
+<polygon points="228,154 260,78 292,154" fill="#166534" fill-opacity="0.7"/>
+<polygon points="140,154 168,96 196,154" fill="#166534" fill-opacity="0.6"/>
+<rect x="206" y="154" width="8" height="24" fill="#166534"/>
+<rect x="256" y="154" width="8" height="24" fill="#166534"/>
+  <text x="28" y="206" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="700" fill="#166534">Forest</text>
+  <text x="28" y="226" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#166534" fill-opacity="0.78">Living things together</text>
+</svg>

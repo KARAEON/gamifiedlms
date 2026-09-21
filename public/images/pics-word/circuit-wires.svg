@@ -1,0 +1,17 @@
+﻿<svg width="480" height="240" viewBox="0 0 480 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="480" y2="240" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FED7AA"/>
+      <stop offset="1" stop-color="#FFF7ED"/>
+    </linearGradient>
+  </defs>
+  <rect width="480" height="240" rx="20" fill="url(#bg)"/>
+  <rect x="18" y="18" width="444" height="204" rx="16" fill="white" fill-opacity="0.35"/>
+  <circle cx="154" cy="122" r="10" fill="#9A3412"/>
+<circle cx="240" cy="92" r="10" fill="#9A3412"/>
+<circle cx="326" cy="132" r="10" fill="#9A3412"/>
+<path d="M164 122C182 122 194 114 210 106C222 100 230 96 240 92" stroke="#9A3412" stroke-width="6" fill="none"/>
+<path d="M250 92C278 94 292 108 316 122" stroke="#9A3412" stroke-width="6" fill="none"/>
+  <text x="28" y="206" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="700" fill="#9A3412">Wires</text>
+  <text x="28" y="226" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#9A3412" fill-opacity="0.78">Connect electrical path</text>
+</svg>

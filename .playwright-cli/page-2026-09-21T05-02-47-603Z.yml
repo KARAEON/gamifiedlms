@@ -1,0 +1,39 @@
+- generic [ref=e6]:
+  - generic [ref=e7]:
+    - paragraph [ref=e8]: Teacher Sign In
+    - heading "Learning Insights Platform" [level=2] [ref=e9]
+    - paragraph [ref=e10]:
+      - text: Need a teacher account?
+      - link "Create one" [ref=e11] [cursor=pointer]:
+        - /url: http://127.0.0.1:8000/register
+    - paragraph [ref=e12]:
+      - text: Student access starts at
+      - link "Student Sign In" [ref=e13] [cursor=pointer]:
+        - /url: http://127.0.0.1:8000/student/login
+      - text: .
+  - generic [ref=e14]:
+    - generic [ref=e15]:
+      - generic [ref=e16]: Email
+      - textbox "Email" [active] [ref=e17]:
+        - /placeholder: you@example.com
+    - generic [ref=e18]:
+      - generic [ref=e19]: Password
+      - textbox "Password" [ref=e20]:
+        - /placeholder: Enter your password
+    - generic [ref=e21]:
+      - checkbox "Keep me signed in" [ref=e22]
+      - text: Keep me signed in
+    - button "Sign In" [ref=e23]
+  - generic [ref=e24]:
+    - paragraph [ref=e25]: Student Access
+    - paragraph [ref=e26]:
+      - text: New student? Use
+      - link "Join Class" [ref=e27] [cursor=pointer]:
+        - /url: http://127.0.0.1:8000/join
+      - text: .
+    - paragraph [ref=e28]:
+      - text: Returning student? Use
+      - link "Student Sign In" [ref=e29] [cursor=pointer]:
+        - /url: http://127.0.0.1:8000/student/login
+      - text: .
+    - paragraph [ref=e30]: If this page was open for a while, refresh it before signing in.

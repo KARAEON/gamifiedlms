@@ -1,0 +1,15 @@
+﻿<svg width="480" height="240" viewBox="0 0 480 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="480" y2="240" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#D1FAE5"/>
+      <stop offset="1" stop-color="#ECFDF5"/>
+    </linearGradient>
+  </defs>
+  <rect width="480" height="240" rx="20" fill="url(#bg)"/>
+  <rect x="18" y="18" width="444" height="204" rx="16" fill="white" fill-opacity="0.35"/>
+  <ellipse cx="240" cy="134" rx="112" ry="34" fill="#047857" fill-opacity="0.25"/>
+<path d="M165 132C186 122 210 118 240 118C270 118 294 122 315 132" stroke="#047857" stroke-width="5" fill="none"/>
+<path d="M214 88C221 78 232 72 244 72C256 72 267 78 274 88" stroke="#047857" stroke-width="5" fill="none"/>
+  <text x="28" y="206" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="700" fill="#047857">Pond</text>
+  <text x="28" y="226" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#047857" fill-opacity="0.78">Water habitat clue</text>
+</svg>

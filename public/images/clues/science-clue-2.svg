@@ -1,0 +1,15 @@
+<svg width="480" height="240" viewBox="0 0 480 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg2" x1="0" y1="0" x2="480" y2="240" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ECFDF5"/>
+      <stop offset="1" stop-color="#F7FDF9"/>
+    </linearGradient>
+  </defs>
+  <rect width="480" height="240" rx="20" fill="url(#bg2)"/>
+  <path d="M118 162C84 162 56 134 56 100V56H100C134 56 162 84 162 118V162H118Z" fill="#86EFAC"/>
+  <path d="M129 147C108 147 91 130 91 109V89H111C132 89 149 106 149 127V147H129Z" fill="#4ADE80"/>
+  <path d="M212 72C258 72 296 110 296 156V184H268C222 184 184 146 184 100V72H212Z" fill="#22C55E" opacity="0.3"/>
+  <path d="M332 66C364 66 390 92 390 124V174H360C328 174 302 148 302 116V66H332Z" fill="#16A34A" opacity="0.38"/>
+  <circle cx="400" cy="62" r="20" fill="#A7F3D0"/>
+  <text x="36" y="212" font-family="Arial, sans-serif" font-size="20" fill="#14532D" opacity="0.8">Ecosystem Clue</text>
+</svg>

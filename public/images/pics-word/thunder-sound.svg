@@ -1,0 +1,16 @@
+﻿<svg width="480" height="240" viewBox="0 0 480 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="480" y2="240" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#DDD6FE"/>
+      <stop offset="1" stop-color="#F3E8FF"/>
+    </linearGradient>
+  </defs>
+  <rect width="480" height="240" rx="20" fill="url(#bg)"/>
+  <rect x="18" y="18" width="444" height="204" rx="16" fill="white" fill-opacity="0.35"/>
+  <path d="M186 120H216" stroke="#6B21A8" stroke-width="7" stroke-linecap="round"/>
+<path d="M232 98C246 108 246 132 232 142" stroke="#6B21A8" stroke-width="7" stroke-linecap="round" fill="none"/>
+<path d="M256 84C276 100 276 140 256 156" stroke="#6B21A8" stroke-width="7" stroke-linecap="round" fill="none"/>
+<path d="M282 72C310 94 310 146 282 168" stroke="#6B21A8" stroke-width="7" stroke-linecap="round" fill="none"/>
+  <text x="28" y="206" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="700" fill="#6B21A8">Sound Wave</text>
+  <text x="28" y="226" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#6B21A8" fill-opacity="0.78">Loud rumble clue</text>
+</svg>

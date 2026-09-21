@@ -1,0 +1,2 @@
+defect_id,tc_id,module,severity,summary,steps_to_reproduce,actual_result,expected_result,status,owner,target_fix_date,retest_result,notes
+DEF-001,UAT-TCH-001,Teacher Workflow,Critical,,,,,Open,,,,

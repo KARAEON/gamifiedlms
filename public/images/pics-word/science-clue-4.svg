@@ -1,0 +1,16 @@
+<svg width="480" height="240" viewBox="0 0 480 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg4" x1="0" y1="0" x2="480" y2="240" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F5F3FF"/>
+      <stop offset="1" stop-color="#FBFAFF"/>
+    </linearGradient>
+  </defs>
+  <rect width="480" height="240" rx="20" fill="url(#bg4)"/>
+  <circle cx="164" cy="120" r="56" fill="#C4B5FD"/>
+  <ellipse cx="164" cy="120" rx="92" ry="22" stroke="#8B5CF6" stroke-width="8"/>
+  <circle cx="324" cy="92" r="28" fill="#DDD6FE"/>
+  <circle cx="372" cy="148" r="20" fill="#A78BFA"/>
+  <circle cx="410" cy="84" r="10" fill="#8B5CF6"/>
+  <path d="M324 92L372 148L410 84" stroke="#7C3AED" stroke-width="4" stroke-linecap="round"/>
+  <text x="36" y="212" font-family="Arial, sans-serif" font-size="20" fill="#4C1D95" opacity="0.8">Space Clue</text>
+</svg>

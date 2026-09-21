@@ -1,0 +1,13 @@
+﻿<svg width="480" height="240" viewBox="0 0 480 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="480" y2="240" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#EDE9FE"/>
+      <stop offset="1" stop-color="#F5F3FF"/>
+    </linearGradient>
+  </defs>
+  <rect width="480" height="240" rx="20" fill="url(#bg)"/>
+  <rect x="18" y="18" width="444" height="204" rx="16" fill="white" fill-opacity="0.35"/>
+  <path d="M246 66L196 126H236L216 184L286 114H246L268 66H246Z" fill="#6D28D9"/>
+  <text x="28" y="206" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="700" fill="#6D28D9">Lightning</text>
+  <text x="28" y="226" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#6D28D9" fill-opacity="0.78">Flash in storm clouds</text>
+</svg>

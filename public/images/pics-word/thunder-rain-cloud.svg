@@ -1,0 +1,16 @@
+﻿<svg width="480" height="240" viewBox="0 0 480 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="480" y2="240" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#EDE9FE"/>
+      <stop offset="1" stop-color="#F5F3FF"/>
+    </linearGradient>
+  </defs>
+  <rect width="480" height="240" rx="20" fill="url(#bg)"/>
+  <rect x="18" y="18" width="444" height="204" rx="16" fill="white" fill-opacity="0.35"/>
+  <path d="M188 104C173 104 160 117 160 132C160 147 173 160 188 160H288C305 160 320 145 320 128C320 112 306 98 289 98C284 83 270 72 254 72C237 72 223 84 220 101C218 100 216 99 213 99C203 99 194 101 188 104Z" fill="#7C3AED" fill-opacity="0.3"/>
+<circle cx="210" cy="182" r="6" fill="#7C3AED"/>
+<circle cx="240" cy="186" r="6" fill="#7C3AED"/>
+<circle cx="270" cy="182" r="6" fill="#7C3AED"/>
+  <text x="28" y="206" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="700" fill="#7C3AED">Rain Cloud</text>
+  <text x="28" y="226" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#7C3AED" fill-opacity="0.78">Heavy drops from sky</text>
+</svg>

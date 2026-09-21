@@ -1,0 +1,16 @@
+﻿<svg width="480" height="240" viewBox="0 0 480 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="480" y2="240" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FEF3C7"/>
+      <stop offset="1" stop-color="#FFFBEB"/>
+    </linearGradient>
+  </defs>
+  <rect width="480" height="240" rx="20" fill="url(#bg)"/>
+  <rect x="18" y="18" width="444" height="204" rx="16" fill="white" fill-opacity="0.35"/>
+  <path d="M190 106C177 106 166 117 166 130C166 143 177 154 190 154H284C299 154 312 141 312 126C312 111 299 98 284 98C280 85 269 76 255 76C240 76 228 87 226 101C224 100 222 99 219 99C208 99 198 102 190 106Z" fill="#A16207" fill-opacity="0.25"/>
+<path d="M204 164L194 182" stroke="#A16207" stroke-width="5" stroke-linecap="round"/>
+<path d="M236 164L226 182" stroke="#A16207" stroke-width="5" stroke-linecap="round"/>
+<path d="M268 164L258 182" stroke="#A16207" stroke-width="5" stroke-linecap="round"/>
+  <text x="28" y="206" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="700" fill="#A16207">Rain</text>
+  <text x="28" y="226" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#A16207" fill-opacity="0.78">Droplets break surfaces</text>
+</svg>

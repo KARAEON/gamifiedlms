@@ -1,4 +1,4 @@
-<x-app-layout title="Teacher Analytics Dashboard">
+<x-teacher-layout title="Dashboard">
     @php
         $scoreTrendLabels = collect($analytics['score_trend'])->pluck('date')->map(fn ($date) => \Illuminate\Support\Carbon::parse($date)->format('M d'));
         $scoreTrendValues = collect($analytics['score_trend'])->pluck('value');
@@ -16,30 +16,14 @@
 
     <div class="mobile-fullbleed-fix space-y-6 overflow-x-hidden w-full max-w-full">
         <section class="panel-hero w-full max-w-full p-7">
-            <div class="absolute -right-14 -top-14 h-44 w-44 rounded-full bg-white/10"></div>
-            <div class="absolute bottom-0 right-8 h-16 w-16 rounded-full bg-white/15"></div>
             <div class="relative flex flex-wrap items-end justify-between gap-6 overflow-hidden">
                 <div class="max-w-3xl">
-                    <p class="text-xs font-bold uppercase tracking-[0.16em] text-brand-100">Instructional Intelligence</p>
-                    <h2 class="mt-2 text-3xl font-semibold leading-tight text-white">Analytics Command Center for Science Mastery</h2>
+                    <p class="text-xs font-bold uppercase tracking-[0.16em] text-brand-100">Classroom overview · Catbalogan I SPED Center</p>
+                    <h2 class="mt-2 text-3xl font-semibold leading-tight text-white">Plan the next instructional step.</h2>
                     <p class="mt-3 text-sm leading-relaxed text-blue-100">
-                        Review class performance, identify weak topics, and prepare remediation strategies with confidence.
+                        {{ $interventionCount > 0 ? $interventionCount.' learner'.($interventionCount === 1 ? ' needs' : 's need').' attention in the selected period.' : 'No learners are currently flagged for intervention in the selected period.' }}
                     </p>
-                    <div class="mt-4 grid gap-3 sm:grid-cols-3" data-stagger>
-                        <div class="glass-strip px-3 py-2">
-                            <p class="text-[11px] uppercase tracking-[0.12em] text-blue-100">Students</p>
-                            <p class="text-lg font-semibold text-white">{{ $analytics['students_count'] }}</p>
-                        </div>
-                        <div class="glass-strip px-3 py-2">
-                            <p class="text-[11px] uppercase tracking-[0.12em] text-blue-100">Avg Accuracy</p>
-                            <p class="text-lg font-semibold text-white">{{ number_format($analytics['avg_class_performance'], 1) }}%</p>
-                        </div>
-                        <div class="glass-strip px-3 py-2">
-                            <p class="text-[11px] uppercase tracking-[0.12em] text-blue-100">Intervention Alerts</p>
-                            <p class="text-lg font-semibold text-white">{{ $interventionCount }}</p>
-                        </div>
-                    </div>
-                    <p class="mt-3 text-xs font-semibold uppercase tracking-[0.12em] text-blue-100">
+                    <p class="mt-4 text-xs font-semibold uppercase tracking-[0.12em] text-blue-100">
                         @if ($trendSummary['has_previous'])
                             {{ $trendSummary['window_days'] }}-day trend:
                             <span class="{{ $trendSummary['delta'] >= 0 ? 'text-emerald-200' : 'text-rose-200' }}">
@@ -54,17 +38,17 @@
 
                 <form class="apple-card-soft w-full max-w-full space-y-3 bg-white/95 p-4 text-slate-800 md:max-w-md">
                     <div>
-                        <p class="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500">Dashboard Window</p>
-                        <p class="text-sm font-semibold text-slate-700">Filter the monitoring period</p>
+                        <p class="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500">Monitoring period</p>
+                        <p class="text-sm font-semibold text-slate-700">Review current classroom evidence</p>
                     </div>
                     <div class="grid min-w-0 gap-3 sm:grid-cols-2">
                         <div>
-                            <label class="mb-1 block text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">From</label>
-                            <input type="date" name="date_from" value="{{ $filters['date_from'] }}" class="input-field">
+                            <label for="dashboard-date-from" class="mb-1 block text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">From</label>
+                            <input id="dashboard-date-from" type="date" name="date_from" value="{{ $filters['date_from'] }}" class="input-field">
                         </div>
                         <div>
-                            <label class="mb-1 block text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">To</label>
-                            <input type="date" name="date_to" value="{{ $filters['date_to'] }}" class="input-field">
+                            <label for="dashboard-date-to" class="mb-1 block text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">To</label>
+                            <input id="dashboard-date-to" type="date" name="date_to" value="{{ $filters['date_to'] }}" class="input-field">
                         </div>
                     </div>
                     <button class="btn-primary w-full">Refresh Analytics</button>
@@ -472,4 +456,4 @@
             }
         </script>
     @endpush
-</x-app-layout>
+</x-teacher-layout>

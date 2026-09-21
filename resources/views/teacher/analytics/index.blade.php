@@ -1,4 +1,4 @@
-<x-app-layout title="Advanced Analytics">
+<x-teacher-layout title="Advanced Analytics">
     <div class="space-y-6">
         <section class="panel-hero p-6">
             <div class="relative z-10">
@@ -14,4 +14,4 @@
             <livewire:teacher.analytics-explorer />
         </section>
     </div>
-</x-app-layout>
+</x-teacher-layout>

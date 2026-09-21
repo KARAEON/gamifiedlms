@@ -1,4 +1,4 @@
-<x-app-layout title="Game Scores">
+<x-teacher-layout title="Game Scores">
     <div class="space-y-6">
         <section class="panel p-6">
             <h1 class="text-2xl font-semibold text-slate-900">Student Game Scores</h1>
@@ -202,4 +202,4 @@
             </div>
         </section>
     </div>
-</x-app-layout>
+</x-teacher-layout>

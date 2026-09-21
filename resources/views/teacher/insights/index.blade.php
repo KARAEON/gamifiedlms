@@ -1,4 +1,4 @@
-<x-app-layout title="Decision Support">
+<x-teacher-layout title="Decision Support">
     <div class="space-y-6">
         <section class="panel-hero p-6">
             <div class="relative z-10">
@@ -313,4 +313,4 @@
             });
         </script>
     @endpush
-</x-app-layout>
+</x-teacher-layout>

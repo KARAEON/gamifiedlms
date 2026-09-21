@@ -387,3 +387,101 @@
 [x-cloak] {
     display: none !important;
 }
+
+/* Teacher portal: intentionally scoped so Student and School Head interfaces retain their presentation. */
+@layer components {
+    .teacher-shell {
+        --teacher-navy: #13375b;
+        --teacher-navy-deep: #0c2742;
+        --teacher-blue: #28628f;
+        --teacher-paper: #f7f8f8;
+        --teacher-ink: #17212b;
+        --teacher-muted: #5d6a75;
+        --teacher-border: #d5dde2;
+        --teacher-gold: #b7791f;
+        background: var(--teacher-paper);
+        color: var(--teacher-ink);
+        font-family: "Source Sans 3", "Segoe UI", Arial, sans-serif;
+    }
+
+    .teacher-shell :focus-visible {
+        outline: 3px solid #d39728;
+        outline-offset: 3px;
+    }
+
+    .teacher-skip-link {
+        position: fixed; left: 1rem; top: -5rem; z-index: 100;
+        border-radius: .25rem; background: #fff; color: var(--teacher-navy-deep);
+        padding: .75rem 1rem; font-weight: 700; box-shadow: 0 2px 8px rgb(12 39 66 / .2);
+    }
+    .teacher-skip-link:focus { top: 1rem; }
+
+    .teacher-sidebar {
+        position: fixed; inset: 0 auto 0 0; z-index: 60; display: flex; width: 17.75rem;
+        flex-direction: column; overflow-y: auto; border-right: 1px solid #234967;
+        background: var(--teacher-navy-deep); color: #eaf1f5; padding: 1.5rem 1rem;
+        transition: transform .2s ease;
+    }
+    .teacher-brand { display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding: 0 .5rem 1.25rem; border-bottom: 1px solid rgb(255 255 255 / .16); }
+    .teacher-brand a { color: #fff; text-decoration: none; }
+    .teacher-brand-mark { display: inline-grid; width: 2.45rem; height: 2.45rem; place-items: center; border: 1px solid #d5b05e; background: #f3e5bf; color: #513b13; font-family: Georgia, serif; font-weight: 700; }
+    .teacher-brand-name, .teacher-brand-meta { display: block; }
+    .teacher-brand-name { font-family: Georgia, serif; font-size: .9rem; font-weight: 700; line-height: 1.15; }
+    .teacher-brand-meta { margin-top: .22rem; color: #b9cad6; font-size: .7rem; }
+    .teacher-user-name { margin: 1rem .5rem .5rem; color: #d5e2ea; font-size: .82rem; }
+    .teacher-nav { display: grid; gap: 1rem; }
+    .teacher-nav-group h2 { margin: 0 0 .3rem; padding: 0 .5rem; color: #91aabf; font-size: .68rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+    .teacher-nav-link { display: block; border-left: 3px solid transparent; color: #dce7ee; padding: .5rem .65rem; font-size: .92rem; font-weight: 600; text-decoration: none; }
+    .teacher-nav-link:hover { background: rgb(255 255 255 / .1); color: #fff; }
+    .teacher-nav-link.is-active { border-left-color: #e7bb59; background: rgb(255 255 255 / .14); color: #fff; }
+    .teacher-sidebar-foot { margin: auto .5rem .25rem; border-top: 1px solid rgb(255 255 255 / .16); padding-top: 1rem; color: #afc0cd; font-size: .75rem; line-height: 1.45; }
+    .teacher-icon-button { color: #fff; font-size: 1.5rem; line-height: 1; }
+    .teacher-nav-backdrop { position: fixed; inset: 0; z-index: 50; background: rgb(12 39 66 / .55); }
+
+    .teacher-content { min-height: 100vh; background: var(--teacher-paper); }
+    .teacher-header { position: sticky; top: 0; z-index: 40; display: flex; min-height: 4.75rem; align-items: center; justify-content: space-between; gap: 1rem; border-bottom: 1px solid var(--teacher-border); background: rgb(255 255 255 / .96); padding: .75rem 1.25rem; }
+    .teacher-eyebrow { margin: 0; color: var(--teacher-blue); font-size: .68rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+    .teacher-header h1 { margin: .1rem 0 0; color: var(--teacher-ink); font-family: Georgia, "Times New Roman", serif; font-size: 1.3rem; font-weight: 700; letter-spacing: -.01em; }
+    .teacher-menu-button, .teacher-signout { border: 1px solid #aebdc7; border-radius: .25rem; background: #fff; color: var(--teacher-navy-deep); padding: .48rem .7rem; font-size: .82rem; font-weight: 700; }
+    .teacher-menu-button:hover, .teacher-signout:hover { border-color: var(--teacher-navy); background: #eef4f7; }
+    .teacher-date { color: var(--teacher-muted); font-size: .8rem; }
+    .teacher-main { width: min(100%, 96rem); margin: 0 auto; padding: 1.5rem 1rem 2.5rem; }
+    .teacher-toast { position: fixed; top: 1rem; right: 1rem; z-index: 80; display: flex; max-width: 25rem; align-items: start; gap: 1rem; border-left: 4px solid #28734b; background: #f4fbf6; box-shadow: 0 4px 14px rgb(12 39 66 / .16); padding: .9rem 1rem; color: #183e28; font-size: .9rem; }
+    .teacher-toast button { font-size: 1.2rem; line-height: 1; }
+
+    .teacher-shell .panel, .teacher-shell .panel-soft, .teacher-shell .chart-shell, .teacher-shell .filter-panel, .teacher-shell .apple-card, .teacher-shell .apple-card-soft, .teacher-shell .premium-card {
+        border: 1px solid var(--teacher-border); border-radius: .45rem; background: #fff; box-shadow: none; backdrop-filter: none;
+    }
+    .teacher-shell .panel, .teacher-shell .chart-shell, .teacher-shell .filter-panel { padding: 1.25rem; }
+    .teacher-shell .panel-hero { border: 1px solid #204f75; border-radius: .45rem; background: var(--teacher-navy); box-shadow: none; backdrop-filter: none; }
+    .teacher-shell .metric-card { border: 1px solid var(--teacher-border); border-radius: .4rem; background: #fff; box-shadow: none; padding: 1.05rem; }
+    .teacher-shell .metric-card:hover { transform: none; box-shadow: inset 0 3px 0 var(--teacher-blue); }
+    .teacher-shell .metric-label, .teacher-shell .section-kicker { color: var(--teacher-blue); font-size: .68rem; font-weight: 700; letter-spacing: .08em; }
+    .teacher-shell .metric-value { color: var(--teacher-ink); font-family: Georgia, serif; font-size: 2rem; }
+    .teacher-shell .section-title { color: var(--teacher-ink); font-family: Georgia, serif; font-size: 1.18rem; letter-spacing: 0; }
+    .teacher-shell .section-copy { color: var(--teacher-muted); }
+    .teacher-shell .apple-stat-item, .teacher-shell .stat-chip { border: 1px solid var(--teacher-border); border-radius: .35rem; background: #f9fafb; box-shadow: none; padding: .85rem; backdrop-filter: none; }
+    .teacher-shell .apple-tint-rose { border-left: 3px solid #b84747; background: #fff8f7; }
+    .teacher-shell .apple-tint-emerald { border-left: 3px solid #28734b; background: #f6fbf7; }
+    .teacher-shell .btn-primary { border: 1px solid var(--teacher-navy); border-radius: .25rem; background: var(--teacher-navy); box-shadow: none; padding: .65rem 1rem; }
+    .teacher-shell .btn-primary:hover { transform: none; background: var(--teacher-navy-deep); }
+    .teacher-shell .btn-secondary, .teacher-shell .btn-ghost { border: 1px solid #aebdc7; border-radius: .25rem; background: #fff; box-shadow: none; color: var(--teacher-navy-deep); padding: .6rem .9rem; }
+    .teacher-shell .btn-secondary:hover { transform: none; border-color: var(--teacher-navy); background: #eef4f7; }
+    .teacher-shell .input-field, .teacher-shell .apple-input { border: 1px solid #aebdc7; border-radius: .25rem; background: #fff; box-shadow: none; padding: .65rem .75rem; }
+    .teacher-shell .input-field:focus, .teacher-shell .apple-input:focus { border-color: var(--teacher-blue); box-shadow: 0 0 0 3px rgb(40 98 143 / .18); }
+    .teacher-shell .table-wrap { border: 1px solid var(--teacher-border); border-radius: .4rem; background: #fff; box-shadow: none; backdrop-filter: none; }
+    .teacher-shell .data-table thead th { border-color: var(--teacher-border); background: #edf3f6; color: #36566e; font-size: .7rem; letter-spacing: .06em; }
+    .teacher-shell .data-table tbody td { border-color: #e5eaed; }
+    .teacher-shell .data-table tbody tr:hover { background: #f6fafc; }
+    .teacher-shell .empty-state { border-radius: .35rem; background: #f8fafb; backdrop-filter: none; }
+    .teacher-shell .glass-strip, .teacher-shell .glass-surface { border: 1px solid rgb(255 255 255 / .26); border-radius: .3rem; box-shadow: none; backdrop-filter: none; }
+    .teacher-shell .apple-glow, .teacher-shell .hero-orb, .teacher-shell .hero-grid { display: none; }
+
+    @media (min-width: 1024px) {
+        .teacher-content { margin-left: 17.75rem; }
+        .teacher-header { padding-left: 2rem; padding-right: 2rem; }
+        .teacher-main { padding: 2rem; }
+    }
+    @media (max-width: 1023px) { .teacher-sidebar { max-width: calc(100vw - 2rem); } }
+    @media (prefers-reduced-motion: reduce) { .teacher-sidebar { transition: none; } }
+}

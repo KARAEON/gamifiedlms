@@ -1,4 +1,4 @@
-<x-teacher-layout :title="$title">
+<x-app-layout :title="$title">
     @push('scripts')
         <style>
             @media print {
@@ -270,4 +270,4 @@
             </p>
         </section>
     </div>
-</x-teacher-layout>
+</x-app-layout>

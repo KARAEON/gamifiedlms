@@ -1,4 +1,4 @@
-<x-teacher-layout title="Activity Management">
+<x-app-layout title="Activity Management">
     <div class="space-y-6">
         <section class="panel p-6">
             <h1 class="text-2xl font-semibold text-slate-900">Activity Management</h1>
@@ -144,4 +144,4 @@
             </div>
         </section>
     </div>
-</x-teacher-layout>
+</x-app-layout>

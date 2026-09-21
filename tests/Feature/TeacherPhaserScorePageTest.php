@@ -56,13 +56,6 @@ class TeacherPhaserScorePageTest extends TestCase
             ->assertSee('MIX MATCH MEMORY QUEST')
             ->assertSee('Phaser Minigame')
             ->assertSee('Phaser Student')
-            ->assertSee('Grade 6 - Actual')
-            ->assertSee('Catbalogan I SPED Center')
-            ->assertSee('School ID 193540')
-            ->assertSee('Overview')
-            ->assertSee('Learners')
-            ->assertSee('Teaching')
-            ->assertSee('Insights')
-            ->assertSee('Account');
+            ->assertSee('Grade 6 - Actual');
     }
 }

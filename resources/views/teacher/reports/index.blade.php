@@ -1,4 +1,4 @@
-<x-teacher-layout title="Reports">
+<x-app-layout title="Reports">
     <div class="space-y-6" x-data="{ reportType: '{{ old('report_type', 'student') }}' }">
         <section class="panel-hero p-6">
             <div class="relative z-10">
@@ -166,4 +166,4 @@
             </div>
         </section>
     </div>
-</x-teacher-layout>
+</x-app-layout>

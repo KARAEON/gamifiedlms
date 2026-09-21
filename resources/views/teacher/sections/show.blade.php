@@ -1,4 +1,4 @@
-<x-teacher-layout :title="$section->name">
+<x-app-layout :title="$section->name">
     <div class="space-y-6">
         <section class="panel p-6">
             <a href="{{ route('teacher.sections.index') }}" class="text-sm font-medium text-brand-600 hover:text-brand-700">&larr; Back to sections</a>
@@ -208,7 +208,7 @@
             </form>
         </section>
     </div>
-</x-teacher-layout>
+</x-app-layout>
 
 
 

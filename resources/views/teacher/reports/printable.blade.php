@@ -180,14 +180,14 @@
     <div class="header">
         <div class="brand-row">
             <div class="brand-cell-left">
-                <div class="brand-chip">Catbalogan I SPED Center · School ID 193540</div>
+                <div class="brand-chip">Gamified LMS Analytics</div>
             </div>
             <div class="brand-cell-right">
                 <div class="brand-chip">{{ ucfirst($reportType) }} report</div>
             </div>
         </div>
         <p class="title">{{ $title }}</p>
-        <p class="meta">Teacher Portal · Generated at {{ $generatedAt->format('M d, Y h:i A') }}</p>
+        <p class="meta">Generated at {{ $generatedAt->format('M d, Y h:i A') }}</p>
         @if (! empty($filters))
             <div style="margin-top: 6px;">
                 @foreach ($filters as $key => $value)

@@ -1,4 +1,4 @@
-<x-teacher-layout title="Student Management">
+<x-app-layout title="Student Management">
     <div x-data="{ createModal: false }" class="space-y-6">
         <section class="panel p-6">
             <div class="flex flex-wrap items-center justify-between gap-4">
@@ -144,7 +144,7 @@
             </div>
         </div>
     </div>
-</x-teacher-layout>
+</x-app-layout>
 
 
 

@@ -1,4 +1,4 @@
-<x-teacher-layout title="Teacher Profile">
+<x-app-layout title="Teacher Profile">
     <div class="mx-auto max-w-3xl space-y-6">
         <section class="panel p-6">
             <p class="section-kicker">Teacher Profile</p>
@@ -44,4 +44,4 @@
             </form>
         </section>
     </div>
-</x-teacher-layout>
+</x-app-layout>

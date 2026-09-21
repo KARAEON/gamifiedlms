@@ -1,4 +1,4 @@
-<x-teacher-layout title="Instructional Workflow">
+<x-app-layout title="Instructional Workflow">
     <div class="space-y-6">
         <section class="panel p-6">
             <h1 class="text-2xl font-semibold text-slate-900">Teacher-Centered Instructional Workflow</h1>
@@ -247,4 +247,4 @@
             </article>
         </section>
     </div>
-</x-teacher-layout>
+</x-app-layout>

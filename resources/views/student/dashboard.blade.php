@@ -9,9 +9,9 @@
         <style>
             .student-game-hud {
                 position: fixed;
-                top: 1rem;
-                left: 1rem;
-                right: 1rem;
+                top: max(0.75rem, env(safe-area-inset-top));
+                left: max(0.75rem, env(safe-area-inset-left));
+                right: max(0.75rem, env(safe-area-inset-right));
                 z-index: 50;
                 display: flex;
                 align-items: center;
@@ -47,6 +47,44 @@
             .student-game-logout:hover {
                 background: rgba(15, 23, 42, 0.92);
             }
+
+            .student-game-orientation {
+                display: none;
+            }
+
+            @media (max-width: 700px) {
+                .student-game-badge {
+                    max-width: calc(100vw - 8rem);
+                    padding: 0.45rem 0.6rem;
+                    font-size: 0.72rem;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                }
+
+                .student-game-logout {
+                    padding: 0.45rem 0.6rem;
+                    font-size: 0.72rem;
+                }
+            }
+
+            @media (max-width: 700px) and (orientation: portrait) {
+                .student-game-orientation {
+                    position: fixed;
+                    inset: 0;
+                    z-index: 40;
+                    display: grid;
+                    place-items: center;
+                    padding: 5rem 2rem 2rem;
+                    background: rgba(15, 23, 42, 0.68);
+                    color: #f8fafc;
+                    font-family: Pixelify Sans, monospace;
+                    font-size: 1rem;
+                    line-height: 1.4;
+                    text-align: center;
+                    pointer-events: none;
+                }
+            }
         </style>
         <script>
             window.GLMS_PHASER = @json($phaserContext);
@@ -55,6 +93,7 @@
     </head>
     <body>
         <div id="game-container"></div>
+        <div class="student-game-orientation" role="status">Rotate your device to landscape for the best game experience.</div>
 
         <header class="student-game-hud">
             <div class="student-game-badge">

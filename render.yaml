@@ -16,6 +16,8 @@ services:
         value: production
       - key: APP_DEBUG
         value: "false"
+      - key: APP_URL
+        value: https://gamifiedlms.onrender.com
       - key: APP_KEY
         generateValue: true
       - key: LOG_CHANNEL

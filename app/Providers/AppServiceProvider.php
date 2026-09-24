@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\URL;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -21,5 +22,12 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Paginator::useTailwind();
+
+        // Render terminates TLS at its edge proxy. Force secure URLs inside the
+        // container so assets, form actions, and game resources are never
+        // emitted as blocked http:// links on the public HTTPS site.
+        if ($this->app->environment('production')) {
+            URL::forceScheme('https');
+        }
     }
 }

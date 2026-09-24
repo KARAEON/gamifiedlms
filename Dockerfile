@@ -8,6 +8,16 @@ COPY public ./public
 COPY vite.config.js ./
 RUN npm run build
 
+FROM node:22-bookworm-slim AS game-assets
+
+WORKDIR /app/PhaserGameupd
+COPY PhaserGameupd/package.json PhaserGameupd/package-lock.json ./
+RUN npm ci
+COPY PhaserGameupd ./
+RUN npm run build \
+    && cp dist/assets/index-*.js /tmp/student-game.js \
+    && cp dist/assets/index-*.css /tmp/student-game.css
+
 FROM composer:2 AS dependencies
 
 WORKDIR /app
@@ -27,6 +37,8 @@ WORKDIR /var/www/html
 COPY . .
 COPY --from=dependencies /app/vendor ./vendor
 COPY --from=assets /app/public/build ./public/build
+COPY --from=game-assets /tmp/student-game.js ./public/assets/student-game.js
+COPY --from=game-assets /tmp/student-game.css ./public/assets/student-game.css
 COPY docker/apache.conf /etc/apache2/conf-available/laravel.conf
 COPY docker/start-container /usr/local/bin/start-container
 

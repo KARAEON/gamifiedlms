@@ -1,0 +1,32 @@
+databases:
+  - name: gamifiedlms-db
+    plan: free
+    databaseName: gamifiedlms
+    user: gamifiedlms
+
+services:
+  - type: web
+    name: gamifiedlms
+    runtime: docker
+    plan: free
+    autoDeploy: true
+    healthCheckPath: /
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: APP_KEY
+        generateValue: true
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_URL
+        fromDatabase:
+          name: gamifiedlms-db
+          property: connectionString
+      - key: SESSION_DRIVER
+        value: database
+      - key: CACHE_STORE
+        value: database
+      - key: QUEUE_CONNECTION
+        value: sync

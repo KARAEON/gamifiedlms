@@ -34,4 +34,7 @@ RUN a2enconf laravel \
     && chmod +x /usr/local/bin/start-container \
     && chown -R www-data:www-data storage bootstrap/cache
 
+ENV PORT=10000
+EXPOSE 10000
+
 CMD ["start-container"]

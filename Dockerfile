@@ -31,6 +31,7 @@ COPY docker/apache.conf /etc/apache2/conf-available/laravel.conf
 COPY docker/start-container /usr/local/bin/start-container
 
 RUN a2enconf laravel \
+    && mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache \
     && chmod +x /usr/local/bin/start-container \
     && chown -R www-data:www-data storage bootstrap/cache
 

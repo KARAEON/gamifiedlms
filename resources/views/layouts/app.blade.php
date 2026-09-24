@@ -11,13 +11,14 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
 </head>
-<body class="app-shell">
-    @php
-        $role = auth()->user()?->role?->value;
-        $isStudent = $role === 'student';
-        $isTeacher = $role === 'teacher';
-        $isAdmin = $role === 'admin';
-    @endphp
+@php
+    $role = auth()->user()?->role?->value;
+    $isStudent = $role === 'student';
+    $isTeacher = $role === 'teacher';
+    $isAdmin = $role === 'admin';
+    $isStaffWorkspace = $isTeacher || $isAdmin;
+@endphp
+<body class="app-shell {{ $isStaffWorkspace ? 'staff-workspace' : '' }}">
 
     <div
         x-data="{
@@ -38,8 +39,8 @@
         class="relative min-h-screen overflow-x-hidden w-full max-w-full"
     >
         <div class="apple-glow parallax-layer -left-24 top-0 -z-10 hidden h-72 w-72 bg-white/90 sm:block" data-parallax="0.03"></div>
-        <div class="apple-glow parallax-layer -z-10 hidden h-80 w-80 bg-sky-100/70 lg:block lg:right-[-6rem] lg:top-12" data-parallax="0.06"></div>
-        <div class="apple-glow parallax-layer bottom-0 left-1/3 -z-10 hidden h-72 w-72 bg-slate-200/55 sm:block" data-parallax="0.04"></div>
+        <div class="apple-glow parallax-layer -z-10 hidden h-80 w-80 {{ $isStaffWorkspace ? 'bg-pink-200/70' : 'bg-sky-100/70' }} lg:block lg:right-[-6rem] lg:top-12" data-parallax="0.06"></div>
+        <div class="apple-glow parallax-layer bottom-0 left-1/3 -z-10 hidden h-72 w-72 {{ $isStaffWorkspace ? 'bg-stone-200/55' : 'bg-slate-200/55' }} sm:block" data-parallax="0.04"></div>
         <div class="hero-grid pointer-events-none absolute inset-x-0 top-0 -z-10 h-[24rem] opacity-50"></div>
 
         <div x-cloak x-show="showToast" x-transition.opacity.duration.250ms
@@ -58,10 +59,12 @@
                 class="app-sidebar fixed inset-y-0 left-0 z-50 w-[18.5rem] max-w-full p-5 transition duration-300 lg:translate-x-0">
                 <div class="mb-6 flex items-center justify-between">
                     <a href="{{ route('dashboard') }}" class="flex items-center gap-3">
-                        <span class="inline-flex h-11 w-11 items-center justify-center rounded-[22px] border border-white/70 bg-white/85 text-lg font-black text-slate-900 shadow-[0_18px_34px_-24px_rgba(15,23,42,0.45)]">GL</span>
+                        <span class="school-logo-frame h-11 w-11">
+                            <img src="{{ asset('images/branding/catbalogan-city-division-logo.png') }}" alt="Department of Education Division of Catbalogan City logo">
+                        </span>
                         <div>
-                            <p class="text-sm font-semibold text-slate-900">Gamified LMS</p>
-                            <p class="text-xs text-slate-500">Premium learning workspace</p>
+                            <p class="text-sm font-semibold text-slate-900">Catbalogan I SPED Center</p>
+                            <p class="text-xs text-slate-500">Gamified LMS workspace</p>
                         </div>
                     </a>
                     <button @click="sidebarOpen = false" class="btn-ghost lg:hidden">×</button>

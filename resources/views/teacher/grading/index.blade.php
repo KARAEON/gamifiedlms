@@ -47,7 +47,7 @@
                 Manual grading for <strong>Performance Tasks</strong> is itemized below. Enter up to 10 items and their HPS values. The system will compute <strong>Total</strong>, <strong>PS</strong>, and <strong>WS</strong> automatically.
             </div>
             <div class="table-wrap" data-no-reveal="true">
-                <table class="data-table">
+                <table class="data-table grading-table">
                     <thead>
                         <tr>
                             <th>Student</th>
@@ -79,13 +79,16 @@
                     </thead>
                     <tbody>
                         @forelse ($gradeRows as $row)
+                            @php
+                                $formId = 'grading-form-'.$row['student']->id;
+                            @endphp
                             <tr>
                                 <td class="py-3">{{ $row['student']->name }}</td>
                                 <td class="py-3">{{ $row['computed']['written_works']['total'] ?? '—' }}</td>
                                 <td class="py-3">{{ $row['computed']['written_works']['hps_total'] ?? '—' }}</td>
                                 <td class="py-3">{{ $row['computed']['written_works']['percentage_score'] !== null ? number_format($row['computed']['written_works']['percentage_score'], 2).'%' : '—' }}</td>
                                 <td colspan="13" class="py-3">
-                                    <form method="POST" action="{{ route('teacher.grading.store') }}" class="grid gap-2">
+                                    <form id="{{ $formId }}" method="POST" action="{{ route('teacher.grading.store') }}" class="grading-entry-grid">
                                         @csrf
                                         <input type="hidden" name="student_id" value="{{ $row['student']->id }}">
                                         <input type="hidden" name="section_id" value="{{ $selectedSectionId }}">
@@ -95,33 +98,33 @@
                                             $ptItems = $row['computed']['performance_task_items'] ?? array_fill(0, 10, null);
                                             $ptHpsItems = $row['computed']['performance_task_hps_items'] ?? array_fill(0, 10, null);
                                         @endphp
-                                        <div class="grid grid-cols-13 gap-2">
+                                        <div class="grading-score-grid">
                                             @foreach (range(0, 9) as $index)
-                                                <input type="number" step="0.01" min="0" name="performance_task_items[]" value="{{ old('performance_task_items.'.$index, $ptItems[$index] ?? null) }}" class="input-field" placeholder="{{ $index + 1 }}">
+                                                <input type="number" step="0.01" min="0" name="performance_task_items[]" value="{{ old('performance_task_items.'.$index, $ptItems[$index] ?? null) }}" class="grading-score-input" placeholder="Score" aria-label="Performance task {{ $index + 1 }} score">
                                             @endforeach
                                             <div class="input-field flex items-center justify-center bg-slate-50 text-xs font-semibold text-slate-700">{{ $row['computed']['performance_tasks']['total'] !== null ? number_format((float) $row['computed']['performance_tasks']['total'], 2) : '—' }}</div>
                                             <div class="input-field flex items-center justify-center bg-slate-50 text-xs font-semibold text-slate-700">{{ $row['computed']['performance_tasks']['percentage_score'] !== null ? number_format((float) $row['computed']['performance_tasks']['percentage_score'], 2) : '—' }}</div>
                                             <div class="input-field flex items-center justify-center bg-slate-50 text-xs font-semibold text-slate-700">{{ $row['computed']['performance_tasks']['weighted_score'] !== null ? number_format((float) $row['computed']['performance_tasks']['weighted_score'], 2) : '—' }}</div>
                                         </div>
-                                        <div class="mt-2 grid grid-cols-13 gap-2">
+                                        <div class="grading-score-grid mt-1.5">
                                             @foreach (range(0, 9) as $index)
-                                                <input type="number" step="0.01" min="0" name="performance_task_hps_items[]" value="{{ old('performance_task_hps_items.'.$index, $ptHpsItems[$index] ?? null) }}" class="input-field" placeholder="HPS {{ $index + 1 }}">
+                                                <input type="number" step="0.01" min="0" name="performance_task_hps_items[]" value="{{ old('performance_task_hps_items.'.$index, $ptHpsItems[$index] ?? null) }}" class="grading-score-input" placeholder="HPS" aria-label="Performance task {{ $index + 1 }} highest possible score">
                                             @endforeach
                                             <div class="input-field flex items-center justify-center bg-slate-50 text-xs font-semibold text-slate-700">{{ $row['computed']['performance_tasks']['hps_total'] !== null ? number_format((float) $row['computed']['performance_tasks']['hps_total'], 2) : '—' }}</div>
                                             <div class="input-field flex items-center justify-center bg-slate-50 text-xs font-semibold text-slate-500">PS</div>
                                             <div class="input-field flex items-center justify-center bg-slate-50 text-xs font-semibold text-slate-500">WS</div>
                                         </div>
+                                    </form>
                                 </td>
                                 <td class="py-3">
-                                        <input type="number" step="0.01" min="0" name="quarterly_assessment_score" value="{{ old('quarterly_assessment_score', $row['entry']?->quarterly_assessment_score) }}" class="input-field" placeholder="QA Score">
+                                        <input form="{{ $formId }}" type="number" step="0.01" min="0" name="quarterly_assessment_score" value="{{ old('quarterly_assessment_score', $row['entry']?->quarterly_assessment_score) }}" class="input-field" placeholder="QA Score">
                                 </td>
                                 <td class="py-3">
-                                        <input type="number" step="0.01" min="0" name="quarterly_assessment_hps" value="{{ old('quarterly_assessment_hps', $row['entry']?->quarterly_assessment_hps) }}" class="input-field" placeholder="QA HPS">
+                                        <input form="{{ $formId }}" type="number" step="0.01" min="0" name="quarterly_assessment_hps" value="{{ old('quarterly_assessment_hps', $row['entry']?->quarterly_assessment_hps) }}" class="input-field" placeholder="QA HPS">
                                 </td>
                                 <td class="py-3">{{ $row['computed']['quarterly_grade'] ?? '—' }}</td>
                                 <td class="py-3">
-                                        <button type="submit" class="btn-primary whitespace-nowrap">Save</button>
-                                    </form>
+                                        <button form="{{ $formId }}" type="submit" class="btn-primary whitespace-nowrap">Save</button>
                                 </td>
                             </tr>
                         @empty

@@ -1,11 +1,13 @@
-<x-guest-layout title="Learning Insights Platform" variant="apple">
+<x-guest-layout title="Learning Insights Platform" variant="apple" :show-school-brand="false">
     <div class="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-6 py-8 lg:px-12 lg:py-10">
         <header class="flex items-center justify-between motion-reveal is-visible">
             <div class="flex items-center gap-3">
-                <span class="inline-flex h-10 w-10 items-center justify-center rounded-[22px] border border-white/70 bg-white/90 text-sm font-black text-slate-900 shadow-[0_18px_32px_-22px_rgba(15,23,42,0.4)]">GL</span>
+                <span class="school-logo-frame h-11 w-11">
+                    <img src="{{ asset('images/branding/catbalogan-city-division-logo.png') }}" alt="Department of Education Division of Catbalogan City logo">
+                </span>
                 <div>
-                    <p class="text-sm font-semibold text-slate-900">Learning Insights Platform</p>
-                    <p class="text-xs text-slate-500">Minimal. Intelligent. Premium.</p>
+                    <p class="text-sm font-semibold text-slate-900">Catbalogan I SPED Center</p>
+                    <p class="text-xs text-slate-500">Gamified Learning Management System</p>
                 </div>
             </div>
             <div class="flex items-center gap-2">

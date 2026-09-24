@@ -19,8 +19,9 @@
     $wrapperClass = $isApple
         ? 'relative min-h-screen overflow-x-hidden bg-[linear-gradient(180deg,#fbfbfd_0%,#f5f5f7_62%,#eef2f7_100%)]'
         : 'relative min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_12%_15%,rgba(39,137,242,0.28),transparent_36%),radial-gradient(circle_at_90%_80%,rgba(15,58,150,0.32),transparent_42%),linear-gradient(135deg,#040b24_0%,#061336_40%,#03112f_100%)]';
+    $showSchoolBrand = $showSchoolBrand ?? true;
 @endphp
-<body class="{{ $bodyClass }}">
+<body class="guest-workspace {{ $bodyClass }}">
     <div class="{{ $wrapperClass }} apple-shell">
         @if ($isApple)
             <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_14%_10%,rgba(255,255,255,0.96),transparent_45%),radial-gradient(circle_at_90%_92%,rgba(226,232,240,0.54),transparent_42%)]"></div>
@@ -35,6 +36,12 @@
         @endif
 
         <div class="relative z-10">
+            @if ($showSchoolBrand)
+                <a href="{{ route('landing') }}" class="school-brand-mark absolute left-5 top-5 z-20 sm:left-8 sm:top-7" aria-label="Catbalogan I SPED Center home">
+                    <img src="{{ asset('images/branding/catbalogan-city-division-logo.png') }}" alt="Department of Education Division of Catbalogan City logo">
+                    <span class="hidden sm:block">Catbalogan I<br>SPED Center</span>
+                </a>
+            @endif
             {{ $slot }}
         </div>
     </div>

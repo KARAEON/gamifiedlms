@@ -1,0 +1,10 @@
+.env
+.env.*
+!.env.example
+node_modules
+vendor
+.git
+.playwright-cli
+storage/framework
+storage/logs
+tests

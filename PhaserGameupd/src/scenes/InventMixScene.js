@@ -1,15 +1,20 @@
 import Phaser from 'phaser';
+import { closeMinigameHelp } from '../ui/minigameHelp.js';
+import { createMinigameNavigation } from '../ui/minigameNavigation.js';
+import { createMinigameHeader } from '../ui/minigameHeader.js';
+import { createGeneralAsset, createIngredientIcon } from '../ui/assetIcons.js';
 import { inventMixWorkshopGame } from '../config/content.js';
 import { getPostGameAssessmentLabel, startPostGameAssessment } from '../systems/assessmentFlow.js';
-import { submitMinigameResult } from '../systems/resultSubmission.js';
 import { markSceneReady, setTestState } from '../systems/testSeam.js';
-import { createSparkles } from '../ui/minigameUi.js';
-import { closeOpenModal, colors, createBackArrow, createPixelButton, showModal, textStyle } from '../ui/ui.js';
+import { createBottomFeedback, createSparkles } from '../ui/minigameUi.js';
+import { closeOpenModal, coverImage, createToggleRow, showModal, textStyle } from '../ui/ui.js';
+
+import { courtButton, courtField, courtPanel } from '../ui/scienceCourtUi.js';
+import { supplyGlyph, supplyPanel, supplyText, supplyHeading } from '../ui/supplyCartUi.js';
+import { playAreaMusic } from '../systems/music.js';
 
 const INGREDIENT_CARD_WIDTH = 92;
-const INGREDIENT_CARD_HEIGHT = 76;
-const CHOICE_WIDTH = 208;
-const CHOICE_HEIGHT = 42;
+const INGREDIENT_CARD_HEIGHT = 85;
 const MAX_SELECTED_INGREDIENTS = 3;
 
 export default class InventMixScene extends Phaser.Scene {
@@ -37,7 +42,6 @@ export default class InventMixScene extends Phaser.Scene {
     this.selectedUse = null;
     this.missionScore = 0;
     this.missionScores = Array(inventMixWorkshopGame.missions.length).fill(null);
-    this.completedMissions = Array(inventMixWorkshopGame.missions.length).fill(null);
     this.customMissionNames = inventMixWorkshopGame.missions.map((mission) => mission.name);
     this.nameInputActive = false;
     this.nameFieldMeta = null;
@@ -50,6 +54,7 @@ export default class InventMixScene extends Phaser.Scene {
     this.nextButtonMeta = null;
     this.retryButtonMeta = null;
 
+    this.input.dragDistanceThreshold = 8;
     this.drawWorkshopBackground();
     this.createHud();
     this.setupKeyboardShortcuts();
@@ -59,57 +64,19 @@ export default class InventMixScene extends Phaser.Scene {
   }
 
   drawWorkshopBackground() {
-    this.add.rectangle(0, 0, 1280, 720, 0x142523, 1).setOrigin(0);
-    this.add.rectangle(0, 0, 1280, 132, 0x201628, 0.98).setOrigin(0);
-    this.add.rectangle(0, 132, 1280, 7, colors.gold, 1).setOrigin(0);
-
-    const wall = this.add.graphics();
-    wall.lineStyle(2, 0x31504a, 0.45);
-    for (let x = 0; x <= 1280; x += 64) {
-      wall.lineBetween(x, 139, x, 700);
-    }
-    for (let y = 139; y <= 700; y += 56) {
-      wall.lineBetween(0, y, 1280, y);
-    }
-
-    const bench = this.add.graphics();
-    bench.fillStyle(0x4a342e, 1);
-    bench.fillRoundedRect(0, 638, 1280, 82, 8);
-    bench.lineStyle(4, 0x8a6048, 1);
-    bench.lineBetween(0, 638, 1280, 638);
+    coverImage(this, 'invent-workshop-backdrop');
+    this.add.rectangle(640, 360, 1280, 720, 0x070d14, 0.56);
   }
 
   createHud() {
-    const back = createBackArrow(this, () => this.returnToQuarter());
-    back.setDepth(30);
-
-    const badge = this.add.graphics();
-    badge.setDepth(20);
-    badge.fillStyle(0x3b2547, 1);
-    badge.lineStyle(5, colors.gold, 1);
-    badge.fillRoundedRect(118, 18, 218, 86, 8);
-    badge.strokeRoundedRect(118, 18, 218, 86, 8);
-
-    const day = this.add.text(228, 43, 'DAY 5', textStyle(28, '#ffd76a'));
-    day.setOrigin(0.5);
-    const mode = this.add.text(228, 78, 'INVENT-A-MIX WORKSHOP', textStyle(16, '#fff2c9'));
-    mode.setOrigin(0.5);
-
-    this.creationText = this.add.text(640, 30, 'CREATION 1', textStyle(24, '#fff2c9'));
-    this.creationText.setOrigin(0.5);
-    this.titleText = this.add.text(640, 74, 'ENERGY JUICE', textStyle(43, '#fff2c9'));
-    this.titleText.setOrigin(0.5);
-    this.titleText.setShadow(3, 3, '#000000', 0, false, true);
-    this.promptText = this.add.text(640, 118, 'MISSION', textStyle(21, '#2f2a2a'));
-    this.promptText.setOrigin(0.5);
-    this.promptText.setBackgroundColor('#fff2c9');
-    this.promptText.setPadding(24, 4, 24, 5);
-
-    this.scoreText = this.add.text(1110, 42, 'CREATIVITY 000 / 135', textStyle(24, '#fff2c9'));
-    this.scoreText.setOrigin(0.5);
-    this.progressDots = this.add.graphics();
-
-    [day, mode, this.creationText, this.titleText, this.promptText, this.scoreText].forEach((item) => item.setDepth(21));
+    createMinigameNavigation(this);
+    createBottomFeedback(this, { primary: 'CREATE. MIX. EXPLAIN!', secondary: 'Build a mixture and describe its appearance and everyday use.' });
+    const header = createMinigameHeader(this, {
+      day: 5, detail: 'WORKSHOP', title: 'INVENT-A-MIX WORKSHOP', subtitle: 'Create your own mixture.',
+      counters: [{ label: 'CREATIVITY SCORE' }, { label: 'TOTAL SCORE' }],
+    });
+    [this.scoreText, this.totalScoreText] = header.values;
+    this.controlsMeta = { settings: this.navigationMeta.settings, back: this.navigationMeta.back };
   }
 
   renderMission(reset = false) {
@@ -123,7 +90,6 @@ export default class InventMixScene extends Phaser.Scene {
       this.selectedUse = null;
       this.nameInputActive = false;
     }
-
     this.ingredientViews = [];
     this.classificationViews = [];
     this.appearanceViews = [];
@@ -132,400 +98,203 @@ export default class InventMixScene extends Phaser.Scene {
     this.presentButtonMeta = null;
     this.nextButtonMeta = null;
     this.retryButtonMeta = null;
-
-    if (this.missionLayer) {
-      this.missionLayer.destroy(true);
-    }
-    this.missionLayer = this.add.container(0, 0);
-    this.missionLayer.setDepth(5);
-
+    this.missionLayer?.destroy(true);
+    this.missionLayer = this.add.container(0, 0).setDepth(5);
     this.drawIngredientShelf();
     this.drawMixStation();
+    this.drawCreationPanel();
     this.drawDescriptionPanel();
+    this.drawResultPanel();
+    if (this.phase === 'result') this.drawResultActionButtons();
     this.updateHud();
     this.updateTestState();
   }
 
+  workshopPanel(x, y, width, height, title, { purple = false, paper = false, icon = null } = {}) {
+    const panel = courtPanel(this, x, y, width, height, { purple });
+    panel.add(supplyPanel(this, 0, -height / 2 + 23, width - 28, 34, { fill: purple ? 0x352044 : 0x092d42, edge: 0x9d722b }));
+    const heading = supplyHeading(this, icon ? 12 : 0, -height / 2 + 23, title, 21, '#ffda72');
+    if (heading.width > width - 64) heading.setFontSize(Math.floor(parseFloat(heading.style.fontSize) * (width - 64) / heading.width));
+    panel.add(heading);
+    if (icon) panel.add(supplyGlyph(this, -width / 2 + 34, -height / 2 + 23, icon, 0xffc238, 2));
+    if (paper) panel.add(supplyPanel(this, 0, 17, width - 34, height - 64, { fill: 0xe9cf98, edge: 0xb29160 }));
+    this.missionLayer.add(panel);
+    return panel;
+  }
+
   drawIngredientShelf() {
-    const mission = this.getCurrentMission();
-    const panel = this.add.graphics();
-    panel.fillStyle(0x0b3651, 0.96);
-    panel.lineStyle(4, 0x66e5ff, 1);
-    panel.fillRoundedRect(18, 154, 470, 500, 8);
-    panel.strokeRoundedRect(18, 154, 470, 500, 8);
-    panel.fillStyle(0x2f2420, 0.9);
-    panel.fillRoundedRect(38, 206, 430, 330, 6);
-
-    const title = this.add.text(253, 181, '1. CHOOSE INGREDIENTS', textStyle(22, '#fff2c9'));
-    title.setOrigin(0.5);
-    const instruction = this.add.text(253, 610, `PICK UP TO ${MAX_SELECTED_INGREDIENTS} INGREDIENTS`, textStyle(17, '#fff2c9'));
-    instruction.setOrigin(0.5);
-    const selectedCount = this.add.text(253, 632, `SELECTED ${this.selectedIngredients.length} / ${MAX_SELECTED_INGREDIENTS}`, textStyle(16, '#66e5ff'));
-    selectedCount.setOrigin(0.5);
-
-    this.missionLayer.add([panel, title, instruction, selectedCount]);
-
-    mission.ingredientOptions.forEach((ingredientId, index) => {
-      const column = index % 4;
-      const row = Math.floor(index / 4);
-      const x = 88 + column * 105;
-      const y = 248 + row * 98;
-      this.createIngredientCard(ingredientId, x, y);
+    this.workshopPanel(217, 304, 414, 346, '1. CHOOSE INGREDIENTS', { icon: 'flask' });
+    this.getCurrentMission().ingredientOptions.forEach((id, index) => {
+      this.createIngredientCard(id, 67 + index % 4 * 100, 218 + Math.floor(index / 4) * 90);
     });
+    this.missionLayer.add(supplyPanel(this, 217, 458, 380, 27, { fill: 0x21481d, edge: 0x8ead3e }));
+    this.missionLayer.add(supplyText(this, 217, 458, 'Drag to the cup or click to select (up to 3).', 16, '#eaf0cf'));
   }
 
   createIngredientCard(ingredientId, x, y) {
     const ingredient = this.getIngredient(ingredientId);
-    const mission = this.getCurrentMission();
+    const selected = this.selectedIngredients.includes(ingredientId);
     const container = this.add.container(x, y);
-    container.setDepth(8);
-
-    const graphics = this.add.graphics();
-    const icon = this.add.graphics();
-    icon.setPosition(0, -12);
-    const label = this.add.text(0, 23, ingredient.label.toUpperCase(), textStyle(13, '#fff2c9'));
-    label.setOrigin(0.5);
-    label.setWordWrapWidth(84);
-    label.setLineSpacing(-5);
-    const count = this.add.text(34, 30, this.selectedIngredients.includes(ingredientId) ? 'x1' : 'x0', textStyle(13, '#fff2c9'));
-    count.setOrigin(0.5);
-
-    const zone = this.add.zone(0, 0, INGREDIENT_CARD_WIDTH, INGREDIENT_CARD_HEIGHT).setInteractive({ useHandCursor: true });
-    zone.on('pointerover', () => {
-      if (this.phase !== 'result') {
-        container.setScale(1.05);
-      }
+    const panel = supplyPanel(this, 0, 0, INGREDIENT_CARD_WIDTH, INGREDIENT_CARD_HEIGHT, {
+      fill: selected ? 0x243b17 : 0x17170f, edge: selected ? 0x90bb3c : 0x735224,
     });
-    zone.on('pointerout', () => container.setScale(1));
-    zone.on('pointerup', () => this.toggleIngredient(ingredientId));
-
-    container.add([graphics, icon, label, count, zone]);
+    const icon = createIngredientIcon(this, ingredient.icon, { y: -15, width: 55, height: 53 });
+    const label = supplyText(this, 0, 17, ingredient.label.toUpperCase(), 14, '#f1dca9');
+    label.setWordWrapWidth(85).setLineSpacing(-3);
+    const count = supplyText(this, 30, 33, selected ? 'x1' : 'x0', 14, selected ? '#fff2c9' : '#aa9b78');
+    container.add([panel, icon, label, count]);
+    if (selected) container.add(supplyGlyph(this, -32, 33, 'check', 0xa5e770, 2));
+    const zone = this.add.zone(0, 0, INGREDIENT_CARD_WIDTH, INGREDIENT_CARD_HEIGHT).setInteractive({ useHandCursor: true });
+    this.input.setDraggable(zone);
+    zone.on('pointerdown', () => { this.draggedIngredient = null; });
+    zone.on('pointerup', () => {
+      if (this.draggedIngredient !== ingredientId) this.toggleIngredient(ingredientId);
+    });
+    zone.on('dragstart', pointer => {
+      if (this.phase === 'result' || this.currentModal) return;
+      this.draggedIngredient = ingredientId;
+      this.dragGhost = createIngredientIcon(this, ingredient.icon, { x: pointer.x, y: pointer.y, width: 60, height: 60 }).setDepth(80);
+    });
+    zone.on('drag', pointer => this.dragGhost?.setPosition(pointer.x, pointer.y));
+    zone.on('dragend', pointer => {
+      this.dragGhost?.destroy();
+      this.dragGhost = null;
+      if (this.draggedIngredient === ingredientId && pointer.x >= 440 && pointer.x <= 762 && pointer.y >= 174 && pointer.y <= 413 && !this.selectedIngredients.includes(ingredientId)) this.toggleIngredient(ingredientId);
+    });
+    container.add(zone);
     this.missionLayer.add(container);
-
-    const view = {
-      id: ingredientId,
-      label: ingredient.label,
-      x,
-      y,
-      correct: mission.correctIngredients.includes(ingredientId),
-      selected: this.selectedIngredients.includes(ingredientId),
-      container,
-      graphics,
-      icon,
-    };
-    this.ingredientViews.push(view);
-    this.drawIngredientCard(view);
-  }
-
-  drawIngredientCard(view) {
-    const selected = this.selectedIngredients.includes(view.id);
-    view.graphics.clear();
-    view.graphics.fillStyle(selected ? 0x2e8c00 : 0x1b1b1b, 1);
-    view.graphics.lineStyle(3, selected ? 0x9fe870 : 0x8a6048, 1);
-    view.graphics.fillRoundedRect(-INGREDIENT_CARD_WIDTH / 2, -INGREDIENT_CARD_HEIGHT / 2, INGREDIENT_CARD_WIDTH, INGREDIENT_CARD_HEIGHT, 7);
-    view.graphics.strokeRoundedRect(-INGREDIENT_CARD_WIDTH / 2, -INGREDIENT_CARD_HEIGHT / 2, INGREDIENT_CARD_WIDTH, INGREDIENT_CARD_HEIGHT, 7);
-    if (selected) {
-      view.graphics.fillStyle(0x58cc02, 1);
-      view.graphics.fillRoundedRect(-37, 23, 24, 18, 4);
-    }
-    this.drawIngredientIcon(view.icon, this.getIngredient(view.id).icon);
+    this.ingredientViews.push({ id: ingredientId, label: ingredient.label, x, y, correct: this.getCurrentMission().correctIngredients.includes(ingredientId) });
   }
 
   drawMixStation() {
-    const mission = this.getCurrentMission();
-    const panel = this.add.graphics();
-    panel.fillStyle(0x0b3651, 0.96);
-    panel.lineStyle(4, 0x66e5ff, 1);
-    panel.fillRoundedRect(508, 154, 330, 500, 8);
-    panel.strokeRoundedRect(508, 154, 330, 500, 8);
-    panel.fillStyle(0xcceeff, 1);
-    panel.fillRoundedRect(548, 214, 250, 184, 6);
-    panel.lineStyle(4, 0x2f2a2a, 1);
-    panel.strokeRoundedRect(548, 214, 250, 184, 6);
-
-    const title = this.add.text(673, 181, '2. MIX YOUR INGREDIENTS', textStyle(22, '#fff2c9'));
-    title.setOrigin(0.5);
-    const icon = this.add.graphics();
-    icon.setPosition(648, 318);
-    icon.setScale(2.15);
-    this.drawMixturePreviewIcon(icon, mission);
-
-    const spoon = this.add.graphics();
-    spoon.lineStyle(7, 0x2f2a2a, 1);
-    spoon.lineBetween(706, 226, 706, 352);
-    spoon.fillStyle(0x2278c9, 1);
-    spoon.fillRoundedRect(692, 221, 28, 44, 5);
-
-    const statusBox = this.add.graphics();
-    statusBox.fillStyle(0x132e24, 1);
-    statusBox.lineStyle(4, 0x58cc02, 1);
-    statusBox.fillRoundedRect(532, 420, 282, 76, 8);
-    statusBox.strokeRoundedRect(532, 420, 282, 76, 8);
-    const status = this.phase === 'choose'
-      ? 'SELECT INGREDIENTS, THEN MIX.'
-      : mission.mixedMessage.toUpperCase();
-    const statusText = this.add.text(673, 457, status, textStyle(20, this.phase === 'choose' ? '#ffd76a' : '#9fe870'));
-    statusText.setOrigin(0.5);
-    statusText.setWordWrapWidth(252);
-    statusText.setLineSpacing(-4);
-
-    const presentation = this.add.text(536, 518, this.buildStationSummary(), textStyle(17, '#fff2c9', 'left'));
-    presentation.setWordWrapWidth(274);
-    presentation.setLineSpacing(-3);
-
-    const mix = createPixelButton(this, 673, 616, 'MIX', () => this.mixIngredients(), {
-      width: 154,
-      height: 50,
-      fontSize: 23,
-      textColor: '#fff2c9',
-      fill: this.selectedIngredients.length > 0 && this.phase !== 'result' ? 0x58cc02 : 0x585858,
-      hoverFill: 0x6ee617,
-      stroke: 0x2e8c00,
-    });
-    mix.setDepth(12);
-    this.mixButtonMeta = { x: 673, y: 616, label: 'MIX' };
-
-    this.missionLayer.add([panel, title, icon, spoon, statusBox, statusText, presentation, mix]);
+    this.workshopPanel(603, 304, 344, 346, '2. MIX YOUR INGREDIENTS', { icon: 'flask' });
+    const stage = this.add.image(603, 292, 'detective-sample-stage').setDisplaySize(308, 239);
+    const icon = this.createMixturePreviewIcon(this.getCurrentMission(), { x: 603, y: 285, width: 222, height: 235 });
+    this.missionLayer.add([stage, icon]);
+    const mixed = this.phase !== 'choose';
+    this.missionLayer.add(supplyPanel(this, 603, 432, 306, 73, { fill: 0x0d2022, edge: 0x926923 }));
+    this.missionLayer.add(supplyText(this, 603, 411, mixed ? 'MIXING COMPLETE!' : 'READY TO MIX?', 21, mixed ? '#b5e748' : '#ffda72'));
+    const detail = supplyText(this, 603, mixed ? 445 : 431, mixed && this.hasExactIngredients() ? this.getCurrentMission().mixedMessage : mixed ? 'Check your recipe, then describe your mixture.' : `${this.selectedIngredients.length} / 3 selected. Press MIX.`, 15, '#efdfb8');
+    detail.setWordWrapWidth(278);
+    this.missionLayer.add(detail);
+    if (!mixed) {
+      const mix = courtButton(this, 603, 459, 'MIX', () => this.mixIngredients(), { width: 178, height: 31, size: 19, fill: this.selectedIngredients.length ? 0x28641e : 0x39413c });
+      this.missionLayer.add(mix);
+      this.mixButtonMeta = { x: 603, y: 459, label: 'MIX' };
+    }
   }
 
   drawDescriptionPanel() {
-    const mission = this.getCurrentMission();
-    const panel = this.add.graphics();
-    panel.fillStyle(0x3b2547, 0.98);
-    panel.lineStyle(5, colors.gold, 1);
-    panel.fillRoundedRect(858, 154, 404, 500, 8);
-    panel.strokeRoundedRect(858, 154, 404, 500, 8);
-    panel.fillStyle(0xfff2c9, 1);
-    panel.fillRoundedRect(880, 202, 360, 426, 7);
+    this.workshopPanel(1028, 390, 488, 518, '3. DESCRIBE YOUR MIXTURE', { purple: true, paper: true });
+    this.missionLayer.add(supplyText(this, 811, 194, 'A. NAME YOUR MIXTURE', 20, '#292116', 'left'));
+    const nameBox = supplyPanel(this, 1028, 230, 425, 46, { fill: 0xf0dbae, edge: 0xa2824e });
+    const nameZone = this.add.zone(1028, 230, 425, 46).setInteractive({ useHandCursor: true });
+    nameZone.on('pointerup', () => this.focusNameInput());
+    this.nameText = supplyText(this, 824, 230, this.getMissionName() || 'TYPE A NAME', 21, '#292116', 'left');
+    this.nameCursor = supplyText(this, 822, 230, this.nameInputActive ? '|' : '', 21, '#292116', 'left');
+    this.nameCountText = supplyText(this, 1230, 264, `${this.getMissionName().length}/25`, 14, '#806644');
+    this.nameFieldMeta = { x: 1028, y: 230, width: 425, height: 46 };
+    this.missionLayer.add([nameBox, this.nameText, this.nameCursor, this.nameCountText, nameZone]);
+    this.missionLayer.add(supplyText(this, 811, 304, 'B. IS IT UNIFORM OR NON-UNIFORM?', 20, '#292116', 'left'));
+    inventMixWorkshopGame.classifications.forEach((option, index) => {
+      const x = 921 + index * 215, y = 344;
+      const selected = this.selectedClassification === option.id;
+      const button = courtButton(this, x, y, option.label, () => {
+        if (this.phase === 'choose') this.flashWarning('MIX YOUR INGREDIENTS FIRST.');
+        else this.selectChoice('classification', option.id);
+      }, { width: 207, height: 46, size: 20, fill: selected ? 0x38821e : index === 0 ? 0x405c26 : 0x963b23 });
+      if (selected) button.list.find(child => child.type === 'Text').setX(-8);
+      if (selected) button.add(supplyGlyph(this, 86, 0, 'check', 0xd4f1a0, 2));
+      this.missionLayer.add(button);
+      this.classificationViews.push({ ...option, x, y, selected, correct: option.id === this.getCurrentMission().type });
+    });
+    this.descriptionFields = { appearance: { x: 1028, y: 436 }, use: { x: 1028, y: 534 } };
+    for (const [kind, label, y, choices, value] of [
+      ['appearance', 'C. DESCRIBE ITS APPEARANCE', 436, this.getAppearanceChoices(), this.selectedAppearance],
+      ['use', 'D. WHAT IS ITS USE?', 534, this.getUseChoices(), this.selectedUse],
+    ]) {
+      this.missionLayer.add(supplyText(this, 811, y - 37, label, 20, '#292116', 'left'));
+      const field = courtField(this, 1028, y, 425, choices.find(option => option.id === value)?.label ?? `Choose ${kind}...`, () => this.openChoiceMenu(kind), { size: 21, height: 46 });
+      this.missionLayer.add(field.container);
+      const views = choices.map((option, index) => ({ ...option, x: 640, y: 294 + index * 47, selected: value === option.id, correct: this.isCorrectChoice(kind, option.id) }));
+      if (kind === 'appearance') this.appearanceViews = views;
+      else this.useViews = views;
+    }
+    if (this.phase !== 'result') {
+      const present = courtButton(this, 1028, 602, 'PRESENT INVENTION', () => this.presentInvention(), { width: 310, height: 44, size: 23, fill: this.canPresent() ? 0x28641e : 0x6d644d });
+      this.missionLayer.add(present);
+    } else {
+      this.missionLayer.add(supplyPanel(this, 1028, 602, 310, 44, { fill: 0x31551d, edge: 0x88a446 }));
+      this.missionLayer.add(supplyText(this, 1028, 602, 'INVENTION PRESENTED!', 22, '#e9f3ce'));
+    }
+    this.presentButtonMeta = this.phase === 'result' ? null : { x: 1028, y: 602, label: 'PRESENT' };
+    this.refreshNameField();
+  }
 
-    const title = this.add.text(1060, 181, '3. DESCRIBE YOUR MIXTURE', textStyle(22, '#fff2c9'));
-    title.setOrigin(0.5);
-    const nameLabel = this.add.text(906, 218, 'A. NAME YOUR MIXTURE', textStyle(17, '#2f2a2a', 'left'));
-    const nameBox = this.add.rectangle(1060, 264, 312, 44, this.nameInputActive ? 0xe7ffd6 : 0xffffff, 0.86);
-    nameBox.setStrokeStyle(3, 0x9e6b47, 1);
-    nameBox.setInteractive({ useHandCursor: true });
-    nameBox.on('pointerup', () => this.focusNameInput());
-    const nameValue = this.getMissionName();
-    this.nameText = this.add.text(926, 264, nameValue || 'TYPE A NAME', textStyle(20, nameValue ? '#2f2a2a' : '#8a6a50', 'left'));
-    this.nameText.setOrigin(0, 0.5);
-    this.nameText.setWordWrapWidth(262);
-    this.nameCursor = this.add.text(926 + Math.min(260, nameValue.length * 12), 264, this.nameInputActive ? '|' : '', textStyle(20, '#2f2a2a', 'left'));
-    this.nameCursor.setOrigin(0, 0.5);
-    this.nameFieldMeta = { x: 1060, y: 264, width: 312, height: 44 };
-
-    this.missionLayer.add([panel, title, nameLabel, nameBox, this.nameText, this.nameCursor]);
-
-    if (this.phase === 'choose') {
-      const locked = this.add.text(1060, 374, 'MIX YOUR INGREDIENTS FIRST.\nTHEN DESCRIBE WHAT YOU CREATED.', textStyle(24, '#2f2a2a'));
-      locked.setOrigin(0.5);
-      locked.setWordWrapWidth(300);
-      locked.setLineSpacing(-3);
-      this.missionLayer.add(locked);
+  openChoiceMenu(kind) {
+    if (this.phase === 'result' || this.currentModal) return;
+    if (this.phase === 'choose' || !this.selectedClassification || (kind === 'use' && !this.selectedAppearance)) {
+      this.flashWarning(this.phase === 'choose' ? 'MIX YOUR INGREDIENTS FIRST.' : 'COMPLETE THE PREVIOUS FIELD FIRST.');
       return;
     }
-
-    const classLabel = this.add.text(906, 314, 'B. IS IT UNIFORM OR NON-UNIFORM?', textStyle(17, '#2f2a2a', 'left'));
-    this.missionLayer.add(classLabel);
-    inventMixWorkshopGame.classifications.forEach((option, index) => {
-      this.createChoiceButton('classification', option, 972 + index * 176, 352, 156, 42);
+    this.blurNameInput();
+    const choices = kind === 'appearance' ? this.appearanceViews : this.useViews;
+    showModal(this, {
+      name: 'invent-choice', title: kind === 'appearance' ? 'DESCRIBE ITS APPEARANCE' : 'CHOOSE ITS USE', width: 660, height: 350, titleSize: 28,
+      body: () => choices.map(option => courtButton(this, option.x, option.y, option.label, () => {
+        closeOpenModal(this);
+        this.selectChoice(kind, option.id);
+      }, { width: 570, height: 39, size: 21, fill: option.selected ? 0x386c28 : 0x34304c })),
+      buttons: [{ label: 'CANCEL', action: () => { closeOpenModal(this); this.updateTestState(); } }],
     });
-
-    if (this.selectedClassification) {
-      const appearanceLabel = this.add.text(906, 400, 'C. DESCRIBE ITS APPEARANCE', textStyle(17, '#2f2a2a', 'left'));
-      this.missionLayer.add(appearanceLabel);
-      this.getAppearanceChoices().forEach((option, index) => {
-        this.createChoiceButton('appearance', option, 936 + index * 124, 442, 112, 52);
-      });
-    }
-
-    if (this.selectedAppearance) {
-      const useLabel = this.add.text(906, 502, 'D. WHAT IS ITS USE?', textStyle(17, '#2f2a2a', 'left'));
-      this.missionLayer.add(useLabel);
-      this.getUseChoices().forEach((option, index) => {
-        this.createChoiceButton('use', option, 936 + index * 124, 546, 112, 56);
-      });
-    }
-
-    const present = createPixelButton(this, 1060, 604, 'PRESENT', () => this.presentInvention(), {
-      width: 214,
-      height: 52,
-      fontSize: 22,
-      textColor: '#fff2c9',
-      fill: this.canPresent() ? 0x58cc02 : 0x585858,
-      hoverFill: 0x6ee617,
-      stroke: 0x2e8c00,
-    });
-    present.setDepth(12);
-    this.missionLayer.add(present);
-    this.presentButtonMeta = this.phase === 'result' ? null : { x: 1060, y: 604, label: 'PRESENT' };
+    this.updateTestState();
   }
 
-  createChoiceButton(kind, option, x, y, width = CHOICE_WIDTH, height = CHOICE_HEIGHT) {
-    const selected = this.getSelectedChoice(kind) === option.id;
-    const correct = this.isCorrectChoice(kind, option.id);
-    const container = this.add.container(x, y);
-    container.setDepth(9);
-    const graphics = this.add.graphics();
-    graphics.fillStyle(selected ? 0xe7ffd6 : 0xfff2c9, 1);
-    graphics.lineStyle(3, selected ? 0x58cc02 : 0x9e6b47, 1);
-    graphics.fillRoundedRect(-width / 2, -height / 2, width, height, 6);
-    graphics.strokeRoundedRect(-width / 2, -height / 2, width, height, 6);
-
-    const labelSize = width < 120 ? 11 : width < 170 ? 13 : 16;
-    const label = this.add.text(0, -1, option.label.toUpperCase(), textStyle(labelSize, '#2f2a2a'));
-    label.setOrigin(0.5);
-    label.setWordWrapWidth(width - 12);
-    label.setLineSpacing(-4);
-    const zone = this.add.zone(0, 0, width, height).setInteractive({ useHandCursor: true });
-    zone.on('pointerover', () => {
-      if (this.phase !== 'result') {
-        container.setScale(1.04);
-      }
-    });
-    zone.on('pointerout', () => container.setScale(1));
-    zone.on('pointerup', () => this.selectChoice(kind, option.id));
-
-    container.add([graphics, label, zone]);
-    this.missionLayer.add(container);
-
-    const meta = {
-      id: option.id,
-      label: option.label,
-      x,
-      y,
-      correct,
-      selected,
-    };
-    if (kind === 'classification') {
-      this.classificationViews.push(meta);
-    } else if (kind === 'appearance') {
-      this.appearanceViews.push(meta);
-    } else {
-      this.useViews.push(meta);
-    }
-  }
-
-  drawBottomPanels() {
-    this.drawMixPreviewPanel();
-    this.drawPresentationPanel();
-    this.drawResultPanel();
-  }
-
-  drawMixPreviewPanel() {
-    const mission = this.getCurrentMission();
-    const panel = this.add.graphics();
-    panel.fillStyle(0x0b3651, 0.96);
-    panel.lineStyle(4, 0x66e5ff, 1);
-    panel.fillRoundedRect(18, 526, 310, 136, 8);
-    panel.strokeRoundedRect(18, 526, 310, 136, 8);
-    const title = this.add.text(52, 548, 'MIX PREVIEW', textStyle(20, '#fff2c9', 'left'));
-    const icon = this.add.graphics();
-    icon.setPosition(88, 604);
-    icon.setScale(1.04);
-    this.drawMixturePreviewIcon(icon, mission);
-    const preview = this.phase === 'choose'
-      ? 'Choose ingredients to see your mixture.'
-      : mission.preview;
-    const text = this.add.text(150, 588, preview, textStyle(18, this.phase === 'choose' ? '#ffd76a' : '#fff2c9', 'left'));
-    text.setWordWrapWidth(154);
-    text.setLineSpacing(-4);
-    this.missionLayer.add([panel, title, icon, text]);
-  }
-
-  drawPresentationPanel() {
-    const panel = this.add.graphics();
-    panel.fillStyle(0x0b3651, 0.96);
-    panel.lineStyle(4, 0x66e5ff, 1);
-    panel.fillRoundedRect(348, 526, 430, 136, 8);
-    panel.strokeRoundedRect(348, 526, 430, 136, 8);
-    const title = this.add.text(563, 548, '4. PRESENT YOUR INVENTION', textStyle(20, '#fff2c9'));
-    title.setOrigin(0.5);
-    const bubble = this.add.graphics();
-    bubble.fillStyle(0xfff2c9, 1);
-    bubble.lineStyle(3, 0x9e6b47, 1);
-    bubble.fillRoundedRect(476, 568, 282, 82, 7);
-    bubble.strokeRoundedRect(476, 568, 282, 82, 7);
-    const text = this.add.text(492, 580, this.buildPresentationText(), textStyle(15, '#2f2a2a', 'left'));
-    text.setWordWrapWidth(250);
-    text.setLineSpacing(-5);
-    const helper = this.add.graphics();
-    helper.fillStyle(0xffd8b8, 1);
-    helper.fillCircle(420, 605, 31);
-    helper.fillStyle(0x2f2a2a, 1);
-    helper.fillRoundedRect(389, 631, 62, 34, 8);
-    helper.fillCircle(410, 600, 3);
-    helper.fillCircle(430, 600, 3);
-    this.missionLayer.add([panel, title, helper, bubble, text]);
+  drawCreationPanel() {
+    const panel = courtPanel(this, 217, 567, 414, 164, { purple: true });
+    this.creationText = supplyHeading(this, 217, 513, '', 22, '#b5e748');
+    this.titleText = supplyHeading(this, 217, 551, '', 29, '#fff0c4');
+    const missionPaper = supplyPanel(this, 217, 607, 374, 53, { fill: 0xe9cf98, edge: 0xb29160 });
+    this.promptText = supplyText(this, 217, 607, '', 18, '#241c16').setWordWrapWidth(350);
+    this.missionLayer.add([panel, this.creationText, this.titleText, missionPaper, this.promptText]);
   }
 
   drawResultPanel() {
-    const panel = this.add.graphics();
-    panel.fillStyle(0x0b3651, 0.96);
-    panel.lineStyle(4, colors.gold, 1);
-    panel.fillRoundedRect(798, 526, 462, 136, 8);
-    panel.strokeRoundedRect(798, 526, 462, 136, 8);
-    const title = this.add.text(1029, 548, 'RESULT & REWARDS', textStyle(20, '#ffd76a'));
-    title.setOrigin(0.5);
-
-    const resultTitle = this.phase === 'result'
-      ? this.getResultTitle()
-      : 'READY TO INVENT';
-    const resultBody = this.phase === 'result'
-      ? this.getResultBody()
-      : 'Mix, describe, and present your creation.';
-    const resultText = this.add.text(832, 585, resultTitle, textStyle(25, this.missionResult === 'perfect' ? '#9fe870' : '#ffd76a', 'left'));
-    const body = this.add.text(832, 617, resultBody, textStyle(17, '#fff2c9', 'left'));
-    body.setWordWrapWidth(270);
-    body.setLineSpacing(-4);
-    this.missionLayer.add([panel, title, resultText, body]);
-
-    const present = createPixelButton(this, 1116, 617, this.phase === 'result' ? 'DONE' : 'PRESENT', () => this.presentInvention(), {
-      width: 172,
-      height: 54,
-      fontSize: 22,
-      textColor: '#fff2c9',
-      fill: this.canPresent() ? 0x58cc02 : 0x585858,
-      hoverFill: 0x6ee617,
-      stroke: 0x2e8c00,
-    });
-    present.setDepth(12);
-    this.missionLayer.add(present);
-    this.presentButtonMeta = this.phase === 'result' ? null : { x: 1116, y: 617, label: 'PRESENT' };
-
-    if (this.phase === 'result') {
-      this.drawResultActionButtons();
-    }
+    this.workshopPanel(603, 567, 344, 164, 'RESULT & REWARDS');
+    const complete = this.phase === 'result';
+    const title = supplyHeading(this, 453, 533, complete ? this.missionResult === 'perfect' ? 'EXCELLENT!' : this.getResultTitle() : 'YOUR REWARD', 20, this.missionResult === 'perfect' ? '#b5e748' : '#ffda72', 'left').setOrigin(0, 0).setWordWrapWidth(180);
+    const body = supplyText(this, 453, 559, complete ? this.getResultBody() : 'Not presented yet.', 16, '#eee0bf', 'left').setOrigin(0, 0).setWordWrapWidth(166);
+    if (body.height > 52) body.setFontSize(16);
+    const trophy = this.add.image(701, 564, 'invent-trophy').setDisplaySize(78, 84).setAlpha(complete ? 1 : 0.4);
+    const ribbon = supplyText(this, 701, 604, this.missionResult === 'perfect' ? 'PERFECT!' : complete ? 'KEEP TRYING' : '', 14, '#ffdd76');
+    this.missionLayer.add([title, body, trophy, ribbon]);
   }
 
   drawResultActionButtons() {
-    const isFinalMission = this.missionIndex === inventMixWorkshopGame.missions.length - 1;
-    const next = createPixelButton(this, 1116, 688, isFinalMission ? 'FINISH' : 'NEXT MISSION', () => this.advanceMission(), {
-      width: 220,
-      height: 50,
-      fontSize: 22,
-      textColor: '#fff2c9',
-      fill: 0x58cc02,
-      hoverFill: 0x6ee617,
-      stroke: 0x2e8c00,
-    });
-    next.setDepth(12);
+    const final = this.missionIndex === inventMixWorkshopGame.missions.length - 1;
+    const retry = this.missionResult !== 'perfect';
+    const x = 674;
+    const next = courtButton(this, x, 627, final ? 'FINISH' : 'NEXT MISSION', () => this.advanceMission(), { width: 156, height: 30, size: 17 });
     this.missionLayer.add(next);
-    this.nextButtonMeta = { x: 1116, y: 688, label: isFinalMission ? 'FINISH' : 'NEXT MISSION' };
-
-    if (this.missionResult !== 'perfect') {
-      const retry = createPixelButton(this, 908, 688, 'RETRY', () => this.retryMission(), {
-        width: 154,
-        height: 50,
-        fontSize: 22,
-        textColor: '#2f2a2a',
-        fill: colors.gold,
-        hoverFill: 0xffe493,
-        stroke: 0x9e6b47,
-      });
-      retry.setDepth(12);
-      this.missionLayer.add(retry);
-      this.retryButtonMeta = { x: 908, y: 688, label: 'RETRY' };
+    this.nextButtonMeta = { x, y: 627, label: final ? 'FINISH' : 'NEXT MISSION' };
+    if (retry) {
+      const button = courtButton(this, 515, 627, 'RETRY', () => this.retryMission(), { width: 124, height: 30, size: 18, fill: 0x694227 });
+      this.missionLayer.add(button);
+      this.retryButtonMeta = { x: 515, y: 627, label: 'RETRY' };
     }
+  }
+
+  openSettings() {
+    this.blurNameInput();
+    showModal(this, {
+      name: 'invent-settings', title: 'SETTINGS', height: 360,
+      body: (_overlay, { panelX, panelY }) => [
+        createToggleRow(this, panelX - 16, panelY - 32, 'MUSIC', this.registry.get('musicEnabled'), enabled => { this.registry.set('musicEnabled', enabled); playAreaMusic(this, this.islandId); }),
+        createToggleRow(this, panelX - 16, panelY + 34, 'SFX', this.registry.get('sfxEnabled'), enabled => this.registry.set('sfxEnabled', enabled)),
+      ],
+      buttons: [{ label: 'DONE', action: () => { closeOpenModal(this); this.updateTestState(); } }],
+    });
+    this.updateTestState();
   }
 
   toggleIngredient(ingredientId) {
@@ -597,14 +366,6 @@ export default class InventMixScene extends Phaser.Scene {
 
     this.missionScore = this.calculateMissionScore();
     this.missionScores[this.missionIndex] = this.missionScore;
-    this.completedMissions[this.missionIndex] = {
-      mission_id: this.getCurrentMission().id,
-      custom_name: this.getMissionName(),
-      selected_ingredients: [...this.selectedIngredients],
-      classification: this.selectedClassification,
-      appearance: this.selectedAppearance,
-      use: this.selectedUse,
-    };
     this.missionResult = this.missionScore === inventMixWorkshopGame.missionMaxScore
       ? 'perfect'
       : this.missionScore > 0
@@ -613,13 +374,11 @@ export default class InventMixScene extends Phaser.Scene {
     this.phase = 'result';
     createSparkles(this, 1060, 604);
     this.renderMission(false);
-    this.showMissionResultModal();
   }
 
   retryMission() {
     closeOpenModal(this);
     this.missionScores[this.missionIndex] = null;
-    this.completedMissions[this.missionIndex] = null;
     this.renderMission(true);
   }
 
@@ -638,66 +397,12 @@ export default class InventMixScene extends Phaser.Scene {
     this.renderMission(true);
   }
 
-  showMissionResultModal() {
-    const isFinalMission = this.missionIndex === inventMixWorkshopGame.missions.length - 1;
-    const nextLabel = isFinalMission ? 'FINISH' : 'NEXT MISSION';
-    const hasRetry = this.missionResult !== 'perfect';
-    this.nextButtonMeta = {
-      x: hasRetry ? 745 : 640,
-      y: 467,
-      label: nextLabel,
-    };
-    this.retryButtonMeta = hasRetry ? { x: 535, y: 467, label: 'RETRY' } : null;
-
-    showModal(this, {
-      name: 'invent-result',
-      title: this.getResultTitle(),
-      width: 640,
-      height: 350,
-      titleSize: 34,
-      body: (_overlay, { panelX, panelY }) => {
-        const score = this.add.text(panelX, panelY - 48, `CREATIVITY +${this.missionScore}`, textStyle(30, '#66e5ff'));
-        score.setOrigin(0.5);
-        const body = this.add.text(panelX, panelY + 2, this.getResultBody(), textStyle(23, '#fff2c9'));
-        body.setOrigin(0.5);
-        body.setWordWrapWidth(500);
-        body.setLineSpacing(-2);
-        const name = this.add.text(panelX, panelY + 58, this.getMissionName().toUpperCase(), textStyle(22, '#ffd76a'));
-        name.setOrigin(0.5);
-        name.setWordWrapWidth(500);
-        return [score, body, name];
-      },
-      buttons: hasRetry
-        ? [
-            {
-              label: 'RETRY',
-              width: 180,
-              action: () => this.retryMission(),
-            },
-            {
-              label: nextLabel,
-              width: 220,
-              action: () => this.advanceMission(),
-            },
-          ]
-        : [
-            {
-              label: nextLabel,
-              width: 220,
-              action: () => this.advanceMission(),
-            },
-        ],
-    });
-    this.updateTestState();
-  }
-
   showFinalResult() {
     const totalScore = this.getTotalScore();
     const won = totalScore >= inventMixWorkshopGame.winScore;
     this.result = won ? 'win' : 'lose';
     this.phase = 'final';
     this.updateTestState();
-    this.submitResult();
 
     showModal(this, {
       name: won ? 'result-win' : 'result-lose',
@@ -849,12 +554,8 @@ export default class InventMixScene extends Phaser.Scene {
     return this.getMissionName().trim() || 'Untitled Mixture';
   }
 
-  getPresentationMissionName() {
-    return this.getMissionName().trim() || 'my mixture';
-  }
-
   setMissionName(value) {
-    const cleaned = value.replace(/\s+/g, ' ').slice(0, 24);
+    const cleaned = value.replace(/\s+/g, ' ').slice(0, 25);
     this.customMissionNames[this.missionIndex] = cleaned.trimStart();
   }
 
@@ -882,8 +583,12 @@ export default class InventMixScene extends Phaser.Scene {
     const name = this.getMissionName();
     this.nameText.setText(name || 'TYPE A NAME');
     this.nameText.setColor(name ? '#2f2a2a' : '#8a6a50');
+    this.nameText.setFontSize(21);
+    if (this.nameText.width > 383) this.nameText.setFontSize(Math.floor(21 * 383 / this.nameText.width));
     this.nameCursor.setText(this.nameInputActive ? '|' : '');
-    this.nameCursor.setX(926 + Math.min(260, name.length * 12));
+    this.nameCursor.setX(825 + Math.min(383, this.nameText.width));
+    this.nameCountText.setText(`${name.length}/25`);
+    this.updateHud();
   }
 
   handleNameKey(event) {
@@ -955,207 +660,54 @@ export default class InventMixScene extends Phaser.Scene {
     return `Review: ${missing.join(', ') || 'presentation'}.`;
   }
 
-  buildPresentationText() {
-    const mission = this.getCurrentMission();
-    const ingredients = this.selectedIngredients.length > 0
-      ? this.selectedIngredients.map((id) => this.getIngredient(id).label.toLowerCase()).join(', ')
-      : '_____';
-    const type = this.selectedClassification
-      ? inventMixWorkshopGame.classifications.find((option) => option.id === this.selectedClassification).label.toLowerCase()
-      : '_____';
-    const appearance = this.selectedAppearance
-      ? inventMixWorkshopGame.appearances.find((option) => option.id === this.selectedAppearance).label.toLowerCase()
-      : '_____';
-    const use = this.selectedUse
-      ? inventMixWorkshopGame.uses.find((option) => option.id === this.selectedUse).label.toLowerCase()
-      : '_____';
-    return `I created ${this.getPresentationMissionName()} by mixing ${ingredients}. It is a ${type} mixture because it ${appearance} It can be used as ${use}`;
-  }
-
-  buildStationSummary() {
-    const ingredients = this.selectedIngredients.length > 0
-      ? this.selectedIngredients.map((id) => this.getIngredient(id).label).join(', ')
-      : 'No ingredients selected yet.';
-    if (this.phase === 'choose') {
-      return `Selected: ${ingredients}\n\nPick ingredients, then press MIX.`;
-    }
-
-    const type = this.selectedClassification
-      ? inventMixWorkshopGame.classifications.find((option) => option.id === this.selectedClassification).label
-      : 'choose a type';
-    const appearance = this.selectedAppearance
-      ? inventMixWorkshopGame.appearances.find((option) => option.id === this.selectedAppearance).label
-      : 'choose an appearance';
-    return `Selected: ${ingredients}\nType: ${type}\nLooks: ${appearance}`;
-  }
-
   updateHud() {
     const mission = this.getCurrentMission();
-    this.creationText.setText(`CREATION ${mission.creationNumber}`);
-    this.titleText.setText(this.getDisplayMissionName().toUpperCase());
-    this.promptText.setText(`MISSION: ${mission.prompt.toUpperCase()}`);
-    this.scoreText.setText(`CREATIVITY ${String(this.getTotalScore()).padStart(3, '0')} / ${inventMixWorkshopGame.maxScore}`);
-    this.drawProgressDots();
+    this.creationText?.setText(`CREATION ${mission.creationNumber}`);
+    this.titleText?.setText(this.getDisplayMissionName().toUpperCase());
+    this.titleText?.setFontSize(36);
+    if (this.titleText?.width > 370) this.titleText.setFontSize(Math.floor(36 * 370 / this.titleText.width));
+    this.promptText?.setText(`Mission: ${mission.prompt}`);
+    this.scoreText.setText(`${String(this.missionScore).padStart(3, '0')} / 045`);
+    this.totalScoreText.setText(`${String(this.getTotalScore()).padStart(3, '0')} / 135`);
   }
 
-  drawProgressDots() {
-    this.progressDots.clear();
-    this.progressDots.setDepth(21);
-    const startX = 1042;
-    for (let index = 0; index < inventMixWorkshopGame.missions.length; index += 1) {
-      const filled = this.missionScores[index] !== null;
-      const active = index === this.missionIndex;
-      this.progressDots.fillStyle(filled ? 0x58cc02 : active ? colors.gold : 0x4b4b4b, 1);
-      this.progressDots.fillCircle(startX + index * 38, 82, active ? 13 : 10);
-      this.progressDots.lineStyle(3, 0x1b1b1b, 1);
-      this.progressDots.strokeCircle(startX + index * 38, 82, active ? 13 : 10);
+  createMixturePreviewIcon(mission, { x = 0, y = 0, width = 226, height = 166 } = {}) {
+    const preview = this.add.container(x, y);
+    if (this.phase === 'choose' || (mission.id === 'energy-juice' && this.hasExactIngredients())) {
+      const size = Math.min(width, height);
+      const cup = this.add.image(0, 0, this.phase === 'choose' ? 'invent-empty-cup' : 'invent-energy-cup').setDisplaySize(size, size);
+      preview.add(cup);
+      if (this.phase === 'choose') this.selectedIngredients.forEach((id, index) => preview.add(createIngredientIcon(this, this.getIngredient(id).icon, { x: (index - (this.selectedIngredients.length - 1) / 2) * size * 0.22, y: size * 0.12, width: size * 0.25, height: size * 0.25 })));
+      return preview;
     }
-  }
-
-  drawMixturePreviewIcon(graphics, mission) {
-    graphics.clear();
-    if (mission.id === 'trail-snack-mix') {
-      graphics.fillStyle(0x8a6048, 1);
-      graphics.fillEllipse(0, 26, 104, 30);
-      graphics.fillStyle(0xffefb5, 1);
-      graphics.fillEllipse(0, 14, 96, 26);
-      graphics.fillStyle(0xd99a3d, 1);
-      for (let index = 0; index < 10; index += 1) {
-        const angle = (Math.PI * 2 * index) / 10;
-        graphics.fillCircle(Math.cos(angle) * 32, 8 + Math.sin(angle) * 14, 6);
-      }
-      graphics.fillStyle(0x9b6bd3, 1);
-      graphics.fillCircle(-18, 2, 6);
-      graphics.fillCircle(22, 0, 6);
-      graphics.fillStyle(0xff5a66, 1);
-      graphics.fillCircle(4, 20, 6);
-      return;
+    if (!this.hasExactIngredients()) {
+      preview.setScale(Math.min(width / 226, height / 166));
+      preview.add(createGeneralAsset(this, 'bowl-empty', { y: 16, width: 226, height: 166 }));
+      this.selectedIngredients.forEach((id, index) => preview.add(createIngredientIcon(this, this.getIngredient(id).icon, { x: (index - (this.selectedIngredients.length - 1) / 2) * 38, y: -12, width: 46, height: 46 })));
+      return preview;
     }
-
-    graphics.lineStyle(5, 0x2f2a2a, 1);
-    graphics.strokeRoundedRect(-34, -44, 68, 88, 8);
+    preview.setScale(Math.min(width / 226, height / 166));
+    const add = (name, options) => {
+      const sprite = createGeneralAsset(this, name, options);
+      if (sprite) preview.add(sprite);
+    };
     if (mission.id === 'color-paint-mix') {
-      graphics.fillStyle(0xffd76a, 0.95);
-      graphics.fillRoundedRect(-28, -2, 56, 22, 4);
-      graphics.fillStyle(0x2278c9, 0.85);
-      graphics.fillRoundedRect(-28, 20, 56, 20, 4);
-      graphics.fillStyle(0xff5a66, 1);
-      graphics.fillCircle(-15, 24, 4);
-      graphics.fillCircle(7, 31, 4);
-      return;
+      // Keep the separated-liquid evidence visible beside the finished paint.
+      add('oil-and-water', { x: -37, width: 132, height: 166 });
+      add('color-paint', { x: 61, y: 22, width: 92, height: 112 });
+      return preview;
+    } else {
+      add('bowl-empty', { y: 16, width: 226, height: 166 });
     }
-
-    graphics.fillStyle(0xff9b42, 0.95);
-    graphics.fillRoundedRect(-28, -4, 56, 42, 5);
-    graphics.fillStyle(0xffffff, 0.8);
-    graphics.fillCircle(-8, 9, 3);
-    graphics.fillCircle(12, 23, 3);
-  }
-
-  drawIngredientIcon(graphics, icon) {
-    graphics.clear();
-    graphics.lineStyle(3, 0x2f2a2a, 1);
-
-    if (icon === 'water' || icon === 'alcohol') {
-      graphics.fillStyle(icon === 'water' ? 0x66e5ff : 0xaeefff, 1);
-      graphics.fillTriangle(0, -26, -17, 10, 17, 10);
-      graphics.fillCircle(0, 12, 17);
-      graphics.strokeCircle(0, 12, 17);
-      return;
-    }
-
-    if (icon === 'powdered-juice') {
-      graphics.fillStyle(0xff9b42, 1);
-      graphics.fillRoundedRect(-19, -25, 38, 42, 4);
-      graphics.fillStyle(0xfff2c9, 1);
-      graphics.fillRoundedRect(-13, -9, 26, 13, 3);
-      graphics.strokeRoundedRect(-19, -25, 38, 42, 4);
-      return;
-    }
-
-    if (icon === 'milk') {
-      graphics.fillStyle(0xffffff, 1);
-      graphics.fillRoundedRect(-16, -26, 32, 48, 4);
-      graphics.fillStyle(0x66e5ff, 0.75);
-      graphics.fillRect(-11, -4, 22, 14);
-      graphics.strokeRoundedRect(-16, -26, 32, 48, 4);
-      return;
-    }
-
-    if (icon === 'sugar' || icon === 'salt' || icon === 'cornstarch') {
-      graphics.fillStyle(icon === 'sugar' ? 0xf7f7ff : icon === 'salt' ? 0xffffff : 0xfff2c9, 1);
-      graphics.fillRoundedRect(-18, -18, 36, 34, 5);
-      graphics.strokeRoundedRect(-18, -18, 36, 34, 5);
-      graphics.fillStyle(0xd8d8d8, 1);
-      graphics.fillCircle(-6, 2, 3);
-      graphics.fillCircle(7, 8, 3);
-      return;
-    }
-
-    if (icon === 'nuts') {
-      graphics.fillStyle(0xd99a3d, 1);
-      graphics.fillCircle(-12, 3, 11);
-      graphics.fillCircle(2, -8, 11);
-      graphics.fillCircle(14, 6, 11);
-      return;
-    }
-
-    if (icon === 'raisins') {
-      graphics.fillStyle(0x6e2b8f, 1);
-      graphics.fillCircle(-13, -3, 9);
-      graphics.fillCircle(1, 4, 9);
-      graphics.fillCircle(15, -5, 9);
-      return;
-    }
-
-    if (icon === 'candy') {
-      graphics.fillStyle(0xff5a66, 1);
-      graphics.fillCircle(-16, 0, 8);
-      graphics.fillStyle(0xffd76a, 1);
-      graphics.fillCircle(0, -3, 9);
-      graphics.fillStyle(0x66e5ff, 1);
-      graphics.fillCircle(16, 2, 8);
-      return;
-    }
-
-    if (icon === 'oil' || icon === 'vinegar' || icon === 'food-coloring') {
-      graphics.fillStyle(icon === 'oil' ? 0xffd76a : icon === 'vinegar' ? 0xaeefff : 0xff5a66, 1);
-      graphics.fillRoundedRect(-14, -25, 28, 48, 5);
-      graphics.fillStyle(0xfff2c9, 1);
-      graphics.fillRect(-10, -4, 20, 12);
-      graphics.strokeRoundedRect(-14, -25, 28, 48, 5);
-      return;
-    }
-
-    if (icon === 'sand') {
-      graphics.fillStyle(0xd7a35a, 1);
-      graphics.fillTriangle(0, -20, -28, 20, 28, 20);
-      graphics.fillStyle(0x7c5b34, 1);
-      graphics.fillCircle(-8, 8, 2);
-      graphics.fillCircle(12, 13, 2);
-      return;
-    }
-
-    if (icon === 'soap') {
-      graphics.fillStyle(0x8ff3c6, 1);
-      graphics.fillRoundedRect(-24, -12, 48, 25, 9);
-      graphics.strokeRoundedRect(-24, -12, 48, 25, 9);
-      graphics.fillStyle(0xffffff, 0.8);
-      graphics.fillCircle(17, -19, 5);
-      graphics.fillCircle(25, -27, 3);
-      return;
-    }
-
-    if (icon === 'glitter') {
-      graphics.fillStyle(0xffd76a, 1);
-      for (let index = 0; index < 5; index += 1) {
-        graphics.fillCircle(-18 + index * 9, -9 + (index % 2) * 18, 4);
-      }
-      return;
-    }
-
-    graphics.fillStyle(0xfff2c9, 1);
-    graphics.fillCircle(0, 0, 18);
+    this.selectedIngredients.forEach((id, index) => {
+      const ingredient = this.getIngredient(id);
+      const sprite = createIngredientIcon(this, ingredient.icon, {
+        x: (index - (this.selectedIngredients.length - 1) / 2) * 38,
+        y: -12, width: 46, height: 46,
+      });
+      preview.add(sprite);
+    });
+    return preview;
   }
 
   setupKeyboardShortcuts() {
@@ -1174,6 +726,14 @@ export default class InventMixScene extends Phaser.Scene {
     });
 
     this.input.keyboard.on('keydown-ESC', () => {
+      if (this.minigameHelpOpen) {
+        closeMinigameHelp(this);
+        return;
+      }
+      if (this.currentModal) {
+        this.goBackOrCloseModal();
+        return;
+      }
       if (this.nameInputActive) {
         this.blurNameInput();
         return;
@@ -1183,6 +743,10 @@ export default class InventMixScene extends Phaser.Scene {
 
     this.input.keyboard.on('keydown-BACKSPACE', (event) => {
       event?.preventDefault?.();
+      if (this.minigameHelpOpen) {
+        closeMinigameHelp(this);
+        return;
+      }
       if (this.nameInputActive) {
         this.handleNameKey(event);
         return;
@@ -1192,11 +756,14 @@ export default class InventMixScene extends Phaser.Scene {
   }
 
   goBackOrCloseModal() {
+    if (this.minigameHelpOpen) {
+      closeMinigameHelp(this);
+      return;
+    }
     if (this.currentModal) {
-      if (this.phase === 'result') {
-        return;
-      }
+      if (this.phase === 'final') return;
       closeOpenModal(this);
+      this.updateTestState();
       return;
     }
 
@@ -1233,29 +800,11 @@ export default class InventMixScene extends Phaser.Scene {
     });
   }
 
-  buildSubmissionPayload() {
-    return {
-      missions: this.completedMissions.filter(Boolean).map((mission) => ({
-        mission_id: mission.mission_id,
-        custom_name: mission.custom_name,
-        selected_ingredients: [...mission.selected_ingredients],
-        classification: mission.classification,
-        appearance: mission.appearance,
-        use: mission.use,
-      })),
-    };
-  }
-
-  submitResult() {
-    submitMinigameResult(this, {
-      lessonKey: this.lessonId,
-      gameKey: inventMixWorkshopGame.id,
-      payloadBuilder: () => this.buildSubmissionPayload(),
-    });
-  }
-
   buildTestState() {
     return {
+      minigameHelpOpen: Boolean(this.minigameHelpOpen),
+      minigameHelpButton: this.helpButtonMeta,
+      minigameControls: this.navigationMeta,
       selectedIsland: this.islandId,
       selectedQuarter: this.quarterId,
       selectedMajor: this.majorId,
@@ -1270,6 +819,8 @@ export default class InventMixScene extends Phaser.Scene {
       inventCustomName: this.getMissionName(),
       inventNameInputActive: this.nameInputActive,
       inventNameField: this.nameFieldMeta,
+      inventDescriptionFields: this.descriptionFields,
+      inventControls: this.controlsMeta,
       inventSelectedIngredients: [...this.selectedIngredients],
       inventIngredientOptions: this.ingredientViews.map((view) => ({
         id: view.id,
@@ -1288,7 +839,6 @@ export default class InventMixScene extends Phaser.Scene {
       inventMissionScore: this.missionScore,
       inventTotalScore: this.getTotalScore(),
       inventMissionScores: [...this.missionScores],
-      inventCompletedMissions: this.completedMissions.filter(Boolean),
       inventResult: this.missionResult,
       inventMixButton: this.mixButtonMeta,
       inventPresentButton: this.presentButtonMeta,

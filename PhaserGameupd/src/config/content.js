@@ -1,9 +1,12 @@
+import { scienceQuarterGames } from './scienceQuarterGames.js';
+import { subjectWeekTopics } from './subjectWeekTopics.js';
+
 export const islands = [
   {
     id: 'numeric-ruins',
     title: 'NUMERIC RUINS',
     assetKey: 'numeric-ruins',
-    unlocked: false,
+    unlocked: true,
     x: 255,
     y: 378,
     scale: 0.29,
@@ -27,7 +30,7 @@ export const islands = [
     id: 'reading-island',
     title: 'READING ISLAND',
     assetKey: 'reading-island',
-    unlocked: false,
+    unlocked: true,
     x: 1025,
     y: 378,
     scale: 0.3,
@@ -59,6 +62,15 @@ const makeMajor = (quarterId, index, title, icon) => ({
   lessons: makeLessons(quarterId, index, title),
 });
 
+// Reserve five empty lessons until their reference designs and content arrive.
+const makePlaceholderMajor = (quarterId, title = 'Additional Week') => ({
+  ...makeMajor(quarterId, 3, title, 'placeholder'),
+  placeholder: true,
+  lessons: makeLessons(quarterId, 3, '').map(lesson => ({
+    ...lesson, title: '', placeholder: true,
+  })),
+});
+
 export const vulcanQuarterDetails = {
   q1: {
     id: 'q1',
@@ -68,7 +80,8 @@ export const vulcanQuarterDetails = {
     majors: [
       makeMajor('q1', 0, 'Mixtures', 'beaker'),
       makeMajor('q1', 1, 'Separation Techniques', 'filter'),
-      makeMajor('q1', 2, 'Useful Mixtures', 'spark'),
+      makeMajor('q1', 2, 'Benefits of Separation', 'spark'),
+      makePlaceholderMajor('q1', 'Mixtures and Separation in Action'),
     ],
   },
   q2: {
@@ -80,6 +93,7 @@ export const vulcanQuarterDetails = {
       makeMajor('q2', 0, 'Body Systems', 'heart'),
       makeMajor('q2', 1, 'Animal Groups', 'paw'),
       makeMajor('q2', 2, 'Ecosystems', 'leaf'),
+      makePlaceholderMajor('q2'),
     ],
   },
   q3: {
@@ -91,6 +105,7 @@ export const vulcanQuarterDetails = {
       makeMajor('q3', 0, 'Gravity and Friction', 'arrow'),
       makeMajor('q3', 1, 'Energy Transformations', 'bolt'),
       makeMajor('q3', 2, 'Simple Machines', 'gear'),
+      makePlaceholderMajor('q3'),
     ],
   },
   q4: {
@@ -102,9 +117,63 @@ export const vulcanQuarterDetails = {
       makeMajor('q4', 0, 'Earthquakes and Volcanoes', 'mountain'),
       makeMajor('q4', 1, 'Seasons', 'sun'),
       makeMajor('q4', 2, 'Solar System', 'orbit'),
+      makePlaceholderMajor('q4'),
     ],
   },
 };
+
+const makeSubjectQuarters = (islandId, subtitle) => Object.fromEntries(
+  subjectWeekTopics[islandId].map((topics, index) => {
+    const id = `q${index + 1}`;
+    return [id, {
+      id,
+      label: `Q${index + 1}`,
+      title: `Quarter ${index + 1}`,
+      subtitle,
+      majors: topics.map((title, week) => ({
+        id: `${islandId}-${id}-week-${week + 1}`,
+        title,
+        week: week + 1,
+        icon: 'placeholder',
+        placeholder: true,
+        lessons: Array.from({ length: 5 }, (_, day) => ({
+          id: `${islandId}-${id}-week-${week + 1}-day-${day + 1}`,
+          label: `Day ${day + 1}`,
+          day: day + 1,
+          title: '',
+          placeholder: true,
+        })),
+      })),
+    }];
+  }),
+);
+
+const makeQuarterNodes = positions => positions.map(([x, y], index) => ({
+  id: `q${index + 1}`, label: `Q${index + 1}`, title: `Quarter ${index + 1}`,
+  x, y, unlocked: true,
+}));
+
+export const islandCurricula = {
+  'vulcan-caverns': {
+    subject: 'Science', nodes: vulcanQuarterNodes, quarters: vulcanQuarterDetails,
+  },
+  'numeric-ruins': {
+    subject: 'Mathematics',
+    nodes: makeQuarterNodes([[88, 640], [433, 330], [823, 350], [1090, 180]]),
+    quarters: makeSubjectQuarters('numeric-ruins', 'NUMERIC RUINS'),
+  },
+  'reading-island': {
+    subject: 'English',
+    nodes: makeQuarterNodes([[180, 595], [393, 330], [864, 426], [1106, 150]]),
+    quarters: makeSubjectQuarters('reading-island', 'READING ISLAND'),
+  },
+};
+
+// Replace implemented Q1 lesson slots with real activities.
+for (const game of scienceQuarterGames) {
+  const lesson = vulcanQuarterDetails.q1.majors.flatMap(major => major.lessons).find(item => item.id === game.lessonId);
+  if (lesson) { lesson.title = game.title; lesson.placeholder = false; }
+}
 
 export const mixMatchMixturesGame = {
   id: 'mix-match-memory-quest',
@@ -247,6 +316,42 @@ export const supplyCartSortingGame = {
       useChoices: ['Food', 'Cleaning', 'Beverage'],
       icon: 'cereal-milk',
       hint: 'You can see cereal and milk separately.',
+    },
+    {
+      id: 'lemonade', name: 'Lemonade', type: 'uniform', typeLabel: 'Uniform Mixture',
+      appearance: 'Looks the same throughout', use: 'Beverage',
+      useChoices: ['Cleaning', 'Beverage', 'Construction'], icon: 'lemonade',
+      hint: 'Smooth lemonade without pulp looks the same throughout.',
+    },
+    {
+      id: 'oil-water', name: 'Oil & Water', type: 'nonuniform', typeLabel: 'Non-uniform Mixture',
+      appearance: 'Separate layers are visible', use: 'Science Experiment',
+      useChoices: ['Drinking', 'Science Experiment', 'Food'], icon: 'oil-water',
+      hint: 'Look at the two separate layers of oil and water.',
+    },
+    {
+      id: 'vinegar', name: 'Vinegar', type: 'uniform', typeLabel: 'Uniform Mixture',
+      appearance: 'Looks the same throughout', use: 'Cooking',
+      useChoices: ['Fuel', 'Construction', 'Cooking'], icon: 'vinegar',
+      hint: 'Vinegar appears evenly mixed throughout.',
+    },
+    {
+      id: 'halo-halo', name: 'Halo-halo', type: 'nonuniform', typeLabel: 'Non-uniform Mixture',
+      appearance: 'Different ingredients are visible', use: 'Dessert',
+      useChoices: ['Dessert', 'Cleaning', 'Construction'], icon: 'halo-halo',
+      hint: 'Ice, beans, jelly, and fruit can be seen separately.',
+    },
+    {
+      id: 'soy-sauce', name: 'Soy Sauce', type: 'uniform', typeLabel: 'Uniform Mixture',
+      appearance: 'Looks the same throughout', use: 'Seasoning',
+      useChoices: ['Fuel', 'Seasoning', 'Beverage'], icon: 'soy-sauce',
+      hint: 'Soy sauce has the same appearance throughout.',
+    },
+    {
+      id: 'vegetable-salad', name: 'Vegetable Salad', type: 'nonuniform', typeLabel: 'Non-uniform Mixture',
+      appearance: 'Different vegetables are visible', use: 'Food',
+      useChoices: ['Cleaning', 'Fuel', 'Food'], icon: 'vegetable-salad',
+      hint: 'The lettuce, tomatoes, and cucumber remain visibly separate.',
     },
   ],
 };

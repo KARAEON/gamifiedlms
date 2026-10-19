@@ -1,18 +1,24 @@
 import Phaser from 'phaser';
+import { closeMinigameHelp } from '../ui/minigameHelp.js';
+import { createMinigameNavigation } from '../ui/minigameNavigation.js';
+import { createMinigameHeader } from '../ui/minigameHeader.js';
+import { createGeneralAsset, createMixtureIcon } from '../ui/assetIcons.js';
 import { scienceCourtGame } from '../config/content.js';
 import { getPostGameAssessmentLabel, startPostGameAssessment } from '../systems/assessmentFlow.js';
-import { submitMinigameResult } from '../systems/resultSubmission.js';
 import { markSceneReady, setTestState } from '../systems/testSeam.js';
-import { createSparkles, drawMixtureIcon } from '../ui/minigameUi.js';
-import { closeOpenModal, colors, createBackArrow, createPixelButton, showModal, textStyle } from '../ui/ui.js';
+import { createBottomFeedback, createSparkles } from '../ui/minigameUi.js';
+import { closeOpenModal, colors, coverImage, createToggleRow, showModal, textStyle } from '../ui/ui.js';
+import { courtButton, courtEvidenceIcon, courtField, courtPanel } from '../ui/scienceCourtUi.js';
+import { supplyGlyph, supplyPanel, supplyText, supplyHeading } from '../ui/supplyCartUi.js';
+import { playAreaMusic } from '../systems/music.js';
 
 const CLASSIFICATION_OPTIONS = [
   { id: 'uniform', label: 'UNIFORM', color: 0x58cc02 },
   { id: 'nonuniform', label: 'NON-UNIFORM', color: 0xc9362c },
 ];
 
-const EVIDENCE_CARD_WIDTH = 190;
-const EVIDENCE_CARD_HEIGHT = 56;
+const EVIDENCE_CARD_WIDTH = 120;
+const EVIDENCE_CARD_HEIGHT = 146;
 
 export default class ScienceCourtScene extends Phaser.Scene {
   constructor() {
@@ -35,7 +41,6 @@ export default class ScienceCourtScene extends Phaser.Scene {
     this.selectedClassification = null;
     this.selectedEvidence = [];
     this.caseScores = Array(scienceCourtGame.cases.length).fill(null);
-    this.caseDefenses = Array(scienceCourtGame.cases.length).fill(null);
     this.caseScore = 0;
     this.verdict = null;
     this.classificationViews = [];
@@ -53,58 +58,19 @@ export default class ScienceCourtScene extends Phaser.Scene {
   }
 
   drawCourtroom() {
-    this.add.rectangle(0, 0, 1280, 720, 0x172826, 1).setOrigin(0);
-    this.add.rectangle(0, 0, 1280, 126, 0x161617, 0.98).setOrigin(0);
-    this.add.rectangle(0, 126, 1280, 8, colors.gold, 1).setOrigin(0);
-
-    const wall = this.add.graphics();
-    wall.lineStyle(2, 0x31504a, 0.48);
-    for (let x = 0; x <= 1280; x += 64) {
-      wall.lineBetween(x, 134, x, 610);
-    }
-    for (let y = 134; y <= 610; y += 54) {
-      wall.lineBetween(0, y, 1280, y);
-    }
-
-    const bench = this.add.graphics();
-    bench.fillStyle(0x4a342e, 1);
-    bench.fillRoundedRect(0, 610, 1280, 110, 8);
-    bench.fillStyle(0x2f2420, 1);
-    bench.fillRect(0, 654, 1280, 10);
-    bench.lineStyle(4, 0x8a6048, 1);
-    bench.lineBetween(0, 610, 1280, 610);
+    coverImage(this, 'science-court-backdrop');
+    this.add.rectangle(640, 360, 1280, 720, 0x070b13, 0.52);
   }
 
   createHud() {
-    const back = createBackArrow(this, () => this.returnToQuarter());
-    back.setDepth(30);
-
-    const titlePanel = this.add.graphics();
-    titlePanel.setDepth(20);
-    titlePanel.fillStyle(0x2d1839, 1);
-    titlePanel.lineStyle(5, colors.gold, 1);
-    titlePanel.fillRoundedRect(272, 18, 478, 86, 8);
-    titlePanel.strokeRoundedRect(272, 18, 478, 86, 8);
-
-    const title = this.add.text(511, 48, scienceCourtGame.title, textStyle(39, '#ffd76a'));
-    title.setOrigin(0.5);
-    title.setShadow(3, 3, '#000000', 0, false, true);
-    const subtitle = this.add.text(511, 86, scienceCourtGame.subtitle, textStyle(22, '#fff2c9'));
-    subtitle.setOrigin(0.5);
-    const scaleA = this.add.text(305, 60, 'SCALE', textStyle(20, '#ffd76a'));
-    scaleA.setOrigin(0.5);
-    const scaleB = this.add.text(716, 60, 'SCALE', textStyle(20, '#ffd76a'));
-    scaleB.setOrigin(0.5);
-
-    this.scoreText = this.add.text(888, 42, 'CREDIBILITY 000 / 100', textStyle(24, '#fff2c9'));
-    this.scoreText.setOrigin(0.5);
-    this.scoreBar = this.add.graphics();
-
-    this.progressText = this.add.text(1100, 42, 'CASE 1 / 5', textStyle(24, '#fff2c9'));
-    this.progressText.setOrigin(0.5);
-    this.progressDots = this.add.graphics();
-
-    [title, subtitle, scaleA, scaleB, this.scoreText, this.progressText].forEach((item) => item.setDepth(21));
+    createMinigameNavigation(this);
+    const header = createMinigameHeader(this, {
+      day: 4, title: 'SCIENCE COURT', subtitle: 'Defend your decision with evidence.',
+      counters: [{ label: 'CREDIBILITY SCORE' }, { label: 'CASE PROGRESS' }],
+    });
+    [this.scoreText, this.progressText] = header.values;
+    this.controlsMeta = { settings: this.navigationMeta.settings, back: this.navigationMeta.back };
+    createBottomFeedback(this, { primary: 'CLASSIFY. CHOOSE EVIDENCE. DEFEND.', secondary: 'Use what you can see in the sample to support your decision.' });
   }
 
   renderCase() {
@@ -136,284 +102,123 @@ export default class ScienceCourtScene extends Phaser.Scene {
   }
 
   drawJudgePrompt() {
-    const panel = this.add.container(20, 142);
-    const judge = this.add.graphics();
-    judge.fillStyle(0x202124, 1);
-    judge.fillRoundedRect(0, 72, 138, 90, 8);
-    judge.fillStyle(0xffd8b8, 1);
-    judge.fillCircle(70, 54, 36);
-    judge.fillStyle(0xd8d8d8, 1);
-    judge.fillCircle(42, 42, 15);
-    judge.fillCircle(98, 42, 15);
-    judge.fillStyle(0x2f2a2a, 1);
-    judge.fillCircle(58, 56, 4);
-    judge.fillCircle(82, 56, 4);
-    judge.fillRoundedRect(53, 75, 34, 6, 3);
-    judge.fillStyle(colors.gold, 1);
-    judge.fillRoundedRect(36, 151, 68, 10, 4);
-    judge.fillRoundedRect(65, 111, 10, 44, 4);
-
-    const bubble = this.add.graphics();
-    bubble.fillStyle(0xfff2c9, 1);
-    bubble.lineStyle(4, 0x9e6b47, 1);
-    bubble.fillRoundedRect(150, 2, 230, 150, 8);
-    bubble.strokeRoundedRect(150, 2, 230, 150, 8);
-    bubble.beginPath();
-    bubble.moveTo(150, 62);
-    bubble.lineTo(128, 78);
-    bubble.lineTo(150, 88);
-    bubble.closePath();
-    bubble.fillPath();
-    bubble.strokePath();
-
-    const prompt = this.add.text(166, 21, 'SCIENCE EXPERT,\nEXAMINE THE SAMPLE\nAND DEFEND YOUR\nDECISION.', textStyle(18, '#2f2a2a', 'left'));
-    prompt.setWordWrapWidth(195);
-    prompt.setLineSpacing(-2);
-    const label = this.add.text(70, 176, 'JUDGE WISE', textStyle(18, '#ffd76a'));
-    label.setOrigin(0.5);
-
-    panel.add([judge, bubble, prompt, label]);
-    this.caseLayer.add(panel);
+    const panel = courtPanel(this, 182, 166, 340, 158);
+    const judge = createGeneralAsset(this, 'judge', { x: 83, y: 157, width: 122, height: 128 });
+    const label = courtPanel(this, 83, 226, 132, 32);
+    const name = supplyText(this, 83, 226, 'JUDGE WISE', 17, '#ffc84a');
+    const bubble = supplyPanel(this, 244, 162, 184, 132, { fill: 0xead4a7, edge: 0xb58b4f });
+    const text = supplyText(this, 244, 160, 'Observe the sample.\nChoose a type.\nDefend your answer!', 20, '#282015');
+    text.setWordWrapWidth(160);
+    this.caseLayer.add([panel, judge, bubble, text, label, name]);
   }
 
   drawCaseBanner() {
-    const currentCase = this.getCurrentCase();
-    const banner = this.add.graphics();
-    banner.fillStyle(0x3b2547, 1);
-    banner.lineStyle(5, colors.gold, 1);
-    banner.fillRoundedRect(410, 142, 390, 102, 8);
-    banner.strokeRoundedRect(410, 142, 390, 102, 8);
-    banner.fillStyle(0xfff2c9, 1);
-    banner.fillRoundedRect(432, 224, 346, 42, 6);
-
-    const caseLabel = this.add.text(605, 164, `CASE ${currentCase.caseNumber}`, textStyle(27, '#ffd76a'));
-    caseLabel.setOrigin(0.5);
-    const title = this.add.text(605, 204, currentCase.title, textStyle(26, '#ffd76a'));
-    title.setOrigin(0.5);
-    title.setWordWrapWidth(350);
-    const question = this.add.text(605, 245, 'IS THIS A UNIFORM OR NON-UNIFORM MIXTURE?', textStyle(16, '#2f2a2a'));
-    question.setOrigin(0.5);
-
-    this.caseLayer.add([banner, caseLabel, title, question]);
+    const current = this.getCurrentCase();
+    const banner = courtPanel(this, 590, 153, 460, 122, { purple: true });
+    const paper = this.add.rectangle(590, 197, 424, 32, 0xe9cf98);
+    const caseLabel = supplyHeading(this, 590, 114, `CASE ${current.caseNumber}`, 24, '#ffe04d');
+    const title = supplyHeading(this, 590, 150, current.title, current.title.length > 28 ? 24 : 27, '#ffdb45');
+    title.setWordWrapWidth(404);
+    const question = supplyText(this, 590, 197, 'Is this a UNIFORM or NON-UNIFORM mixture?', 18, '#282015');
+    const accents = [388, 792].map(x => this.add.image(x, 117, 'court-scales').setDisplaySize(25, 32));
+    this.caseLayer.add([banner, paper, caseLabel, title, question, ...accents]);
   }
 
   drawExhibit() {
-    const currentCase = this.getCurrentCase();
-    const panel = this.add.graphics();
-    panel.fillStyle(0x4a342e, 1);
-    panel.lineStyle(5, 0x8a6048, 1);
-    panel.fillRoundedRect(410, 282, 390, 214, 8);
-    panel.strokeRoundedRect(410, 282, 390, 214, 8);
-    panel.fillStyle(0xcceeff, 1);
-    panel.fillRoundedRect(434, 304, 196, 154, 6);
-    panel.lineStyle(4, 0x2f2a2a, 1);
-    panel.strokeRoundedRect(434, 304, 196, 154, 6);
-
-    const exhibitLabel = this.add.text(544, 286, 'EXHIBIT A', textStyle(20, '#fff2c9'));
-    exhibitLabel.setOrigin(0.5);
-    const icon = this.add.graphics();
-    icon.setPosition(532, 384);
-    icon.setScale(currentCase.icon === 'halo-halo' ? 1.8 : 2);
-    drawMixtureIcon(icon, currentCase.icon);
-
-    const clueBox = this.add.graphics();
-    clueBox.fillStyle(0xfff2c9, 1);
-    clueBox.lineStyle(4, 0x9e6b47, 1);
-    clueBox.fillRoundedRect(646, 310, 136, 168, 6);
-    clueBox.strokeRoundedRect(646, 310, 136, 168, 6);
-    const clueTitle = this.add.text(714, 331, 'CLUE', textStyle(20, '#2f2a2a'));
-    clueTitle.setOrigin(0.5);
-    const clueText = this.add.text(658, 356, currentCase.visualClues.join('\n'), textStyle(14, '#2f2a2a', 'left'));
-    clueText.setWordWrapWidth(108);
-    clueText.setLineSpacing(-2);
-
-    this.caseLayer.add([panel, exhibitLabel, icon, clueBox, clueTitle, clueText]);
-  }
-
-  drawAudience() {
-    const panel = this.add.graphics();
-    panel.fillStyle(0x2d1839, 1);
-    panel.lineStyle(4, 0x8a6048, 1);
-    panel.fillRoundedRect(835, 142, 424, 116, 8);
-    panel.strokeRoundedRect(835, 142, 424, 116, 8);
-    panel.fillStyle(0x4a342e, 1);
-    panel.fillRoundedRect(852, 222, 390, 22, 4);
-
-    const label = this.add.text(1047, 161, 'COURTROOM AUDIENCE', textStyle(18, '#fff2c9'));
-    label.setOrigin(0.5);
-    const people = [];
-    for (let index = 0; index < 5; index += 1) {
-      const x = 900 + index * 74;
-      const person = this.add.graphics();
-      person.fillStyle([0x58cc02, 0xff5a66, 0x2278c9, 0xffd76a, 0x9b6bd3][index], 1);
-      person.fillRoundedRect(x - 21, 203, 42, 34, 8);
-      person.fillStyle(0xffd8b8, 1);
-      person.fillCircle(x, 191, 18);
-      person.fillStyle(0x2f2a2a, 1);
-      person.fillCircle(x - 6, 190, 3);
-      person.fillCircle(x + 6, 190, 3);
-      people.push(person);
-    }
-    const speech = this.add.text(1046, 198, this.getAudienceLine(), textStyle(18, '#2f2a2a'));
-    speech.setOrigin(0.5);
-    speech.setBackgroundColor('#fff2c9');
-    speech.setPadding(10, 4, 10, 5);
-
-    this.caseLayer.add([panel, label, ...people, speech]);
+    const current = this.getCurrentCase();
+    const panel = courtPanel(this, 590, 369, 460, 284);
+    const stage = this.add.image(590, 369, 'detective-sample-stage').setDisplaySize(424, 254);
+    const icon = createMixtureIcon(this, current.icon, { x: 525, y: 375, width: 214, height: 236 });
+    const label = courtPanel(this, 548, 234, 168, 34);
+    const labelText = supplyHeading(this, 548, 234, 'EXHIBIT A', 19);
+    const clipboard = courtPanel(this, 727, 414, 160, 172, { paper: true });
+    const clip = this.add.rectangle(727, 326, 42, 13, 0xaaa99c).setStrokeStyle(2, 0x38332d);
+    const clueTitle = supplyHeading(this, 727, 352, 'CLUE', 21, '#282015');
+    const clues = supplyText(this, 727, 426, current.visualClues.join('\n'), 15, '#282015');
+    clues.setWordWrapWidth(132).setLineSpacing(0);
+    for (let size = 14; clues.height > 124 && size >= 13; size--) clues.setFontSize(size);
+    this.caseLayer.add([panel, stage, icon, label, labelText, clipboard, clip, clueTitle, clues]);
   }
 
   drawClassificationPanel() {
-    const panel = this.add.graphics();
-    panel.fillStyle(0x0b3651, 0.96);
-    panel.lineStyle(4, 0x66e5ff, 1);
-    panel.fillRoundedRect(20, 348, 360, 150, 8);
-    panel.strokeRoundedRect(20, 348, 360, 150, 8);
-    panel.fillStyle(0xfff2c9, 1);
-    panel.fillRoundedRect(38, 390, 324, 88, 6);
-
-    const title = this.add.text(200, 372, 'STEP 1: MAKE YOUR DECISION', textStyle(21, '#fff2c9'));
-    title.setOrigin(0.5);
-    const hint = this.add.text(200, 410, 'CHOOSE THE CLASSIFICATION.', textStyle(17, '#2f2a2a'));
-    hint.setOrigin(0.5);
-    this.caseLayer.add([panel, title, hint]);
-
-    CLASSIFICATION_OPTIONS.forEach((option, index) => {
-      this.createClassificationButton(option, 124 + index * 154, 455);
-    });
+    const panel = courtPanel(this, 182, 380, 340, 262, { paper: true });
+    const header = this.add.rectangle(182, 270, 304, 27, 0x102135);
+    const title = supplyHeading(this, 182, 270, 'STEP 1: MAKE YOUR DECISION', 20, '#f3cf8c');
+    if (title.width > 296) title.setFontSize(Math.floor(parseFloat(title.style.fontSize) * 296 / title.width));
+    const hint = supplyText(this, 182, 299, 'Choose the correct classification.', 18, '#282015');
+    const uniformSample = createMixtureIcon(this, 'salt-water', { x: 104, y: 455, width: 46, height: 46 });
+    const separateSample = createMixtureIcon(this, 'sand-water', { x: 260, y: 455, width: 46, height: 46 });
+    const uniformCaption = supplyText(this, 104, 486, 'SAME THROUGHOUT', 12, '#282015');
+    const separateCaption = supplyText(this, 260, 486, 'VISIBLE PARTS', 12, '#282015');
+    this.caseLayer.add([panel, header, title, hint, uniformSample, separateSample, uniformCaption, separateCaption]);
+    CLASSIFICATION_OPTIONS.forEach((option, i) => this.createClassificationButton(option, 104 + i * 156, 370));
   }
 
   createClassificationButton(option, x, y) {
-    const container = this.add.container(x, y);
-    container.setDepth(8);
-    const width = 132;
-    const height = 62;
+    const container = this.add.container(x, y).setDepth(8);
+    const width = 144, height = 108;
     const graphics = this.add.graphics();
-    const icon = this.add.graphics();
-    const text = this.add.text(0, 18, option.label, textStyle(17, '#fff2c9'));
-    text.setOrigin(0.5);
-    const zone = this.add.zone(0, 0, width, height).setInteractive({ useHandCursor: true });
-    zone.on('pointerover', () => {
-      if (this.phase === 'defense') {
-        container.setScale(1.05);
+    const icon = this.add.image(0, -16, 'court-magnifier').setDisplaySize(62, 62);
+    const parts = this.add.graphics();
+    if (option.id === 'nonuniform') {
+      for (const [dx, dy, color] of [[-13, -28, 0xfb9657], [0, -15, 0xe3bc39], [10, -32, 0xa14630]]) {
+        parts.fillStyle(color); parts.fillRect(dx, dy, 7, 7); parts.lineStyle(1, 0x392619); parts.strokeRect(dx, dy, 7, 7);
       }
-    });
+    }
+    const text = supplyText(this, 0, 33, option.label, 19);
+    const zone = this.add.zone(0, 0, width, height).setInteractive({ useHandCursor: true });
+    zone.on('pointerover', () => { if (this.phase === 'defense') container.setScale(1.02); });
     zone.on('pointerout', () => container.setScale(1));
     zone.on('pointerup', () => this.selectClassification(option.id));
-
-    container.add([graphics, icon, text, zone]);
+    container.add([graphics, icon, parts, text, zone]);
     this.caseLayer.add(container);
-
-    const view = {
-      id: option.id,
-      label: option.label,
-      x,
-      y,
-      width,
-      height,
-      correct: option.id === this.getCurrentCase().type,
-      container,
-      graphics,
-      icon,
-    };
+    const view = { id: option.id, label: option.label, x, y, width, height, correct: option.id === this.getCurrentCase().type, container, graphics, icon };
     this.classificationViews.push(view);
     this.drawClassificationButton(view);
   }
 
   drawClassificationButton(view) {
     const selected = this.selectedClassification === view.id;
-    const option = CLASSIFICATION_OPTIONS.find((candidate) => candidate.id === view.id);
+    const fill = view.id === 'uniform' ? 0x3b761a : 0xaa361a;
     view.graphics.clear();
-    view.graphics.fillStyle(selected ? colors.gold : option.color, 1);
-    view.graphics.lineStyle(4, selected ? 0xfff2c9 : 0x2f2a2a, 1);
-    view.graphics.fillRoundedRect(-view.width / 2, -view.height / 2, view.width, view.height, 7);
-    view.graphics.strokeRoundedRect(-view.width / 2, -view.height / 2, view.width, view.height, 7);
-
-    view.icon.clear();
-    view.icon.lineStyle(4, 0x2f2a2a, 1);
-    view.icon.strokeCircle(0, -13, 13);
-    view.icon.lineBetween(10, -4, 28, 14);
-    if (view.id === 'nonuniform') {
-      view.icon.fillStyle(0xff5a66, 1);
-      view.icon.fillCircle(-5, -15, 3);
-      view.icon.fillCircle(3, -9, 3);
-      view.icon.fillCircle(8, -17, 3);
-    } else {
-      view.icon.fillStyle(0x66e5ff, 1);
-      view.icon.fillCircle(0, -13, 5);
-    }
+    view.graphics.fillStyle(fill); view.graphics.fillRect(-view.width / 2, -view.height / 2, view.width, view.height);
+    view.graphics.lineStyle(selected ? 4 : 3, selected ? 0xffdf77 : 0x2f2b19);
+    view.graphics.strokeRect(-view.width / 2, -view.height / 2, view.width, view.height);
+    view.graphics.lineStyle(2, view.id === 'uniform' ? 0x92b936 : 0xdf7437);
+    view.graphics.strokeRect(-view.width / 2 + 6, -view.height / 2 + 6, view.width - 12, view.height - 12);
+    if (selected) { view.graphics.fillStyle(0xffdf77); view.graphics.fillRect(view.width / 2 - 14, -view.height / 2 + 6, 8, 8); }
   }
 
   drawEvidencePanel() {
-    const currentCase = this.getCurrentCase();
-    const panel = this.add.graphics();
-    panel.fillStyle(0x0b3651, 0.96);
-    panel.lineStyle(4, 0x66e5ff, 1);
-    panel.fillRoundedRect(820, 148, 440, 350, 8);
-    panel.strokeRoundedRect(820, 148, 440, 350, 8);
-
-    const rangeText = currentCase.evidencePick.min === currentCase.evidencePick.max
-      ? `PICK ${currentCase.evidencePick.min}`
-      : `PICK ${currentCase.evidencePick.min}-${currentCase.evidencePick.max}`;
-    const title = this.add.text(1040, 178, `STEP 2: CHOOSE EVIDENCE (${rangeText})`, textStyle(21, '#fff2c9'));
-    title.setOrigin(0.5);
-    this.caseLayer.add([panel, title]);
-
-    currentCase.evidenceOptions.forEach((evidenceId, index) => {
-      const column = index % 2;
-      const row = Math.floor(index / 2);
-      this.createEvidenceCard(evidenceId, 936 + column * 208, 244 + row * 70);
-    });
-
-    this.evidenceHintText = this.add.text(
-      1040,
-      472,
-      `YOU MUST CHOOSE ${currentCase.evidencePick.min === currentCase.evidencePick.max ? 'EXACTLY' : ''} ${rangeText.replace('PICK ', '')} EVIDENCE CARDS.`,
-      textStyle(16, '#fff2c9'),
-    );
-    this.evidenceHintText.setOrigin(0.5);
+    const current = this.getCurrentCase();
+    const panel = courtPanel(this, 1050, 302, 420, 418);
+    const count = current.evidencePick.min === current.evidencePick.max ? `${current.evidencePick.min}` : `${current.evidencePick.min}-${current.evidencePick.max}`;
+    const title = supplyHeading(this, 1050, 119, 'STEP 2: CHOOSE EVIDENCE', 22, '#f3cf8c');
+    this.caseLayer.add([panel, title, supplyText(this, 1050, 147, `Pick ${count} cards to support your decision.`, 18, '#e8dcc0')]);
+    current.evidenceOptions.forEach((id, i) => this.createEvidenceCard(id, 921 + i % 3 * 130, 235 + Math.floor(i / 3) * 156));
+    this.evidenceHintText = supplyText(this, 1050, 491, '', 15);
     this.caseLayer.add(this.evidenceHintText);
+    this.resetEvidenceHintText();
   }
 
   createEvidenceCard(evidenceId, x, y) {
     const evidence = this.getEvidence(evidenceId);
-    const container = this.add.container(x, y);
-    container.setDepth(8);
+    const container = this.add.container(x, y).setDepth(8);
     const graphics = this.add.graphics();
-    const icon = this.add.graphics();
-    icon.setPosition(-66, -3);
-    const label = this.add.text(-36, 0, evidence.label.toUpperCase(), textStyle(14, '#2f2a2a', 'left'));
-    label.setOrigin(0, 0.5);
-    label.setWordWrapWidth(124);
-    label.setLineSpacing(-4);
-    const checkText = this.add.text(72, -19, '', textStyle(20, '#ffffff'));
-    checkText.setOrigin(0.5);
-
+    const icon = courtEvidenceIcon(this, evidenceId, 0, -49);
+    const label = supplyText(this, 0, -20, evidence.label, 17, '#282015');
+    label.setOrigin(0.5, 0).setWordWrapWidth(108).setLineSpacing(0);
+    for (let size = 16; label.height > 66 && size >= 14; size--) label.setFontSize(size);
+    const checkText = this.add.container(43, -56);
+    checkText.add([this.add.rectangle(0, 0, 20, 20, 0x39771d), supplyGlyph(this, 0, 0, 'check', 0xffffff, 2)]);
+    const checkbox = this.add.graphics();
     const zone = this.add.zone(0, 0, EVIDENCE_CARD_WIDTH, EVIDENCE_CARD_HEIGHT).setInteractive({ useHandCursor: true });
-    zone.on('pointerover', () => {
-      if (this.phase === 'defense') {
-        container.setScale(1.04);
-      }
-    });
+    zone.on('pointerover', () => { if (this.phase === 'defense') container.setScale(1.02); });
     zone.on('pointerout', () => container.setScale(1));
     zone.on('pointerup', () => this.toggleEvidence(evidenceId));
-
-    container.add([graphics, icon, label, checkText, zone]);
+    container.add([graphics, icon, label, checkbox, checkText, zone]);
     this.caseLayer.add(container);
-
-    const view = {
-      id: evidenceId,
-      label: evidence.label,
-      iconName: evidence.icon,
-      x,
-      y,
-      width: EVIDENCE_CARD_WIDTH,
-      height: EVIDENCE_CARD_HEIGHT,
-      correct: this.getCurrentCase().correctEvidence.includes(evidenceId),
-      container,
-      graphics,
-      icon,
-      checkText,
-    };
+    const view = { id: evidenceId, label: evidence.label, iconName: evidence.icon, x, y, width: EVIDENCE_CARD_WIDTH, height: EVIDENCE_CARD_HEIGHT, correct: this.getCurrentCase().correctEvidence.includes(evidenceId), container, graphics, icon, checkText, checkbox };
     this.evidenceViews.push(view);
     this.drawEvidenceCard(view);
   }
@@ -421,157 +226,67 @@ export default class ScienceCourtScene extends Phaser.Scene {
   drawEvidenceCard(view) {
     const selected = this.selectedEvidence.includes(view.id);
     view.graphics.clear();
-    view.graphics.fillStyle(selected ? 0xe7ffd6 : 0xfff2c9, 1);
-    view.graphics.lineStyle(4, selected ? 0x58cc02 : 0x9e6b47, 1);
-    view.graphics.fillRoundedRect(-EVIDENCE_CARD_WIDTH / 2, -EVIDENCE_CARD_HEIGHT / 2, EVIDENCE_CARD_WIDTH, EVIDENCE_CARD_HEIGHT, 7);
-    view.graphics.strokeRoundedRect(-EVIDENCE_CARD_WIDTH / 2, -EVIDENCE_CARD_HEIGHT / 2, EVIDENCE_CARD_WIDTH, EVIDENCE_CARD_HEIGHT, 7);
-    view.checkText.setText(selected ? 'OK' : '');
-    this.drawEvidenceIcon(view.icon, view.iconName);
-  }
-
-  drawEvidenceIcon(graphics, iconName) {
-    graphics.clear();
-    graphics.lineStyle(4, 0x2f2a2a, 1);
-    graphics.fillStyle(0xffd76a, 1);
-
-    if (iconName === 'eye') {
-      graphics.strokeEllipse(0, 0, 36, 20);
-      graphics.fillCircle(0, 0, 6);
-      return;
-    }
-    if (iconName === 'magnifier') {
-      graphics.strokeCircle(-4, -4, 11);
-      graphics.lineBetween(5, 5, 18, 18);
-      return;
-    }
-    if (iconName === 'dots') {
-      for (let x = -10; x <= 10; x += 10) {
-        for (let y = -10; y <= 10; y += 10) {
-          graphics.fillCircle(x, y, 3);
-        }
-      }
-      return;
-    }
-    if (iconName === 'cube') {
-      graphics.strokeRect(-12, -12, 24, 24);
-      graphics.lineBetween(-12, -12, 0, -22);
-      graphics.lineBetween(12, -12, 24, -22);
-      graphics.lineBetween(0, -22, 24, -22);
-      graphics.lineBetween(12, 12, 24, 2);
-      graphics.lineBetween(24, -22, 24, 2);
-      return;
-    }
-    if (iconName === 'layers') {
-      graphics.strokeRoundedRect(-14, -16, 28, 32, 5);
-      graphics.fillStyle(0xffd76a, 1);
-      graphics.fillRect(-10, -2, 20, 8);
-      graphics.fillStyle(0x66e5ff, 1);
-      graphics.fillRect(-10, 7, 20, 7);
-      return;
-    }
-
-    graphics.beginPath();
-    graphics.moveTo(0, -20);
-    graphics.lineTo(6, -6);
-    graphics.lineTo(21, -5);
-    graphics.lineTo(10, 4);
-    graphics.lineTo(14, 19);
-    graphics.lineTo(0, 10);
-    graphics.lineTo(-14, 19);
-    graphics.lineTo(-10, 4);
-    graphics.lineTo(-21, -5);
-    graphics.lineTo(-6, -6);
-    graphics.closePath();
-    graphics.fillPath();
+    view.graphics.fillStyle(0xe9cf98); view.graphics.fillRect(-view.width / 2, -view.height / 2, view.width, view.height);
+    view.graphics.lineStyle(3, selected ? 0x74aa28 : 0x967043); view.graphics.strokeRect(-view.width / 2, -view.height / 2, view.width, view.height);
+    view.graphics.lineStyle(1, 0xffeabd); view.graphics.strokeRect(-view.width / 2 + 5, -view.height / 2 + 5, view.width - 10, view.height - 10);
+    view.checkText.setVisible(selected);
+    view.checkbox.clear(); view.checkbox.lineStyle(1, 0x53412c); view.checkbox.strokeRect(-6, 54, 12, 12);
+    if (selected) { view.checkbox.fillStyle(0x4c8b21); view.checkbox.fillRect(-4, 56, 8, 8); }
   }
 
   drawDefensePanel() {
-    const panel = this.add.graphics();
-    panel.fillStyle(0x0b3651, 0.96);
-    panel.lineStyle(4, 0x66e5ff, 1);
-    panel.fillRoundedRect(138, 526, 1004, 158, 8);
-    panel.strokeRoundedRect(138, 526, 1004, 158, 8);
-    panel.fillStyle(0xfff2c9, 1);
-    panel.fillRoundedRect(170, 570, 748, 96, 6);
-
-    const title = this.add.text(640, 550, 'STEP 3: DEFEND YOUR DECISION', textStyle(22, '#fff2c9'));
-    title.setOrigin(0.5);
-    this.defenseText = this.add.text(198, 586, '', textStyle(18, '#2f2a2a', 'left'));
-    this.defenseText.setWordWrapWidth(690);
-    this.defenseText.setLineSpacing(-2);
-    this.defenseHintText = this.add.text(198, 646, '', textStyle(15, '#9e6b00', 'left'));
-    this.defenseHintText.setWordWrapWidth(690);
-
-    const submit = createPixelButton(this, 1028, 616, 'SUBMIT\nDEFENSE', () => this.submitDefense(), {
-      width: 160,
-      height: 76,
-      fontSize: 21,
-      textColor: '#fff2c9',
-      fill: 0x58cc02,
-      hoverFill: 0x6ee617,
-      stroke: 0x2e8c00,
-    });
-    submit.setDepth(12);
-    this.submitButtonMeta = { x: 1028, y: 616, label: 'SUBMIT DEFENSE' };
-
-    this.caseLayer.add([panel, title, this.defenseText, this.defenseHintText, submit]);
+    const panel = courtPanel(this, 411, 584, 802, 132, { paper: true });
+    const header = this.add.rectangle(411, 536, 766, 25, 0x102135);
+    const title = supplyHeading(this, 411, 536, 'STEP 3: DEFEND YOUR DECISION', 21, '#f3cf8c');
+    const prefix = supplyText(this, 30, 568, 'I conclude that', 14, '#282015', 'left');
+    const is = supplyText(this, 306, 568, 'is', 17, '#282015', 'left');
+    const because = supplyText(this, 494, 568, 'because', 16, '#282015', 'left');
+    const and = supplyText(this, 30, 609, 'and', 17, '#282015', 'left');
+    const material = courtField(this, 217, 568, 162, this.getCurrentCase().material, null, { size: 18, height: 34 });
+    const type = courtField(this, 411, 568, 144, 'CHOOSE TYPE', () => this.showDefenseChoices('type'), { size: 17 });
+    const first = courtField(this, 674, 568, 220, 'CHOOSE EVIDENCE', () => this.showDefenseChoices('first'), { size: 16, height: 36 });
+    const second = courtField(this, 359, 609, 570, 'CHOOSE EVIDENCE', () => this.showDefenseChoices('second'), { size: 17, height: 36 });
+    this.defenseFields = { material, type, first, second };
+    this.defenseFieldsMeta = { type: { x: 411, y: 568 }, first: { x: 674, y: 568 }, second: { x: 359, y: 609 } };
+    this.defenseText = supplyText(this, 31, 635, '', 13, '#765625', 'left');
+    this.defenseHintText = this.defenseText;
+    const submit = courtButton(this, 743, 609, 'SUBMIT\nDEFENSE', () => this.submitDefense(), { width: 106, height: 56, size: 18 });
+    this.submitButton = submit;
+    this.submitButtonMeta = { x: 743, y: 609, label: 'SUBMIT DEFENSE' };
+    this.caseLayer.add([panel, header, title, prefix, is, because, and, material.container, type.container, first.container, second.container, this.defenseText, submit]);
     this.updateDefenseText();
+    this.drawVerdictPanel();
   }
 
   drawVerdictPanel() {
-    const currentCase = this.getCurrentCase();
-    const isFinalCase = this.caseIndex === scienceCourtGame.cases.length - 1;
-    const nextLabel = isFinalCase ? 'FINISH' : 'NEXT CASE';
-    const hasRetry = this.verdict !== 'accepted';
-    this.nextButtonMeta = {
-      x: hasRetry ? 745 : 640,
-      y: 457,
-      label: nextLabel,
-    };
-    this.retryButtonMeta = hasRetry ? { x: 535, y: 457, label: 'RETRY' } : null;
-
-    showModal(this, {
-      name: 'court-verdict',
-      title: "JUDGE'S VERDICT",
-      width: 620,
-      height: 330,
-      titleSize: 34,
-      body: (_overlay, { panelX, panelY }) => {
-        const verdictText = this.add.text(panelX, panelY - 46, this.verdict.toUpperCase(), textStyle(34, this.getVerdictColor()));
-        verdictText.setOrigin(0.5);
-        const score = this.add.text(panelX, panelY, `+${this.caseScore} CREDIBILITY`, textStyle(27, '#66e5ff'));
-        score.setOrigin(0.5);
-        const body = this.add.text(panelX, panelY + 46, this.getVerdictMessage(currentCase), textStyle(22, '#fff2c9'));
-        body.setOrigin(0.5);
-        body.setWordWrapWidth(500);
-        body.setLineSpacing(-2);
-        return [verdictText, score, body];
-      },
-      buttons: hasRetry
-        ? [
-            {
-              label: 'RETRY',
-              width: 180,
-              action: () => this.retryCase(),
-            },
-            {
-              label: nextLabel,
-              width: 210,
-              action: () => this.advanceCase(),
-            },
-          ]
-        : [
-            {
-              label: nextLabel,
-              width: 210,
-              action: () => this.advanceCase(),
-            },
-          ],
-    });
+    this.verdictLayer?.destroy(true);
+    this.verdictLayer = this.add.container(0, 0);
+    const panel = courtPanel(this, 1050, 584, 420, 132, { paper: true });
+    const header = this.add.rectangle(1050, 536, 384, 25, 0x39204f);
+    const title = supplyHeading(this, 1050, 536, "JUDGE'S VERDICT", 21);
+    const judge = createGeneralAsset(this, 'judge', { x: 894, y: 593, width: 74, height: 92 });
+    const verdict = supplyText(this, 952, 563, this.verdict ? `${this.verdict.toUpperCase()}!` : 'AWAITING DEFENSE', 21, this.verdict ? this.getVerdictColor() : '#765625', 'left');
+    const message = supplyText(this, 952, 578, this.verdict === 'accepted' ? 'Your classification and evidence are correct.' : this.verdict ? this.getVerdictMessage(this.getCurrentCase()) : 'Choose a type and evidence, then submit your defense.', 15, '#282015', 'left');
+    message.setOrigin(0, 0).setWordWrapWidth(292);
+    this.verdictLayer.add([panel, header, title, judge, verdict, message]);
+    this.nextButtonMeta = null; this.retryButtonMeta = null;
+    this.nextButton = null;
+    if (this.verdict) {
+      const label = this.caseIndex === scienceCourtGame.cases.length - 1 ? 'FINISH' : 'NEXT CASE';
+      this.nextButton = courtButton(this, 1165, 626, label, () => this.advanceCase(), { width: 154, height: 32, fill: 0x18558c, edge: 0x5b94c4, size: 20 });
+      this.verdictLayer.add(this.nextButton);
+      this.nextButtonMeta = { x: 1165, y: 626, label };
+      if (this.verdict !== 'accepted') {
+        const retry = courtButton(this, 1014, 626, 'RETRY', () => this.retryCase(), { width: 124, height: 32, size: 20, fill: 0x7d361e });
+        this.verdictLayer.add(retry);
+        this.retryButtonMeta = { x: 1014, y: 626, label: 'RETRY' };
+      }
+    }
+    this.caseLayer.add(this.verdictLayer);
   }
 
   selectClassification(type) {
-    if (this.phase !== 'defense') {
+    if (this.phase !== 'defense' || this.currentModal || this.result) {
       return;
     }
 
@@ -582,7 +297,7 @@ export default class ScienceCourtScene extends Phaser.Scene {
   }
 
   toggleEvidence(evidenceId) {
-    if (this.phase !== 'defense') {
+    if (this.phase !== 'defense' || this.currentModal || this.result) {
       return;
     }
 
@@ -626,7 +341,7 @@ export default class ScienceCourtScene extends Phaser.Scene {
   }
 
   submitDefense() {
-    if (this.phase !== 'defense') {
+    if (this.phase !== 'defense' || this.currentModal || this.result) {
       return;
     }
 
@@ -646,11 +361,6 @@ export default class ScienceCourtScene extends Phaser.Scene {
 
     this.caseScore = this.calculateCaseScore();
     this.caseScores[this.caseIndex] = this.caseScore;
-    this.caseDefenses[this.caseIndex] = {
-      case_id: currentCase.id,
-      classification: this.selectedClassification,
-      evidence_ids: [...this.selectedEvidence],
-    };
     this.verdict = this.getVerdict(this.caseScore);
     this.phase = 'verdict';
     this.submitButtonMeta = null;
@@ -661,32 +371,17 @@ export default class ScienceCourtScene extends Phaser.Scene {
   }
 
   setDefenseWarning(message) {
-    this.defenseText.setText(message);
-    this.defenseText.setColor('#a31c1c');
-    const startX = this.defenseText.x;
-    this.tweens.add({
-      targets: this.defenseText,
-      x: startX + 8,
-      duration: 60,
-      yoyo: true,
-      repeat: 3,
-      onComplete: () => {
-        this.defenseText.x = startX;
-        this.defenseText.setColor('#2f2a2a');
-        this.updateDefenseText();
-      },
-    });
+    this.pulseEvidenceHint(message);
   }
 
   retryCase() {
     closeOpenModal(this);
     this.caseScores[this.caseIndex] = null;
-    this.caseDefenses[this.caseIndex] = null;
     this.renderCase();
   }
 
   advanceCase() {
-    if (this.phase !== 'verdict') {
+    if (this.phase !== 'verdict' || this.currentModal) {
       return;
     }
 
@@ -706,7 +401,6 @@ export default class ScienceCourtScene extends Phaser.Scene {
     this.result = won ? 'win' : 'lose';
     this.phase = 'result';
     this.updateTestState();
-    this.submitResult();
 
     showModal(this, {
       name: won ? 'result-win' : 'result-lose',
@@ -794,29 +488,49 @@ export default class ScienceCourtScene extends Phaser.Scene {
   }
 
   updateDefenseText() {
-    if (!this.defenseText) {
-      return;
-    }
+    if (!this.defenseFields) return;
+    this.defenseFields.type.text.setText(this.selectedClassification === 'uniform' ? 'UNIFORM' : this.selectedClassification === 'nonuniform' ? 'NON-UNIFORM' : 'CHOOSE TYPE');
+    const phrase = id => this.getEvidence(id).label.replace(/\.$/, '');
+    this.defenseFields.first.text.setText(this.selectedEvidence[0] ? phrase(this.selectedEvidence[0]) : 'CHOOSE EVIDENCE');
+    this.defenseFields.second.text.setText(this.selectedEvidence.length > 1 ? this.selectedEvidence.slice(1).map(phrase).join(' and ') : 'CHOOSE EVIDENCE');
+    const current = this.getCurrentCase();
+    const range = current.evidencePick.min === current.evidencePick.max ? `${current.evidencePick.min}` : `${current.evidencePick.min}-${current.evidencePick.max}`;
+    this.defenseHintText?.setText('');
+  }
 
-    const currentCase = this.getCurrentCase();
-    const classification = this.selectedClassification ? this.getClassificationLabel(this.selectedClassification) : '_____';
-    const evidence = this.selectedEvidence.length > 0
-      ? this.formatEvidencePhrase()
-      : '_____';
-    this.defenseText.setText(`I conclude that ${currentCase.material} is ${classification} because ${evidence}.`);
-    if (!this.defenseHintText) {
-      return;
-    }
-    if (!this.selectedClassification) {
-      this.defenseHintText.setText('Choose a classification to fill the first blank.');
-    } else if (this.selectedEvidence.length === 0) {
-      this.defenseHintText.setText('Now choose evidence to support your decision.');
-    } else {
-      const range = currentCase.evidencePick.min === currentCase.evidencePick.max
-        ? `${currentCase.evidencePick.min}`
-        : `${currentCase.evidencePick.min}-${currentCase.evidencePick.max}`;
-      this.defenseHintText.setText(`Evidence chosen: ${this.selectedEvidence.length}. Needed: ${range}.`);
-    }
+  showDefenseChoices(kind) {
+    if (this.phase !== 'defense' || this.currentModal) return;
+    const choices = kind === 'type' ? CLASSIFICATION_OPTIONS.map(option => ({ id: option.id, label: option.label })) : this.getCurrentCase().evidenceOptions.map(id => this.getEvidence(id));
+    showModal(this, {
+      name: 'court-choice', title: kind === 'type' ? 'CHOOSE CLASSIFICATION' : 'CHOOSE EVIDENCE', width: 620, height: 480,
+      body: (_overlay, { panelX, panelTop }) => choices.map((choice, i) => courtButton(this, panelX, panelTop + 125 + i * 40, choice.label, () => {
+        closeOpenModal(this);
+        if (kind === 'type') this.selectClassification(choice.id);
+        else {
+          const slot = kind === 'first' ? 0 : 1;
+          if (this.selectedEvidence.includes(choice.id) && this.selectedEvidence[slot] !== choice.id) return;
+          const values = [...this.selectedEvidence]; values[slot] = choice.id;
+          this.selectedEvidence = values.filter(Boolean);
+          this.evidenceViews.forEach(view => this.drawEvidenceCard(view));
+          this.updateDefenseText(); this.updateTestState();
+        }
+      }, { width: 548, height: 34, size: 20, fill: 0x292b3a })),
+      buttons: [{ label: 'CANCEL', action: () => { closeOpenModal(this); this.updateTestState(); } }],
+    });
+    this.updateTestState();
+  }
+
+  openSettings() {
+    if (this.currentModal || this.result) return;
+    showModal(this, {
+      name: 'court-settings', title: 'SETTINGS', height: 360,
+      body: (_overlay, { panelX, panelY }) => [
+        createToggleRow(this, panelX - 16, panelY - 32, 'MUSIC', this.registry.get('musicEnabled'), enabled => { this.registry.set('musicEnabled', enabled); playAreaMusic(this, this.islandId); }),
+        createToggleRow(this, panelX - 16, panelY + 34, 'SFX', this.registry.get('sfxEnabled'), enabled => this.registry.set('sfxEnabled', enabled)),
+      ],
+      buttons: [{ label: 'BACK', action: () => { closeOpenModal(this); this.updateTestState(); } }, { label: 'EXIT', action: () => this.returnToQuarter() }],
+    });
+    this.updateTestState();
   }
 
   formatEvidencePhrase() {
@@ -829,49 +543,11 @@ export default class ScienceCourtScene extends Phaser.Scene {
   }
 
   updateHud() {
-    const totalScore = this.getTotalScore();
-    this.scoreText.setText(`CREDIBILITY ${String(totalScore).padStart(3, '0')} / ${scienceCourtGame.maxScore}`);
-    this.progressText.setText(`CASE ${this.caseIndex + 1} / ${scienceCourtGame.cases.length}`);
-    this.drawScoreBar(totalScore);
-    this.drawProgressDots();
-  }
-
-  drawScoreBar(totalScore) {
-    this.scoreBar.clear();
-    this.scoreBar.setDepth(21);
-    const x = 782;
-    const y = 78;
-    const width = 208;
-    const height = 12;
-    this.scoreBar.fillStyle(0x272727, 1);
-    this.scoreBar.fillRoundedRect(x, y, width, height, 5);
-    this.scoreBar.fillStyle(0x58cc02, 1);
-    this.scoreBar.fillRoundedRect(x, y, width * Phaser.Math.Clamp(totalScore / scienceCourtGame.maxScore, 0, 1), height, 5);
-  }
-
-  drawProgressDots() {
-    this.progressDots.clear();
-    this.progressDots.setDepth(21);
-    const startX = 1036;
-    for (let index = 0; index < scienceCourtGame.cases.length; index += 1) {
-      const filled = this.caseScores[index] !== null;
-      const active = index === this.caseIndex;
-      this.progressDots.fillStyle(filled ? 0x58cc02 : active ? colors.gold : 0x4b4b4b, 1);
-      this.progressDots.fillCircle(startX + index * 30, 80, active ? 11 : 9);
-      this.progressDots.lineStyle(3, 0x1b1b1b, 1);
-      this.progressDots.strokeCircle(startX + index * 30, 80, active ? 11 : 9);
-    }
-  }
-
-  getAudienceLine() {
-    const lines = [
-      "LET'S HEAR THE EXPERT!",
-      "WE'RE LISTENING!",
-      'INTERESTING CASE!',
-      'HMM... INTERESTING!',
-      "LET'S SEE THAT DEFENSE!",
-    ];
-    return lines[this.caseIndex] ?? lines[0];
+    const total = this.getTotalScore();
+    this.scoreText.setText(`${String(total).padStart(3, '0')} / 100`);
+    this.progressText.setText(`${this.caseIndex + 1} / ${scienceCourtGame.cases.length}`);
+    if (this.nextButton) this.nextButton.setAlpha(this.phase === 'verdict' ? 1 : 0.4);
+    this.submitButton?.setAlpha(this.phase === 'defense' ? 1 : 0.4);
   }
 
   getCurrentCase() {
@@ -879,7 +555,12 @@ export default class ScienceCourtScene extends Phaser.Scene {
   }
 
   getEvidence(evidenceId) {
-    return scienceCourtGame.evidenceBank.find((evidence) => evidence.id === evidenceId);
+    const evidence = scienceCourtGame.evidenceBank.find(item => item.id === evidenceId);
+    if (evidenceId === 'not-evenly-mixed') return { ...evidence, label: 'The parts are not evenly mixed.' };
+    if (evidenceId === 'common-use') return {
+      ...evidence, label: this.getCurrentCase().icon === 'shampoo' ? 'It is used for cleaning.' : 'It is used in everyday life.',
+    };
+    return evidence;
   }
 
   getClassificationLabel(type) {
@@ -907,11 +588,13 @@ export default class ScienceCourtScene extends Phaser.Scene {
   }
 
   goBackOrCloseModal() {
+    if (this.minigameHelpOpen) {
+      closeMinigameHelp(this);
+      return;
+    }
     if (this.currentModal) {
-      if (this.phase === 'verdict') {
-        return;
-      }
       closeOpenModal(this);
+      this.updateTestState();
       return;
     }
 
@@ -948,26 +631,11 @@ export default class ScienceCourtScene extends Phaser.Scene {
     });
   }
 
-  buildSubmissionPayload() {
-    return {
-      cases: this.caseDefenses.filter(Boolean).map((entry) => ({
-        case_id: entry.case_id,
-        classification: entry.classification,
-        evidence_ids: [...entry.evidence_ids],
-      })),
-    };
-  }
-
-  submitResult() {
-    submitMinigameResult(this, {
-      lessonKey: this.lessonId,
-      gameKey: scienceCourtGame.id,
-      payloadBuilder: () => this.buildSubmissionPayload(),
-    });
-  }
-
   buildTestState() {
     return {
+      minigameHelpOpen: Boolean(this.minigameHelpOpen),
+      minigameHelpButton: this.helpButtonMeta,
+      minigameControls: this.navigationMeta,
       selectedIsland: this.islandId,
       selectedQuarter: this.quarterId,
       selectedMajor: this.majorId,
@@ -975,6 +643,8 @@ export default class ScienceCourtScene extends Phaser.Scene {
       minigameId: scienceCourtGame.id,
       score: this.getTotalScore(),
       gameResult: this.result,
+      courtControls: this.controlsMeta,
+      courtDefenseFields: this.defenseFieldsMeta,
       courtPhase: this.phase,
       courtCaseIndex: this.caseIndex,
       courtCaseId: this.getCurrentCase()?.id ?? null,
@@ -1001,7 +671,6 @@ export default class ScienceCourtScene extends Phaser.Scene {
       courtTotalScore: this.getTotalScore(),
       courtVerdict: this.verdict,
       courtCaseScores: [...this.caseScores],
-      courtCaseDefenses: this.caseDefenses.filter(Boolean),
       courtSubmitButton: this.submitButtonMeta,
       courtNextButton: this.nextButtonMeta,
       courtRetryButton: this.retryButtonMeta,

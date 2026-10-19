@@ -1,8 +1,15 @@
 import Phaser from 'phaser';
 import { GAME_HEIGHT, GAME_WIDTH } from '../config/gameConfig.js';
-import { colors, createBackArrow, textStyle } from './ui.js';
+import { colors, coverImage, textStyle } from './ui.js';
+import { supplyPanel, supplyText } from './supplyCartUi.js';
+import { createMinigameHeader } from './minigameHeader.js';
 
-export function drawMinigameBackdrop(scene) {
+export function drawMinigameBackdrop(scene, key) {
+  if (key && scene.textures.exists(key)) {
+    coverImage(scene, key);
+    scene.add.rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT, 0x0e1920, 0.25).setOrigin(0);
+    return;
+  }
   scene.add.rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT, 0x213733, 1).setOrigin(0);
   scene.add.rectangle(0, 0, GAME_WIDTH, 136, 0x3e3a36, 0.96).setOrigin(0);
   scene.add.rectangle(0, 136, GAME_WIDTH, 6, colors.gold, 1).setOrigin(0);
@@ -23,99 +30,48 @@ export function drawMinigameBackdrop(scene) {
 }
 
 export function createMinigameHud(scene, {
-  title,
-  topic,
-  progressLabel,
-  progressValue = 0,
-  progressMax,
-  score = 0,
-  time = 0,
-  onBack,
+  title, topic, progressLabel, progressValue = 0, progressMax, score = 0, time = 0,
 }) {
-  const back = createBackArrow(scene, onBack);
-  back.setDepth(20);
-
-  const titleText = scene.add.text(145, 38, title, textStyle(36, '#fff2c9', 'left'));
-  titleText.setOrigin(0, 0.5);
-  titleText.setShadow(3, 3, '#000000', 0, false, true);
-
-  const topicText = scene.add.text(145, 80, topic, textStyle(22, '#66e5ff', 'left'));
-  topicText.setOrigin(0, 0.5);
-
-  const scoreText = scene.add.text(980, 38, `SCORE ${score}`, textStyle(25, '#fff2c9', 'left'));
-  scoreText.setOrigin(0, 0.5);
-  const timerText = scene.add.text(980, 78, `TIME ${Math.ceil(time)}`, textStyle(25, '#fff2c9', 'left'));
-  timerText.setOrigin(0, 0.5);
-
-  const progressGraphics = scene.add.graphics();
-  const progressText = scene.add.text(605, 96, '', textStyle(22, '#fff2c9'));
-  progressText.setOrigin(0.5);
-
+  const header = createMinigameHeader(scene, {
+    day: 1, title, subtitle: topic,
+    counters: [{ label: 'TIME', glyph: 'clock', color: '#e8dcc0' }, { label: 'SCORE', glyph: 'star' }],
+  });
+  const { titleText, subtitleText: topicText, values: [timerText, scoreText] } = header;
+  scoreText.setText(String(score));
+  supplyPanel(scene, 640, 132, 798, 38, { fill: 0x101d2b, edge: 0x35678e });
+  const progressGraphics = scene.add.graphics().setDepth(6);
+  const progressText = supplyText(scene, 852, 132, '', 20).setDepth(6);
   const drawProgress = (value, max = progressMax) => {
-    const x = 450;
-    const y = 58;
-    const width = 310;
-    const height = 24;
-    const progress = max > 0 ? Phaser.Math.Clamp(value / max, 0, 1) : 0;
-
     progressGraphics.clear();
-    progressGraphics.fillStyle(0x201b1b, 1);
-    progressGraphics.fillRoundedRect(x, y, width, height, 6);
-    progressGraphics.lineStyle(3, colors.cream, 1);
-    progressGraphics.strokeRoundedRect(x, y, width, height, 6);
-    progressGraphics.fillStyle(0x58cc02, 1);
-    progressGraphics.fillRoundedRect(x + 4, y + 4, Math.max(0, (width - 8) * progress), height - 8, 4);
+    for (let i = 0; i < max; i++) {
+      progressGraphics.fillStyle(i < value ? 0x77ad2e : 0x263a4c);
+      progressGraphics.fillRect(265 + i * 80, 122, 70, 20);
+      progressGraphics.lineStyle(2, 0x0a101a);
+      progressGraphics.strokeRect(265 + i * 80, 122, 70, 20);
+    }
     progressText.setText(`${progressLabel} ${value} / ${max}`);
   };
-
+  const setTime = value => timerText.setText(`${Math.floor(value / 60).toString().padStart(2, '0')}:${Math.ceil(value % 60).toString().padStart(2, '0')}`);
+  setTime(time);
   drawProgress(progressValue, progressMax);
-
   return {
-    back,
-    titleText,
-    topicText,
-    scoreText,
-    timerText,
-    progressGraphics,
-    progressText,
-    setScore(value) {
-      scoreText.setText(`SCORE ${value}`);
-    },
-    setTime(value) {
-      timerText.setText(`TIME ${Math.ceil(value)}`);
-    },
-    setProgress(value, max = progressMax) {
-      drawProgress(value, max);
-    },
+    titleText, topicText, scoreText, timerText, progressGraphics, progressText,
+    setScore: value => scoreText.setText(String(value)), setTime,
+    setProgress: (value, max = progressMax) => drawProgress(value, max),
   };
 }
 
-export function createBottomFeedback(scene, {
-  primary,
-  secondary,
-}) {
-  const primaryText = scene.add.text(GAME_WIDTH / 2, 654, primary, textStyle(30, '#fff2c9'));
-  primaryText.setOrigin(0.5);
-  primaryText.setWordWrapWidth(920);
-  primaryText.setLineSpacing(-2);
-  primaryText.setShadow(2, 2, '#000000', 0, false, true);
-
-  const secondaryText = scene.add.text(GAME_WIDTH / 2, 698, secondary, textStyle(23, '#66e5ff'));
-  secondaryText.setOrigin(0.5);
-  secondaryText.setWordWrapWidth(980);
-  secondaryText.setLineSpacing(-2);
-
-  return {
-    primaryText,
-    secondaryText,
-    setText(nextPrimary, nextSecondary) {
-      if (nextPrimary !== undefined) {
-        primaryText.setText(nextPrimary);
-      }
-      if (nextSecondary !== undefined) {
-        secondaryText.setText(nextSecondary);
-      }
-    },
+export function createBottomFeedback(scene, { primary, secondary, rightInset = 0, panelFactory = supplyPanel, align = 'center', primarySize = 24, secondaryColor = '#67d8ee' }) {
+  const width = 1140 - rightInset;
+  const x = 103 + width / 2;
+  panelFactory(scene, x, 678, width, 64, { fill: 0x111c30, edge: 0x35678e });
+  const textX = align === 'left' ? 124 : x;
+  const primaryText = supplyText(scene, textX, 660, primary, primarySize, '#fff2c9', align).setDepth(6);
+  const secondaryText = supplyText(scene, textX, 692, secondary, 18, secondaryColor, align).setDepth(6);
+  primaryText.setWordWrapWidth(width - 62);
+  secondaryText.setWordWrapWidth(width - 62);
+  return { primaryText, secondaryText,
+    setText: (a, b) => { if (a !== undefined) primaryText.setText(a); if (b !== undefined) secondaryText.setText(b); },
   };
 }
 

@@ -1,5 +1,3 @@
-import '@fontsource/pixelify-sans/400.css';
-import '@fontsource/pixelify-sans/700.css';
 import './styles.css';
 
 import Phaser from 'phaser';
@@ -10,7 +8,10 @@ setupTestSeam();
 
 async function startGame() {
   if (document.fonts) {
-    await document.fonts.load('32px "Pixelify Sans"');
+    await Promise.all([
+      document.fonts.load('32px "ArcadeClassic"'),
+      document.fonts.load('20px "Lower Pixel"'),
+    ]);
     await document.fonts.ready;
   }
 

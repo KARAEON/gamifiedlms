@@ -1,9 +1,8 @@
 import Phaser from 'phaser';
 import { getAssessmentForLesson } from '../config/content.js';
 import { GAME_HEIGHT, GAME_WIDTH } from '../config/gameConfig.js';
-import { submitAssessmentResult } from '../systems/resultSubmission.js';
 import { markSceneReady, setTestState } from '../systems/testSeam.js';
-import { closeOpenModal, createBackArrow, createPixelButton, showModal, textStyle } from '../ui/ui.js';
+import { closeOpenModal, coverImage, createBackArrow, createPixelButton, showModal, textStyle, titleStyle } from '../ui/ui.js';
 
 const CARD_WIDTH = 820;
 const CARD_HEIGHT = 380;
@@ -32,7 +31,6 @@ export default class AssessmentScene extends Phaser.Scene {
     this.answered = false;
     this.result = null;
     this.phase = 'intro';
-    this.responses = {};
     this.choiceViews = [];
     this.nextButtonMeta = null;
 
@@ -45,7 +43,8 @@ export default class AssessmentScene extends Phaser.Scene {
   }
 
   drawBackground() {
-    this.add.rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT, 0x172826, 1).setOrigin(0);
+    if (this.textures.exists('assessment-backdrop')) coverImage(this, 'assessment-backdrop');
+    else this.add.rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT, 0x172826, 1).setOrigin(0);
     this.add.rectangle(0, 0, GAME_WIDTH, 134, 0x3e3a36, 0.98).setOrigin(0);
     this.add.rectangle(0, 134, GAME_WIDTH, 7, 0xffd76a, 1).setOrigin(0);
 
@@ -64,7 +63,7 @@ export default class AssessmentScene extends Phaser.Scene {
     back.setDepth(20);
 
     const label = this.assessment.type === 'summative' ? 'SUMMATIVE' : 'FORMATIVE';
-    this.titleText = this.add.text(150, 42, this.assessment.title, textStyle(36, '#fff2c9', 'left'));
+    this.titleText = this.add.text(150, 42, this.assessment.title, titleStyle(36, '#fff2c9', 'left'));
     this.titleText.setOrigin(0, 0.5);
     this.titleText.setShadow(3, 3, '#000000', 0, false, true);
     this.subtitleText = this.add.text(150, 82, this.assessment.subtitle, textStyle(22, '#66e5ff', 'left'));
@@ -231,7 +230,6 @@ export default class AssessmentScene extends Phaser.Scene {
     this.selectedChoice = choice;
     this.answered = true;
     const correct = choice === item.answer;
-    this.responses[item.id] = choice;
     if (correct) {
       this.score += 1;
     }
@@ -273,7 +271,6 @@ export default class AssessmentScene extends Phaser.Scene {
     this.result = this.getPercent() >= this.assessment.passPercent ? 'pass' : 'fail';
     this.phase = 'result';
     this.updateTestState();
-    this.submitResult();
     showModal(this, {
       name: `assessment-${this.result}`,
       title: this.result === 'pass' ? 'ASSESSMENT PASSED' : 'RETEACHING NEEDED',
@@ -350,20 +347,6 @@ export default class AssessmentScene extends Phaser.Scene {
     });
   }
 
-  buildSubmissionPayload() {
-    return {
-      answers: { ...this.responses },
-    };
-  }
-
-  submitResult() {
-    submitAssessmentResult(this, {
-      lessonKey: this.lessonId,
-      gameKey: this.assessment.id,
-      payloadBuilder: () => this.buildSubmissionPayload(),
-    });
-  }
-
   buildTestState() {
     return {
       selectedIsland: this.islandId,
@@ -378,7 +361,6 @@ export default class AssessmentScene extends Phaser.Scene {
       assessmentScore: this.score,
       assessmentPercent: this.result ? this.getPercent() : 0,
       assessmentResult: this.result,
-      assessmentResponses: { ...this.responses },
       assessmentFallback: this.assessment.fallback,
       assessmentSelectedChoice: this.selectedChoice,
       assessmentOptions: this.choiceViews.map((view) => ({

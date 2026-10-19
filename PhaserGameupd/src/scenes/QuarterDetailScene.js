@@ -1,21 +1,23 @@
 import Phaser from 'phaser';
+import { scienceQuarterGames, SCIENCE_TOOLS } from '../config/scienceQuarterGames.js';
+import { readScienceProgress } from '../systems/scienceProgress.js';
 import {
   inventMixWorkshopGame,
   mixMatchMixturesGame,
   mixtureDetectiveGame,
   scienceCourtGame,
   supplyCartSortingGame,
-  vulcanQuarterDetails,
+  islandCurricula,
 } from '../config/content.js';
 import { GAME_HEIGHT, GAME_WIDTH } from '../config/gameConfig.js';
 import { markSceneReady, setTestCommand, setTestState } from '../systems/testSeam.js';
-import { drawMixtureIcon } from '../ui/minigameUi.js';
-import { closeOpenModal, colors, createBackArrow, showModal, textStyle } from '../ui/ui.js';
+import { createGeneralAsset, createMixtureIcon } from '../ui/assetIcons.js';
+import { closeOpenModal, colors, createBackArrow, showModal, textStyle, titleStyle } from '../ui/ui.js';
 
 const HEADER_HEIGHT = 112;
 const FIRST_MAJOR_Y = 450;
 const MAJOR_SPACING = 540;
-const CONTENT_HEIGHT = 2280;
+const CONTENT_BOTTOM_PADDING = 380;
 const LEFT_LESSON_OFFSETS = [
   { x: 760, y: 50 },
   { x: 640, y: 130 },
@@ -32,6 +34,7 @@ const RIGHT_LESSON_OFFSETS = [
 ];
 
 const MINIGAMES = {
+  ...Object.fromEntries(scienceQuarterGames.map(game => [game.lessonId, { sceneKey: 'ScienceAdventureScene', game, kind: game.kind }])),
   [mixMatchMixturesGame.lessonId]: {
     sceneKey: 'MixMatchScene',
     game: mixMatchMixturesGame,
@@ -67,20 +70,23 @@ export default class QuarterDetailScene extends Phaser.Scene {
   init(data) {
     this.islandId = data.islandId ?? 'vulcan-caverns';
     this.quarterId = data.quarterId ?? 'q1';
-    this.quarter = vulcanQuarterDetails[this.quarterId] ?? vulcanQuarterDetails.q1;
-    this.maxScrollY = CONTENT_HEIGHT - GAME_HEIGHT;
+    this.curriculum = islandCurricula[this.islandId] ?? islandCurricula['vulcan-caverns'];
+    this.quarter = this.curriculum.quarters[this.quarterId] ?? this.curriculum.quarters.q1;
+    const hasLessons = this.quarter.majors.some(major => major.lessons.length > 0);
+    this.majorSpacing = hasLessons ? MAJOR_SPACING : 280;
+    const lastLessonOffset = hasLessons ? Math.max(...LEFT_LESSON_OFFSETS.map(point => point.y), ...RIGHT_LESSON_OFFSETS.map(point => point.y)) : 0;
+    this.contentHeight = FIRST_MAJOR_Y + (this.quarter.majors.length - 1) * this.majorSpacing
+      + lastLessonOffset + CONTENT_BOTTOM_PADDING;
+    this.maxScrollY = Math.max(0, this.contentHeight - GAME_HEIGHT);
     this.initialScrollY = Number.isFinite(data.scrollY) ? data.scrollY : 0;
     this.dragStartY = 0;
     this.dragStartScrollY = 0;
     this.isDraggingPath = false;
     this.currentModal = null;
-    this.majorAccess = globalThis.GLMS_PHASER?.majorAccess ?? {};
-    this.lessonAccess = globalThis.GLMS_PHASER?.lessonAccess ?? {};
-    this.lockedMessage = globalThis.GLMS_PHASER?.lockedMessage ?? 'This lesson is locked by your teacher.';
   }
 
   create() {
-    this.cameras.main.setBounds(0, 0, GAME_WIDTH, CONTENT_HEIGHT);
+    this.cameras.main.setBounds(0, 0, GAME_WIDTH, this.contentHeight);
     this.drawScrollableWorld();
     this.drawQuarterPath();
     this.createHeader();
@@ -105,7 +111,7 @@ export default class QuarterDetailScene extends Phaser.Scene {
   }
 
   drawScrollableWorld() {
-    this.add.rectangle(0, 0, GAME_WIDTH, CONTENT_HEIGHT, 0xf5f4ef, 1).setOrigin(0);
+    this.add.rectangle(0, 0, GAME_WIDTH, this.contentHeight, 0xf5f4ef, 1).setOrigin(0);
 
     const banner = this.add.graphics();
     banner.fillStyle(0x54c900, 1);
@@ -115,9 +121,9 @@ export default class QuarterDetailScene extends Phaser.Scene {
     banner.fillStyle(0x2e8c00, 1);
     banner.fillRect(90, 292, 1100, 18);
 
-    const section = this.add.text(142, 178, `${this.quarter.label} SCIENCE`, textStyle(32, '#d8ffc7', 'left'));
+    const section = this.add.text(142, 178, `${this.quarter.label} ${this.curriculum.subject.toUpperCase()}`, titleStyle(32, '#d8ffc7', 'left'));
     section.setOrigin(0, 0.5);
-    const title = this.add.text(142, 242, this.quarter.title.toUpperCase(), textStyle(44, '#ffffff', 'left'));
+    const title = this.add.text(142, 242, this.quarter.title.toUpperCase(), titleStyle(44, '#ffffff', 'left'));
     title.setOrigin(0, 0.5);
 
     this.drawListIcon(1110, 222);
@@ -149,7 +155,7 @@ export default class QuarterDetailScene extends Phaser.Scene {
       this.scene.start('IslandMapScene', { islandId: this.islandId });
     });
 
-    const title = this.add.text(145, 43, this.quarter.title.toUpperCase(), textStyle(30, '#2f2a2a', 'left'));
+    const title = this.add.text(145, 43, this.quarter.title.toUpperCase(), titleStyle(30, '#2f2a2a', 'left'));
     title.setOrigin(0, 0.5);
     title.setDepth(502);
     title.setScrollFactor(0);
@@ -163,15 +169,21 @@ export default class QuarterDetailScene extends Phaser.Scene {
   drawQuarterPath() {
     this.quarter.majors.forEach((major, majorIndex) => {
       const majorX = majorIndex % 2 === 0 ? 430 : 850;
-      const majorY = FIRST_MAJOR_Y + majorIndex * MAJOR_SPACING;
+      const majorY = FIRST_MAJOR_Y + majorIndex * this.majorSpacing;
       const lessonOffsets = majorIndex % 2 === 0 ? LEFT_LESSON_OFFSETS : RIGHT_LESSON_OFFSETS;
-      const lessonPoints = lessonOffsets.map((offset, lessonIndex) => ({
+      const lessonPoints = lessonOffsets.slice(0, major.lessons.length).map((offset, lessonIndex) => ({
         x: offset.x,
         y: majorY + offset.y,
         lesson: major.lessons[lessonIndex],
       }));
 
       this.drawDottedPath([{ x: majorX, y: majorY }, ...lessonPoints]);
+      if (!major.lessons.length && majorIndex < this.quarter.majors.length - 1) {
+        this.drawDottedPath([
+          { x: majorX, y: majorY },
+          { x: majorIndex % 2 === 0 ? 850 : 430, y: majorY + this.majorSpacing },
+        ]);
+      }
       this.createMajorNode(major, majorX, majorY);
       lessonPoints.forEach(({ x, y, lesson }, lessonIndex) => {
         this.createLessonNode(major, lesson, x, y, lessonIndex);
@@ -200,66 +212,68 @@ export default class QuarterDetailScene extends Phaser.Scene {
   }
 
   createMajorNode(major, x, y) {
-    const isLocked = this.isMajorLocked(major.id);
     const container = this.add.container(x, y);
     container.setDepth(10);
     container.setData('majorId', major.id);
 
     const shadow = this.add.ellipse(10, 18, 130, 42, 0x000000, 0.15);
-    const base = this.add.circle(0, 0, 72, isLocked ? 0xc8d8ab : 0x58cc02, 1);
-    base.setStrokeStyle(7, isLocked ? 0x8ea264 : 0x47a800, 1);
-    const shine = this.add.arc(-14, -18, 50, 205, 320, false, isLocked ? 0xe6efd2 : 0x8eea32, isLocked ? 0.28 : 0.35);
+    const base = this.add.circle(0, 0, 72, 0x58cc02, 1);
+    base.setStrokeStyle(7, 0x47a800, 1);
+    const shine = this.add.arc(-14, -18, 50, 205, 320, false, 0x8eea32, 0.35);
     const icon = this.add.graphics();
-    this.drawMajorIcon(icon, major.icon, isLocked);
+    this.drawMajorIcon(icon, major.icon);
 
-    const label = this.add.text(0, 98, major.title.toUpperCase(), textStyle(23, isLocked ? '#6d755c' : '#2f2a2a'));
-    label.setOrigin(0.5);
+    const label = this.add.text(0, 98, major.title.toUpperCase(), titleStyle(23, '#2f2a2a'));
+    label.setOrigin(0.5, major.placeholder ? 0 : 0.5);
     label.setWordWrapWidth(255);
-    const lockBadge = isLocked ? this.createMajorLockBadge(46, -46) : null;
 
     const hitArea = this.add.zone(0, 0, 150, 150).setInteractive({ useHandCursor: true });
-    hitArea.on('pointerover', () => container.setScale(isLocked ? 1.04 : 1.08));
+    hitArea.on('pointerover', () => container.setScale(1.08));
     hitArea.on('pointerout', () => container.setScale(1));
     hitArea.on('pointerup', () => this.openMajor(major));
 
-    if (isLocked) {
-      container.setAlpha(0.94);
+    container.add([shadow, base, shine, icon, label, hitArea]);
+    if (major.week) {
+      const weekLabel = this.add.text(0, -102, `WEEK ${major.week}`, textStyle(20, '#7e7e7e')).setOrigin(0.5);
+      container.add(weekLabel);
     }
-
-    container.add([shadow, base, shine, icon, label, hitArea, lockBadge].filter(Boolean));
   }
 
   createLessonNode(major, lesson, x, y, lessonIndex) {
-    const isLocked = this.isLessonLocked(lesson.id);
     const container = this.add.container(x, y);
     container.setDepth(9);
     container.setData('lessonId', lesson.id);
 
     const shadow = this.add.circle(5, 7, 31, 0x000000, 0.14);
-    const base = this.add.circle(0, 0, 31, isLocked ? 0xe6dece : colors.cream, 1);
-    base.setStrokeStyle(5, isLocked ? 0xa78852 : 0xc4a55c, 1);
-    const inner = this.add.circle(0, 0, 17, isLocked ? 0xf4ebd5 : 0xfff7cf, 1);
-    const label = this.add.text(0, -1, `${lessonIndex + 1}`, textStyle(20, isLocked ? '#7c6545' : '#5b4322'));
+    const base = this.add.circle(0, 0, 31, colors.cream, 1);
+    if (readScienceProgress()[lesson.id]?.completed) base.setFillStyle(0xb4d76d);
+    base.setStrokeStyle(5, 0xc4a55c, 1);
+    const inner = this.add.circle(0, 0, 17, 0xfff7cf, 1);
+    const label = this.add.text(0, -1, `${lessonIndex + 1}`, textStyle(20, '#5b4322'));
     label.setOrigin(0.5);
-    const lockBadge = isLocked ? this.createLessonLockBadge(21, -21) : null;
 
     const hitArea = this.add.zone(0, 0, 78, 78).setInteractive({ useHandCursor: true });
-    hitArea.on('pointerover', () => container.setScale(isLocked ? 1.05 : 1.12));
+    hitArea.on('pointerover', () => container.setScale(1.12));
     hitArea.on('pointerout', () => container.setScale(1));
     hitArea.on('pointerup', () => this.openLesson(major, lesson));
 
-    if (isLocked) {
-      container.setAlpha(0.94);
+    container.add([shadow, base, inner, label, hitArea]);
+    if (lesson.day) {
+      const dayLabel = this.add.text(0, 48, lesson.label.toUpperCase(), textStyle(16, '#5b4322')).setOrigin(0.5);
+      container.add(dayLabel);
     }
-
-    container.add([shadow, base, inner, label, hitArea, lockBadge].filter(Boolean));
   }
 
-  drawMajorIcon(graphics, icon, isLocked = false) {
-    const iconColor = isLocked ? 0xf6f1df : 0xffffff;
-    const cutoutColor = isLocked ? 0xc8d8ab : 0x58cc02;
-    graphics.fillStyle(iconColor, 1);
-    graphics.lineStyle(8, iconColor, 1);
+  drawMajorIcon(graphics, icon) {
+    graphics.fillStyle(0xffffff, 1);
+    graphics.lineStyle(8, 0xffffff, 1);
+
+    if (icon === 'placeholder') {
+      graphics.strokeRoundedRect(-26, -34, 52, 68, 4);
+      graphics.lineBetween(-14, -12, 14, -12);
+      graphics.lineBetween(-14, 7, 14, 7);
+      return;
+    }
 
     if (icon === 'beaker') {
       graphics.strokeRect(-22, -38, 44, 62);
@@ -317,7 +331,7 @@ export default class QuarterDetailScene extends Phaser.Scene {
 
     if (icon === 'leaf') {
       graphics.fillEllipse(0, 0, 76, 44);
-      graphics.lineStyle(6, cutoutColor, 1);
+      graphics.lineStyle(6, 0x58cc02, 1);
       graphics.lineBetween(-24, 16, 30, -16);
       return;
     }
@@ -335,9 +349,9 @@ export default class QuarterDetailScene extends Phaser.Scene {
 
     if (icon === 'gear') {
       graphics.fillCircle(0, 0, 34);
-      graphics.fillStyle(cutoutColor, 1);
+      graphics.fillStyle(0x58cc02, 1);
       graphics.fillCircle(0, 0, 14);
-      graphics.fillStyle(iconColor, 1);
+      graphics.fillStyle(0xffffff, 1);
       for (let i = 0; i < 8; i += 1) {
         const angle = (Math.PI * 2 * i) / 8;
         graphics.fillRect(Math.cos(angle) * 37 - 5, Math.sin(angle) * 37 - 5, 10, 10);
@@ -386,17 +400,16 @@ export default class QuarterDetailScene extends Phaser.Scene {
   openMajor(major) {
     setTestState({ selectedMajor: major.id, selectedLesson: null });
 
-    if (this.isMajorLocked(major.id)) {
-      this.showLockedMajorInfo(major);
-      return;
-    }
-
     showModal(this, {
       name: 'major',
       title: major.title.toUpperCase(),
+      titleSize: major.placeholder ? 26 : 38,
+      width: major.week ? 720 : 520,
       height: 285,
       body: (overlay, { panelX, panelY }) => {
-        const body = this.add.text(panelX, panelY + 8, 'COMPETENCY PLACEHOLDER', textStyle(28, '#66e5ff'));
+        const available = major.lessons.filter(lesson => MINIGAMES[lesson.id]).length;
+        const label = major.week ? `${major.lessons.length} DAILY GAMES COMING SOON` : major.placeholder && available ? `${available} ${available === 1 ? 'ACTIVITY' : 'ACTIVITIES'} AVAILABLE\n${major.lessons.length - available} LESSONS COMING SOON` : major.placeholder ? 'LESSONS COMING SOON' : 'COMPETENCY PLACEHOLDER';
+        const body = this.add.text(panelX, panelY + 8, label, textStyle(28, '#66e5ff')).setAlign('center');
         body.setOrigin(0.5);
         return [body];
       },
@@ -410,15 +423,9 @@ export default class QuarterDetailScene extends Phaser.Scene {
   }
 
   openLesson(major, lesson) {
-    setTestState({ selectedMajor: major.id, selectedLesson: lesson.id, lockedFeedback: null });
+    setTestState({ selectedMajor: major.id, selectedLesson: lesson.id });
 
     const minigame = MINIGAMES[lesson.id];
-    if (this.isLessonLocked(lesson.id)) {
-      setTestState({ lockedFeedback: lesson.id });
-      this.showLockedLessonInfo(major, lesson, minigame);
-      return;
-    }
-
     if (minigame) {
       this.showMinigameInfo(major, lesson, minigame);
       return;
@@ -427,84 +434,17 @@ export default class QuarterDetailScene extends Phaser.Scene {
     showModal(this, {
       name: 'lesson',
       title: `${this.quarter.label} ${major.title} ${lesson.label}`.toUpperCase(),
-      height: 285,
+      titleSize: lesson.day ? 22 : lesson.placeholder ? 26 : 38,
+      width: lesson.day ? 720 : 520,
+      height: lesson.day ? 340 : 285,
       body: (overlay, { panelX, panelY }) => {
-        const body = this.add.text(panelX, panelY + 8, 'MINIGAME PLACEHOLDER', textStyle(28, '#66e5ff'));
+        const body = this.add.text(panelX, panelY + 8, lesson.day ? 'GAME COMING SOON' : lesson.placeholder ? 'LESSON COMING SOON' : 'MINIGAME PLACEHOLDER', textStyle(28, '#66e5ff'));
         body.setOrigin(0.5);
         return [body];
       },
       buttons: [
         {
           label: 'BACK',
-          action: () => closeOpenModal(this),
-        },
-      ],
-    });
-  }
-
-  showLockedLessonInfo(major, lesson, minigame) {
-    const lessonAccess = this.resolveLessonAccess(lesson.id);
-    const lockedMessage = this.buildLockedLessonMessage(lessonAccess);
-
-    showModal(this, {
-      name: `lesson-locked-${lesson.id}`,
-      title: `LESSON ${lesson.label} LOCKED`,
-      width: 700,
-      height: 380,
-      body: (_overlay, { panelX, panelY, panelTop }) => {
-        const topic = this.add.text(
-          panelX,
-          panelTop + 108,
-          `${this.quarter.label} ${major.title} LESSON ${lesson.label}`.toUpperCase(),
-          textStyle(23, '#66e5ff'),
-        );
-        topic.setOrigin(0.5);
-        const gameTitle = this.add.text(panelX, panelY - 12, minigame?.game?.title ?? lesson.title.toUpperCase(), textStyle(30, '#fff2c9'));
-        gameTitle.setOrigin(0.5);
-        const message = this.add.text(panelX, panelY + 52, lockedMessage.toUpperCase(), textStyle(23, '#ffd76a'));
-        message.setOrigin(0.5);
-        message.setWordWrapWidth(520);
-        message.setLineSpacing(-2);
-
-        return [topic, gameTitle, message];
-      },
-      buttons: [
-        {
-          label: 'BACK',
-          width: 180,
-          action: () => closeOpenModal(this),
-        },
-      ],
-    });
-  }
-
-  showLockedMajorInfo(major) {
-    const lockedMessage = `${major.title} is locked by your teacher.`;
-
-    showModal(this, {
-      name: `major-locked-${major.id}`,
-      title: `${major.title.toUpperCase()} LOCKED`,
-      width: 700,
-      height: 350,
-      body: (_overlay, { panelX, panelY, panelTop }) => {
-        const topic = this.add.text(
-          panelX,
-          panelTop + 108,
-          `${this.quarter.label} ${this.quarter.title}`.toUpperCase(),
-          textStyle(23, '#66e5ff'),
-        );
-        topic.setOrigin(0.5);
-        const message = this.add.text(panelX, panelY + 8, lockedMessage.toUpperCase(), textStyle(28, '#ffd76a'));
-        message.setOrigin(0.5);
-        message.setWordWrapWidth(520);
-        message.setLineSpacing(-2);
-
-        return [topic, message];
-      },
-      buttons: [
-        {
-          label: 'BACK',
-          width: 180,
           action: () => closeOpenModal(this),
         },
       ],
@@ -521,7 +461,7 @@ export default class QuarterDetailScene extends Phaser.Scene {
       body: (overlay, { panelX, panelY, panelTop }) => {
         const topic = this.add.text(panelX, panelTop + 105, `${this.quarter.label} ${major.title} LESSON ${lesson.label}`.toUpperCase(), textStyle(23, '#66e5ff'));
         topic.setOrigin(0.5);
-        const instruction = this.add.text(panelX, panelTop + 148, this.getMinigameInstruction(minigame.kind), textStyle(24, '#fff2c9'));
+        const instruction = this.add.text(panelX, panelTop + 148, minigame.game.brief ?? this.getMinigameInstruction(minigame.kind), textStyle(24, '#fff2c9'));
         instruction.setOrigin(0.5);
         instruction.setWordWrapWidth(620);
         instruction.setLineSpacing(-2);
@@ -576,6 +516,15 @@ export default class QuarterDetailScene extends Phaser.Scene {
   }
 
   createMinigamePreview(kind, panelX, panelY) {
+    if (scienceQuarterGames.some(game => game.kind === kind)) {
+      const game = scienceQuarterGames.find(game => game.kind === kind);
+      const tool = SCIENCE_TOOLS.find(item => item.id === kind) ?? SCIENCE_TOOLS[0];
+      const key = kind === 'kit' ? 'science-kit-case' : kind === 'mystery' || kind === 'fair' ? 'general-sand-and-water' : kind === 'relay' ? 'science-filter-funnel' : `science-${tool.asset}`;
+      const image = this.add.image(panelX - 183, panelY + 43, this.textures.exists(key) ? key : 'general-sand-and-water');
+      image.setScale(Math.min(120 / image.width, 110 / image.height));
+      const label = this.add.text(panelX + 42, panelY + 40, `${game.competency}\n3 CHALLENGES\nEXPLORE AND RETRY`, textStyle(24, '#ffd76a')).setOrigin(0.5);
+      return [image, label];
+    }
     if (kind === 'memory') {
       return this.createMemoryPreview(panelX, panelY);
     }
@@ -642,10 +591,7 @@ export default class QuarterDetailScene extends Phaser.Scene {
     itemCard.lineStyle(4, 0x9e6b47, 1);
     itemCard.fillRoundedRect(panelX - 262, panelY - 52, 130, 104, 8);
     itemCard.strokeRoundedRect(panelX - 262, panelY - 52, 130, 104, 8);
-    const icon = this.add.graphics();
-    icon.setPosition(panelX - 197, panelY - 14);
-    icon.setScale(0.58);
-    drawMixtureIcon(icon, 'fruit-salad');
+    const icon = createMixtureIcon(this, 'fruit-salad', { x: panelX - 197, y: panelY - 14, width: 60, height: 58 });
     const itemLabel = this.add.text(panelX - 197, panelY + 34, 'FRUIT SALAD', textStyle(17, '#2f2a2a'));
     itemLabel.setOrigin(0.5);
 
@@ -683,10 +629,7 @@ export default class QuarterDetailScene extends Phaser.Scene {
 
       const sampleLabel = this.add.text(x, panelY - 39, `SAMPLE ${sample.key}`, textStyle(18, '#fff2c9'));
       sampleLabel.setOrigin(0.5);
-      const icon = this.add.graphics();
-      icon.setPosition(x, panelY + 12);
-      icon.setScale(0.76);
-      drawMixtureIcon(icon, sample.icon);
+      const icon = createMixtureIcon(this, sample.icon, { x, y: panelY + 12, width: 72, height: 66 });
       const name = this.add.text(x, panelY + 65, sample.name, textStyle(19, '#2f2a2a'));
       name.setOrigin(0.5);
       items.push(card, sampleLabel, icon, name);
@@ -708,27 +651,14 @@ export default class QuarterDetailScene extends Phaser.Scene {
   createCourtPreview(panelX, panelY) {
     const items = [];
 
-    const judge = this.add.graphics();
-    judge.fillStyle(0xfff2c9, 1);
-    judge.fillCircle(panelX - 238, panelY - 24, 27);
-    judge.fillStyle(0x2f2a2a, 1);
-    judge.fillRoundedRect(panelX - 268, panelY + 0, 60, 50, 8);
-    judge.fillStyle(0xd6d6d6, 1);
-    judge.fillCircle(panelX - 255, panelY - 30, 11);
-    judge.fillCircle(panelX - 221, panelY - 30, 11);
-    judge.fillStyle(0x8a6048, 1);
-    judge.fillRoundedRect(panelX - 188, panelY - 8, 48, 9, 4);
-    judge.fillRoundedRect(panelX - 148, panelY - 26, 11, 42, 4);
+    const judge = createGeneralAsset(this, 'judge', { x: panelX - 238, y: panelY - 2, width: 114, height: 114 });
 
     const exhibit = this.add.graphics();
     exhibit.fillStyle(0xfff2c9, 1);
     exhibit.lineStyle(4, 0x9e6b47, 1);
     exhibit.fillRoundedRect(panelX - 78, panelY - 66, 156, 116, 8);
     exhibit.strokeRoundedRect(panelX - 78, panelY - 66, 156, 116, 8);
-    const icon = this.add.graphics();
-    icon.setPosition(panelX, panelY - 16);
-    icon.setScale(0.72);
-    drawMixtureIcon(icon, 'halo-halo');
+    const icon = createMixtureIcon(this, 'halo-halo', { x: panelX, y: panelY - 16, width: 72, height: 66 });
     const exhibitText = this.add.text(panelX, panelY + 34, 'EXHIBIT', textStyle(17, '#2f2a2a'));
     exhibitText.setOrigin(0.5);
 
@@ -760,21 +690,13 @@ export default class QuarterDetailScene extends Phaser.Scene {
       card.lineStyle(4, index < 2 ? 0x58cc02 : 0x9e6b47, 1);
       card.fillRoundedRect(x - 42, panelY - 58, 84, 96, 8);
       card.strokeRoundedRect(x - 42, panelY - 58, 84, 96, 8);
-      card.fillStyle(index === 0 ? 0x66e5ff : index === 1 ? 0xff9b42 : 0xffd76a, 1);
-      card.fillCircle(x, panelY - 22, 18);
+      const sprite = createGeneralAsset(this, ['bottled-water', 'powdered-juice', 'bowl-half-full'][index], { x, y: panelY - 22, width: 58, height: 54 });
       const text = this.add.text(x, panelY + 20, label, textStyle(15, '#2f2a2a'));
       text.setOrigin(0.5);
-      items.push(card, text);
+      items.push(card, sprite, text);
     });
 
-    const cup = this.add.graphics();
-    cup.lineStyle(5, 0x2f2a2a, 1);
-    cup.strokeRoundedRect(panelX + 50, panelY - 50, 94, 108, 8);
-    cup.fillStyle(0xff9b42, 0.94);
-    cup.fillRoundedRect(panelX + 58, panelY + 2, 78, 48, 5);
-    cup.fillStyle(0x66e5ff, 0.35);
-    cup.fillCircle(panelX + 78, panelY + 21, 4);
-    cup.fillCircle(panelX + 115, panelY + 31, 3);
+    const cup = createGeneralAsset(this, 'energy-drink', { x: panelX + 97, y: panelY + 4, width: 118, height: 118 });
 
     const checklist = this.add.graphics();
     checklist.fillStyle(0xfff2c9, 1);
@@ -789,64 +711,6 @@ export default class QuarterDetailScene extends Phaser.Scene {
     note.setOrigin(0.5);
     items.push(cup, checklist, checks, note);
     return items;
-  }
-
-  createLessonLockBadge(x, y) {
-    const container = this.add.container(x, y);
-    const badge = this.add.circle(0, 0, 12, 0x8a6048, 1);
-    const icon = this.add.graphics();
-    icon.lineStyle(2.5, 0xfff2c9, 1);
-    icon.strokeRoundedRect(-4, -8, 8, 8, 3);
-    icon.strokeRoundedRect(-5, -1, 10, 8, 2);
-    container.add([badge, icon]);
-
-    return container;
-  }
-
-  createMajorLockBadge(x, y) {
-    const container = this.add.container(x, y);
-    const badge = this.add.circle(0, 0, 16, 0x7c6545, 1);
-    const icon = this.add.graphics();
-    icon.lineStyle(3, 0xfff2c9, 1);
-    icon.strokeRoundedRect(-5, -11, 10, 10, 3);
-    icon.strokeRoundedRect(-7, -1, 14, 10, 3);
-    container.add([badge, icon]);
-
-    return container;
-  }
-
-  resolveMajorAccess(majorId) {
-    const entry = this.majorAccess?.[majorId];
-    if (!entry || typeof entry.locked !== 'boolean') {
-      return { locked: false };
-    }
-
-    return entry;
-  }
-
-  resolveLessonAccess(lessonId) {
-    const entry = this.lessonAccess?.[lessonId];
-    if (!entry || typeof entry.locked !== 'boolean') {
-      return { locked: false };
-    }
-
-    return entry;
-  }
-
-  isMajorLocked(majorId) {
-    return this.resolveMajorAccess(majorId).locked === true;
-  }
-
-  isLessonLocked(lessonId) {
-    return this.resolveLessonAccess(lessonId).locked === true;
-  }
-
-  buildLockedLessonMessage(lessonAccess) {
-    if (lessonAccess?.lockReason === 'major' && lessonAccess?.parentMajorTitle) {
-      return `This lesson is locked because ${lessonAccess.parentMajorTitle} is locked by your teacher.`;
-    }
-
-    return this.lockedMessage;
   }
 
   setupScrolling() {

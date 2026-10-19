@@ -35,6 +35,7 @@ RUN apt-get update \
 
 WORKDIR /var/www/html
 COPY . .
+COPY --from=game-assets /app/PhaserGameupd/public/assets/ ./public/assets/
 COPY --from=dependencies /app/vendor ./vendor
 COPY --from=assets /app/public/build ./public/build
 COPY --from=game-assets /tmp/student-game.js ./public/assets/student-game.js

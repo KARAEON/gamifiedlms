@@ -2,7 +2,6 @@ html,
 body {
   margin: 0;
   min-width: 320px;
-  width: 100%;
   min-height: 100%;
   background: #111111;
   overflow: hidden;
@@ -12,27 +11,29 @@ body {
   display: grid;
   place-items: center;
   min-height: 100vh;
-  min-height: 100dvh;
-  font-family: "Pixelify Sans", monospace;
-  overscroll-behavior: none;
+  font-family: "Lower Pixel", monospace;
 }
 
 #game-container {
   width: 100vw;
   height: 100vh;
-  height: 100dvh;
 }
 
-#game-container canvas {
-  display: block;
-  max-width: 100%;
-  max-height: 100%;
+canvas {
   image-rendering: pixelated;
-  touch-action: manipulation;
+}
+@font-face {
+  font-family: "ArcadeClassic";
+  src: url('/assets/fonts/arcadeclassic/ARCADECLASSIC.TTF') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
 }
 
-@media (max-width: 700px) and (orientation: portrait) {
-  #game-container {
-    opacity: 0.35;
-  }
+@font-face {
+  font-family: "Lower Pixel";
+  src: url('/assets/fonts/lower-pixel/LowresPixel-Regular.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
 }

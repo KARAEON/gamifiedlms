@@ -2,7 +2,8 @@ import Phaser from 'phaser';
 import { GAME_HEIGHT, GAME_WIDTH } from '../config/gameConfig.js';
 import { setTestState } from '../systems/testSeam.js';
 
-const FONT_FAMILY = '"Pixelify Sans", monospace';
+export const BODY_FONT = '"Lower Pixel", monospace';
+export const HEADING_FONT = '"ArcadeClassic", "Lower Pixel", monospace';
 
 export const colors = {
   paper: 0xffdca6,
@@ -24,13 +25,23 @@ export function coverImage(scene, key) {
 
 export function textStyle(size, color = '#fff2c9', align = 'center') {
   return {
-    fontFamily: FONT_FAMILY,
+    fontFamily: BODY_FONT,
     fontSize: `${size}px`,
-    fontStyle: '700',
+    fontStyle: 'normal',
     color,
     align,
     letterSpacing: 0,
   };
+}
+
+export function titleStyle(size, color = '#fff2c9', align = 'center') {
+  // ArcadeClassic has shorter glyphs; keep its visible height close to body text.
+  return { ...textStyle(Math.round(size * 1.25), color, align), fontFamily: HEADING_FONT, letterSpacing: 1 };
+}
+
+export function fitTextWidth(node, width) {
+  if (node.width > width) node.setFontSize(Math.floor(parseFloat(node.style.fontSize) * width / node.width));
+  return node;
 }
 
 export function createPixelButton(scene, x, y, label, onClick, options = {}) {
@@ -41,7 +52,7 @@ export function createPixelButton(scene, x, y, label, onClick, options = {}) {
   const fill = options.fill ?? colors.paper;
   const hoverFill = options.hoverFill ?? colors.paperLight;
   const stroke = options.stroke ?? colors.paperDark;
-  const textColor = options.textColor ?? '#65e7ff';
+  const textColor = options.textColor ?? '#263c49';
   const testId = options.testId ?? label.toLowerCase().replaceAll(' ', '-');
 
   const container = scene.add.container(x, y);
@@ -63,7 +74,7 @@ export function createPixelButton(scene, x, y, label, onClick, options = {}) {
 
   const text = scene.add.text(0, -2, label, textStyle(fontSize, textColor));
   text.setOrigin(0.5);
-  text.setShadow(2, 2, '#ffffff', 0, false, true);
+  if (text.width > width - 28) text.setFontSize(Math.floor(fontSize * (width - 28) / text.width));
 
   const hitArea = scene.add.zone(0, 0, width, height);
   hitArea.setOrigin(0.5);
@@ -152,7 +163,7 @@ export function showModal(scene, config) {
     panelX,
     panelTop + (config.titleTop ?? 62),
     config.title,
-    textStyle(config.titleSize ?? 38),
+    titleStyle(config.titleSize ?? 38),
   );
   title.setOrigin(0.5);
   title.setWordWrapWidth(panelWidth - 72);

@@ -1,41 +1,51 @@
 import Phaser from 'phaser';
-import { vulcanQuarterNodes } from '../config/content.js';
+import { islands, islandCurricula } from '../config/content.js';
 import { GAME_HEIGHT, GAME_WIDTH } from '../config/gameConfig.js';
+import { playAreaMusic } from '../systems/music.js';
 import { markSceneReady, setTestState } from '../systems/testSeam.js';
-import { colors, coverImage, createBackArrow, textStyle } from '../ui/ui.js';
+import { colors, coverImage, createBackArrow, textStyle, titleStyle } from '../ui/ui.js';
 
 export default class IslandMapScene extends Phaser.Scene {
   constructor() {
     super('IslandMapScene');
   }
 
-  init(data) {
-    this.islandId = data.islandId ?? 'vulcan-caverns';
+  init(data = {}) {
+    this.island = islands.find((island) => island.id === data.islandId) ?? islands.find((island) => island.id === 'vulcan-caverns');
+    this.islandId = this.island.id;
+    this.quarterNodes = islandCurricula[this.islandId]?.nodes ?? [];
   }
 
   create() {
-    coverImage(this, 'vulcan-caverns-map');
+    playAreaMusic(this, this.islandId);
+    coverImage(this, `${this.islandId}-map`);
     this.add.rectangle(0, 0, GAME_WIDTH, 112, 0x000000, 0.24).setOrigin(0);
 
-    createBackArrow(this, () => this.scene.start('IslandSelectScene'));
+    createBackArrow(this, () => this.scene.start('IslandSelectScene', { cloudTransition: false, fadeFromWhite: false }));
 
-    const title = this.add.text(156, 56, 'VULCAN\nCAVERNS', textStyle(40, '#fff2c9', 'left'));
+    const title = this.add.text(156, 56, this.island.title.replace(' ', '\n'), titleStyle(40, '#fff2c9', 'left'));
     title.setOrigin(0, 0.5);
     title.setLineSpacing(-8);
     title.setShadow(4, 4, '#4d332f', 0, false, true);
 
     this.createQuarterNodes();
+    if (!this.quarterNodes.length) {
+      const panel = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT - 62, 560, 72, 0x172d3b, 0.94);
+      panel.setStrokeStyle(3, 0xffe6a3);
+      this.add.text(GAME_WIDTH / 2, GAME_HEIGHT - 62, 'NEW LESSONS COMING SOON', textStyle(28, '#fff2c9')).setOrigin(0.5);
+    }
 
     markSceneReady('IslandMapScene', {
       selectedIsland: this.islandId,
       selectedQuarter: null,
-      mapQuarterNodeCount: vulcanQuarterNodes.length,
+      mapQuarterNodeCount: this.quarterNodes.length,
+      worldBackground: `${this.islandId}-map`,
       mapSmallNodeCount: 0,
     });
   }
 
   createQuarterNodes() {
-    vulcanQuarterNodes.forEach((node) => {
+    this.quarterNodes.forEach((node) => {
       const radius = 33;
       const container = this.add.container(node.x, node.y);
       container.setDepth(10);

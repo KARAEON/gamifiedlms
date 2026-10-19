@@ -1,24 +1,21 @@
 import Phaser from 'phaser';
+import { closeMinigameHelp } from '../ui/minigameHelp.js';
+import { createMinigameNavigation } from '../ui/minigameNavigation.js';
+import { createMinigameHeader } from '../ui/minigameHeader.js';
+import { createMixtureIcon } from '../ui/assetIcons.js';
 import { mixtureDetectiveGame } from '../config/content.js';
-import { GAME_WIDTH } from '../config/gameConfig.js';
+import { supplyControl, supplyGlyph, supplyPanel, supplyText, supplyHeading } from '../ui/supplyCartUi.js';
 import { getPostGameAssessmentLabel, startPostGameAssessment } from '../systems/assessmentFlow.js';
-import { submitMinigameResult } from '../systems/resultSubmission.js';
 import { markSceneReady, setTestState } from '../systems/testSeam.js';
-import {
-  createBottomFeedback,
-  createMinigameHud,
-  createSparkles,
-  drawMinigameBackdrop,
-  drawMixtureIcon,
-} from '../ui/minigameUi.js';
-import { closeOpenModal, colors, createPixelButton, showModal, textStyle } from '../ui/ui.js';
+import { createBottomFeedback, createSparkles } from '../ui/minigameUi.js';
+import { closeOpenModal, showModal, textStyle } from '../ui/ui.js';
 
-const SAMPLE_CARD_WIDTH = 270;
-const SAMPLE_CARD_HEIGHT = 300;
-const QUESTION_PANEL_X = 1034;
-const QUESTION_PANEL_Y = 382;
-const QUESTION_PANEL_WIDTH = 410;
-const QUESTION_PANEL_HEIGHT = 420;
+const SAMPLE_CARD_WIDTH = 310;
+const SAMPLE_CARD_HEIGHT = 352;
+const QUESTION_PANEL_X = 1050;
+const QUESTION_PANEL_Y = 306;
+const QUESTION_PANEL_WIDTH = 370;
+const QUESTION_PANEL_HEIGHT = 372;
 
 export default class MixtureDetectiveScene extends Phaser.Scene {
   constructor() {
@@ -36,6 +33,8 @@ export default class MixtureDetectiveScene extends Phaser.Scene {
 
   create() {
     this.score = 0;
+    this.streak = 0;
+    this.selectedOptionId = null;
     this.timeRemaining = mixtureDetectiveGame.timerSeconds;
     this.lastTimerSecond = Math.ceil(this.timeRemaining);
     this.result = null;
@@ -54,9 +53,11 @@ export default class MixtureDetectiveScene extends Phaser.Scene {
     };
     this.nextButtonMeta = null;
     this.checkButtonMeta = null;
+    this.submitButtonMeta = null;
+    this.submitButton = null;
 
-    drawMinigameBackdrop(this);
-    this.drawDetectiveDesk();
+    this.add.rectangle(640, 360, 1280, 720, 0x080d16);
+    this.add.image(640, 384, 'detective-sample-stage').setDisplaySize(1280, 640).setAlpha(0.25);
     this.createHud();
     this.renderQuestion();
     this.setupKeyboardShortcuts();
@@ -65,7 +66,7 @@ export default class MixtureDetectiveScene extends Phaser.Scene {
   }
 
   update(_time, delta) {
-    if (this.result) {
+    if (this.result || this.currentModal) {
       return;
     }
 
@@ -83,35 +84,49 @@ export default class MixtureDetectiveScene extends Phaser.Scene {
     }
   }
 
-  drawDetectiveDesk() {
-    const desk = this.add.graphics();
-    desk.setDepth(1);
-    desk.fillStyle(0x2b2422, 0.42);
-    desk.fillRoundedRect(74, 178, 742, 384, 8);
-    desk.lineStyle(5, 0x6e5241, 0.95);
-    desk.strokeRoundedRect(74, 178, 742, 384, 8);
-  }
-
   createHud() {
-    this.hud = createMinigameHud(this, {
-      title: mixtureDetectiveGame.title,
-      topic: mixtureDetectiveGame.topic,
-      progressLabel: 'CASE',
-      progressValue: this.correctCount,
-      progressMax: mixtureDetectiveGame.questions.length,
-      score: this.score,
-      time: this.timeRemaining,
-      onBack: () => this.returnToQuarter(),
+    createMinigameNavigation(this);
+    const header = createMinigameHeader(this, {
+      day: 3, detail: 'CASE 01', title: 'MIXTURE COMPARE CARDS', subtitle: 'Compare the samples. Choose your evidence.',
+      counters: [{ label: 'TIME', glyph: 'clock', color: '#e8dcc0' }, { label: 'SCORE', glyph: 'star' }, { label: 'STREAK', glyph: 'star', color: '#ffad39' }],
     });
+    this.caseText = header.detailText;
+    const values = header.values;
+    this.hud = {
+      setTime: value => values[0].setText(`${Math.floor(value / 60).toString().padStart(2, '0')}:${Math.ceil(value % 60).toString().padStart(2, '0')}`),
+      setScore: value => values[1].setText(String(value)),
+      setProgress: () => values[2].setText(`x ${this.streak}`),
+    };
+    supplyPanel(this, 225, 567, 414, 146, { fill: 0x191e23, edge: 0x956037 });
+    supplyHeading(this, 225, 516, 'ROUND PROGRESS', 21, '#c094ed').setDepth(6);
+    this.progressDots = [];
+    for (let i = 0; i < mixtureDetectiveGame.questions.length; i++) {
+      const x = 65 + i * 80;
+      if (i < 4) this.add.rectangle(x + 40, 565, 36, 4, 0x916d3d).setDepth(6);
+      const panel = supplyPanel(this, x, 565, 48, 48, { fill: 0x383835, edge: 0x827b69 });
+      const label = supplyText(this, x, 565, String(i + 1), 29).setDepth(6);
+      this.progressDots.push({ panel, label, x });
+    }
+    this.progressText = supplyText(this, 225, 613, '', 18, '#c7baa1').setDepth(6);
+    supplyPanel(this, 651, 567, 414, 146, { fill: 0x15301b, edge: 0x826035 });
+    supplyHeading(this, 619, 516, 'SCIENTIST FEEDBACK', 20, '#97d144').setDepth(6);
+    this.add.image(809, 578, 'supply-guide').setDisplaySize(90, 108).setDepth(7);
+    const primary = supplyText(this, 464, 555, '', 23, '#ffdb78', 'left').setDepth(6);
+    const secondary = supplyText(this, 464, 603, '', 18, '#e8dcc0', 'left').setDepth(6).setWordWrapWidth(280);
+    this.feedback = { setText: (a, b) => { primary.setText(a); secondary.setText(b); } };
+    supplyPanel(this, 1050, 567, 370, 146, { fill: 0x261c17, edge: 0x956037 });
+    supplyHeading(this, 1050, 516, 'DETECTIVE BADGE', 21, '#c094ed').setDepth(6);
+    this.add.image(915, 580, 'detective-detective-badge').setDisplaySize(76, 76).setDepth(6);
+    this.badgeTitle = supplyHeading(this, 974, 555, 'SHARP OBSERVER', 22, '#ffce58', 'left').setDepth(6);
+    supplyText(this, 974, 598, 'Notice details\nlike a scientist!', 20, '#e8dcc0', 'left').setDepth(6);
+    createBottomFeedback(this, { primary: 'COMPARE TWO SAMPLES', secondary: 'Choose an answer and submit it before time runs out.' });
+    this.controlsMeta = { settings: this.navigationMeta.settings, back: this.navigationMeta.back };
 
-    this.feedback = createBottomFeedback(this, {
-      primary: 'COMPARE THE TWO MIXTURES',
-      secondary: 'CHOOSE THE ANSWER THAT BEST EXPLAINS WHAT YOU SEE.',
-    });
   }
 
   renderQuestion() {
     this.phase = 'question';
+    this.selectedOptionId = null;
     this.clearRoundLayer();
     this.roundLayer = this.add.container(0, 0);
     this.roundLayer.setDepth(5);
@@ -120,12 +135,17 @@ export default class MixtureDetectiveScene extends Phaser.Scene {
     this.finalChipViews = [];
     this.nextButtonMeta = null;
     this.checkButtonMeta = null;
+    this.submitButtonMeta = null;
+    this.submitButton = null;
 
     const question = this.getCurrentQuestion();
-    this.createSampleCard(question.samples[0], 250, 382, 0x58cc02);
-    this.createSampleCard(question.samples[1], 610, 382, 0x2278c9);
+    this.createSampleCard(question.samples[0], 230, 300, 0x406d1e);
+    this.createSampleCard(question.samples[1], 644, 300, 0x225683);
+    const versus = supplyPanel(this, 437, 300, 70, 70, { fill: 0xdba326, edge: 0xffde71 });
+    this.roundLayer.add(versus);
+    this.roundLayer.add(supplyText(this, 437, 300, 'VS', 37, '#231b12'));
     this.createQuestionPanel(question);
-    this.feedback.setText(`CASE ${this.currentRoundIndex + 1}: COMPARE SAMPLE A AND SAMPLE B`, 'CLICK A SAMPLE OR CHOOSE AN ANSWER.');
+    this.feedback.setText('COMPARE THE SAMPLES', 'Choose your answer, then press SUBMIT.');
     this.updateHudText();
     this.updateTestState();
   }
@@ -138,160 +158,89 @@ export default class MixtureDetectiveScene extends Phaser.Scene {
   }
 
   createSampleCard(sample, x, y, color) {
-    const container = this.add.container(x, y);
-    container.setDepth(10);
-
-    const shadow = this.add.rectangle(8, 10, SAMPLE_CARD_WIDTH, SAMPLE_CARD_HEIGHT, 0x000000, 0.24);
-    shadow.setOrigin(0.5);
-    const card = this.add.graphics();
-    card.fillStyle(0xfff2c9, 1);
-    card.lineStyle(5, color, 1);
-    card.fillRoundedRect(-SAMPLE_CARD_WIDTH / 2, -SAMPLE_CARD_HEIGHT / 2, SAMPLE_CARD_WIDTH, SAMPLE_CARD_HEIGHT, 8);
-    card.strokeRoundedRect(-SAMPLE_CARD_WIDTH / 2, -SAMPLE_CARD_HEIGHT / 2, SAMPLE_CARD_WIDTH, SAMPLE_CARD_HEIGHT, 8);
-    card.fillStyle(color, 1);
-    card.fillRoundedRect(-SAMPLE_CARD_WIDTH / 2, -SAMPLE_CARD_HEIGHT / 2, SAMPLE_CARD_WIDTH, 52, 8);
-    card.fillStyle(0xffffff, 0.4);
-    card.fillRoundedRect(-SAMPLE_CARD_WIDTH / 2 + 8, -SAMPLE_CARD_HEIGHT / 2 + 8, SAMPLE_CARD_WIDTH - 16, 10, 4);
-
-    const header = this.add.text(0, -128, `SAMPLE ${sample.key}`, textStyle(25, '#fff2c9'));
-    header.setOrigin(0.5);
-    header.setShadow(2, 2, '#000000', 0, false, true);
-
-    const name = this.add.text(0, -88, sample.name.toUpperCase(), textStyle(23, '#2f2a2a'));
-    name.setOrigin(0.5);
-    name.setWordWrapWidth(SAMPLE_CARD_WIDTH - 36);
-
-    const windowBg = this.add.rectangle(0, 14, 210, 132, 0xdaf7ff, 1);
-    windowBg.setStrokeStyle(4, 0x9e6b47, 1);
-    const icon = this.add.graphics();
-    icon.setPosition(0, 4);
-    icon.setScale(1.42);
-    drawMixtureIcon(icon, sample.icon);
-
-    const noteBg = this.add.graphics();
-    noteBg.fillStyle(0x3e3a36, 1);
-    noteBg.fillRoundedRect(-SAMPLE_CARD_WIDTH / 2 + 16, 106, SAMPLE_CARD_WIDTH - 32, 52, 8);
-    const note = this.add.text(0, 132, sample.note.toUpperCase(), textStyle(18, '#fff2c9'));
-    note.setOrigin(0.5);
-    note.setWordWrapWidth(SAMPLE_CARD_WIDTH - 54);
-    note.setLineSpacing(-4);
-
+    const container = this.add.container(x, y).setDepth(10);
+    const frame = supplyPanel(this, 0, 0, SAMPLE_CARD_WIDTH, SAMPLE_CARD_HEIGHT, { fill: 0x342619, edge: 0xb78336, highlight: 0xffdf83 });
+    const stage = this.add.image(0, 18, 'detective-sample-stage').setDisplaySize(294, 240);
+    const headerBg = this.add.rectangle(0, -153, 292, 33, color);
+    const header = supplyHeading(this, 0, -153, `SAMPLE ${sample.key}`, 26);
+    const nameBg = this.add.rectangle(0, -118, 292, 36, 0xe8d9b2);
+    const name = supplyText(this, 0, -118, sample.name, 24, '#292017');
+    const shadow = this.add.ellipse(0, 115, 148, 18, 0x21180e, 0.5);
+    const icon = createMixtureIcon(this, sample.icon, { x: 0, y: 34, width: 196, height: 180 });
+    const noteBg = this.add.rectangle(0, 151, 292, 39, color);
+    const note = supplyText(this, 0, 151, sample.note, 18);
+    note.setWordWrapWidth(272);
     const hitArea = this.add.zone(0, 0, SAMPLE_CARD_WIDTH, SAMPLE_CARD_HEIGHT).setInteractive({ useHandCursor: true });
-    hitArea.on('pointerover', () => {
-      if (this.getSampleOption(sample.key)) {
-        container.setScale(1.035);
-      }
-    });
+    hitArea.on('pointerover', () => { if (this.getSampleOption(sample.key)) container.setScale(1.015); });
     hitArea.on('pointerout', () => container.setScale(1));
-    hitArea.on('pointerup', () => {
-      const option = this.getSampleOption(sample.key);
-      if (option) {
-        this.answerOption(option);
-      }
-    });
-
-    container.add([shadow, card, header, name, windowBg, icon, noteBg, note, hitArea]);
+    hitArea.on('pointerup', () => { const option = this.getSampleOption(sample.key); if (option) this.selectOption(option); });
+    container.add([frame, stage, headerBg, header, nameBg, name, shadow, icon, noteBg, note, hitArea]);
     this.roundLayer.add(container);
-    this.sampleMetas.push({
-      key: sample.key,
-      name: sample.name,
-      icon: sample.icon,
-      type: sample.type,
-      x,
-      y,
-    });
+    this.sampleMetas.push({ key: sample.key, name: sample.name, icon: sample.icon, type: sample.type, x, y });
   }
 
   createQuestionPanel(question) {
-    const panel = this.add.container(QUESTION_PANEL_X, QUESTION_PANEL_Y);
-    panel.setDepth(11);
-
-    const background = this.add.graphics();
-    background.fillStyle(0x3b2547, 0.98);
-    background.lineStyle(5, 0xffefb5, 1);
-    background.fillRoundedRect(-QUESTION_PANEL_WIDTH / 2, -QUESTION_PANEL_HEIGHT / 2, QUESTION_PANEL_WIDTH, QUESTION_PANEL_HEIGHT, 8);
-    background.strokeRoundedRect(-QUESTION_PANEL_WIDTH / 2, -QUESTION_PANEL_HEIGHT / 2, QUESTION_PANEL_WIDTH, QUESTION_PANEL_HEIGHT, 8);
-    background.lineStyle(3, 0x9e6b47, 1);
-    background.strokeRoundedRect(-QUESTION_PANEL_WIDTH / 2 + 10, -QUESTION_PANEL_HEIGHT / 2 + 10, QUESTION_PANEL_WIDTH - 20, QUESTION_PANEL_HEIGHT - 20, 6);
-
-    const count = this.add.text(0, -172, `QUESTION ${this.currentRoundIndex + 1} / ${mixtureDetectiveGame.questions.length}`, textStyle(24, '#d7b6ff'));
-    count.setOrigin(0.5);
-
-    const prompt = this.add.text(0, -106, question.prompt.toUpperCase(), textStyle(27, '#fff2c9'));
-    prompt.setOrigin(0.5);
-    prompt.setWordWrapWidth(336);
-    prompt.setLineSpacing(-4);
-
-    panel.add([background, count, prompt]);
+    const panel = this.add.container(QUESTION_PANEL_X, QUESTION_PANEL_Y).setDepth(11);
+    panel.add(supplyPanel(this, 0, 0, QUESTION_PANEL_WIDTH, QUESTION_PANEL_HEIGHT, { fill: 0x3b2547, edge: 0xb78336, highlight: 0xe0ba76 }));
+    panel.add(this.add.rectangle(0, 15, 344, 312, 0xe8d9b2));
+    panel.add(supplyHeading(this, 0, -160, `QUESTION ${this.currentRoundIndex + 1} / ${mixtureDetectiveGame.questions.length}`, 23, '#e2c6ee'));
+    const prompt = supplyText(this, 0, -100, question.prompt, 26, '#292017');
+    prompt.setWordWrapWidth(314);
+    panel.add(prompt);
     this.roundLayer.add(panel);
-
-    const optionHeight = question.options.length > 2 ? 70 : 78;
-    const optionGap = question.options.length > 2 ? 12 : 22;
-    const startY = QUESTION_PANEL_Y + (question.options.length > 2 ? 14 : 38);
-    question.options.forEach((option, index) => {
-      const y = startY + index * (optionHeight + optionGap);
-      this.createAnswerButton(option, index, QUESTION_PANEL_X, y, 350, optionHeight);
-    });
+    const count = question.options.length;
+    const height = count > 2 ? 55 : 72;
+    const startY = count > 2 ? 270 : 300;
+    question.options.forEach((option, i) => this.createAnswerButton(option, i, QUESTION_PANEL_X, startY + i * (height + 10), 316, height));
+    const submit = supplyControl(this, QUESTION_PANEL_X, 453, 'SUBMIT', () => this.submitSelectedOption(), { width: 210, height: 44, fill: 0x345b16, edge: 0x88b837 });
+    this.roundLayer.add(submit);
+    this.submitButton = submit;
+    this.submitButtonMeta = { x: QUESTION_PANEL_X, y: 453 };
+    submit.setAlpha(0.5);
   }
 
   createAnswerButton(option, index, x, y, width, height) {
-    const container = this.add.container(x, y);
-    container.setDepth(12);
-
+    const container = this.add.container(x, y).setDepth(12);
     const graphics = this.add.graphics();
     const draw = (fill, stroke) => {
       graphics.clear();
-      graphics.fillStyle(fill, 1);
-      graphics.lineStyle(4, stroke, 1);
-      graphics.fillRoundedRect(-width / 2, -height / 2, width, height, 7);
-      graphics.strokeRoundedRect(-width / 2, -height / 2, width, height, 7);
-      graphics.lineStyle(2, 0xffffff, 0.42);
-      graphics.strokeRoundedRect(-width / 2 + 7, -height / 2 + 7, width - 14, height - 14, 5);
+      graphics.fillStyle(fill); graphics.fillRect(-width / 2, -height / 2, width, height);
+      graphics.lineStyle(3, stroke); graphics.strokeRect(-width / 2, -height / 2, width, height);
+      graphics.lineStyle(1, 0xfff4cf, 0.6); graphics.strokeRect(-width / 2 + 4, -height / 2 + 4, width - 8, height - 8);
     };
-    draw(0xfff2c9, 0x9e6b47);
-
-    const badgeLabel = option.sampleKey ?? String.fromCharCode(65 + index);
-    const badge = this.add.rectangle(-width / 2 + 34, 0, 42, 38, option.sampleKey === 'B' ? 0x2278c9 : 0x58cc02, 1);
-    badge.setStrokeStyle(3, 0x2f2a2a, 1);
-    const badgeText = this.add.text(-width / 2 + 34, -1, badgeLabel.toUpperCase(), textStyle(21, '#fff2c9'));
-    badgeText.setOrigin(0.5);
-
-    const label = this.add.text(-width / 2 + 68, 0, option.label.toUpperCase(), textStyle(questionTextSize(option.label), '#2f2a2a', 'left'));
-    label.setOrigin(0, 0.5);
-    label.setWordWrapWidth(width - 92);
-    label.setLineSpacing(-3);
-
+    draw(0xded0af, 0x8d7953);
+    const badge = supplyPanel(this, -width / 2 + 27, 0, 34, 36, { fill: option.sampleKey === 'B' ? 0x235b90 : 0x375b20, edge: 0x272718 });
+    const badgeText = supplyText(this, -width / 2 + 27, 0, option.sampleKey ?? String.fromCharCode(65 + index), 23);
+    const label = supplyText(this, -width / 2 + 54, 0, option.label, option.label.length > 38 ? 17 : 21, '#292017', 'left');
+    label.setWordWrapWidth(width - 65);
     const zone = this.add.zone(0, 0, width, height).setInteractive({ useHandCursor: true });
-    zone.on('pointerover', () => {
-      if (this.phase === 'question' && !this.result) {
-        draw(0xe7ffd6, colors.gold);
-        container.setScale(1.035);
-      }
-    });
-    zone.on('pointerout', () => {
-      draw(0xfff2c9, 0x9e6b47);
-      container.setScale(1);
-    });
-    zone.on('pointerup', () => this.answerOption(option));
-
+    zone.on('pointerover', () => { if (this.phase === 'question') container.setScale(1.015); });
+    zone.on('pointerout', () => container.setScale(1));
+    zone.on('pointerup', () => this.selectOption(option));
     container.add([graphics, badge, badgeText, label, zone]);
     this.roundLayer.add(container);
-    this.optionViews.push({
-      id: option.id,
-      label: option.label,
-      sampleKey: option.sampleKey ?? null,
-      correct: option.correct,
-      x,
-      y,
-      width,
-      height,
-      container,
-      draw,
+    this.optionViews.push({ id: option.id, label: option.label, sampleKey: option.sampleKey ?? null, correct: option.correct, x, y, width, height, container, draw, text: label, zone });
+  }
+
+  selectOption(option) {
+    if (this.phase !== 'question' || this.result || this.currentModal) return;
+    this.selectedOptionId = option.id;
+    this.optionViews.forEach(view => {
+      const selected = view.id === option.id;
+      view.draw(selected ? 0x3b6c1c : 0xded0af, selected ? 0xc3d76c : 0x8d7953);
+      view.text.setColor(selected ? '#fff2c9' : '#292017');
     });
+    this.submitButton?.setAlpha(1);
+    this.updateTestState();
+  }
+
+  submitSelectedOption() {
+    const option = this.getCurrentQuestion().options.find(item => item.id === this.selectedOptionId);
+    if (option) this.answerOption(option);
   }
 
   answerOption(option) {
-    if (this.phase !== 'question' || this.result) {
+    if (this.phase !== 'question' || this.result || this.currentModal) {
       return;
     }
 
@@ -305,36 +254,38 @@ export default class MixtureDetectiveScene extends Phaser.Scene {
 
   handleCorrectAnswer(option) {
     this.phase = 'feedback';
+    this.streak += 1;
     this.correctCount += 1;
     this.score += mixtureDetectiveGame.score.correctQuestion;
     this.showStatusMark(true);
     this.markOption(option.id, true);
-    this.clearAnswerButtons();
+    this.lockAnswerButtons();
 
     const sparkleTarget = this.sampleMetas.find((sample) => sample.key === option.sampleKey) ?? { x: QUESTION_PANEL_X, y: QUESTION_PANEL_Y };
     createSparkles(this, sparkleTarget.x, sparkleTarget.y);
 
     const question = this.getCurrentQuestion();
-    this.feedback.setText(`CORRECT +${mixtureDetectiveGame.score.correctQuestion}`, question.feedback.toUpperCase());
+    this.feedback.setText(`CORRECT +${mixtureDetectiveGame.score.correctQuestion}`, question.feedback);
     this.createNextButton();
     this.updateHudText();
     this.updateTestState();
   }
 
-  clearAnswerButtons() {
-    this.optionViews.forEach((view) => {
-      view.container?.destroy(true);
-    });
-    this.optionViews = [];
+  lockAnswerButtons() {
+    this.optionViews.forEach(view => view.zone.disableInteractive());
+    this.submitButton?.destroy(true);
+    this.submitButton = null;
   }
 
   handleWrongAnswer(option) {
     this.mistakes += 1;
+    this.streak = 0;
+    this.updateHudText();
     this.showStatusMark(false);
     this.markOption(option.id, false);
 
     const question = this.getCurrentQuestion();
-    this.feedback.setText(`TRY AGAIN - MISTAKE ${this.mistakes} / ${mixtureDetectiveGame.maxMistakes}`, question.hint.toUpperCase());
+    this.feedback.setText(`TRY AGAIN (${this.mistakes}/${mixtureDetectiveGame.maxMistakes})`, question.hint);
 
     const optionView = this.optionViews.find((view) => view.id === option.id);
     if (optionView) {
@@ -354,53 +305,27 @@ export default class MixtureDetectiveScene extends Phaser.Scene {
       return;
     }
 
-    optionView.draw(correct ? 0xe7ffd6 : 0xffd6d6, correct ? 0x58cc02 : 0xff5a66);
+    optionView.draw(correct ? 0x3b6c1c : 0xffd6d6, correct ? 0xc3d76c : 0xff5a66);
+    optionView.text.setColor(correct ? '#fff2c9' : '#292017');
   }
 
   showStatusMark(correct) {
-    if (this.statusMark) {
-      this.statusMark.destroy(true);
-    }
-
-    const mark = this.add.container(832, 198);
-    mark.setDepth(12);
-    const circle = this.add.circle(0, 0, 31, correct ? 0x58cc02 : 0xff5a66, 1);
-    circle.setStrokeStyle(4, 0xfff2c9, 1);
-    const graphics = this.add.graphics();
-    graphics.lineStyle(7, 0xffffff, 1);
-
-    if (correct) {
-      graphics.lineBetween(-14, 0, -4, 13);
-      graphics.lineBetween(-4, 13, 18, -14);
-    } else {
-      graphics.lineBetween(-13, -13, 13, 13);
-      graphics.lineBetween(13, -13, -13, 13);
-    }
-
-    mark.add([circle, graphics]);
+    this.statusMark?.destroy(true);
+    const mark = this.add.container(750, 548).setDepth(12);
+    mark.add(supplyGlyph(this, 0, 0, correct ? 'check' : 'cross', correct ? 0x93d442 : 0xff685c, 3));
     this.roundLayer?.add(mark);
     this.statusMark = mark;
   }
 
   createNextButton() {
     const label = this.currentRoundIndex === mixtureDetectiveGame.questions.length - 1 ? 'FINAL CASE' : 'NEXT';
-    const button = createPixelButton(this, QUESTION_PANEL_X, 562, label, () => this.advanceAfterFeedback(), {
-      width: 198,
-      height: 54,
-      fontSize: 25,
-      textColor: '#2f2a2a',
-    });
-    button.setDepth(12);
+    const button = supplyControl(this, QUESTION_PANEL_X, 453, label, () => this.advanceAfterFeedback(), { width: 210, height: 44, fill: 0x345b16, edge: 0x88b837 });
     this.roundLayer.add(button);
-    this.nextButtonMeta = {
-      x: QUESTION_PANEL_X,
-      y: 562,
-      label,
-    };
+    this.nextButtonMeta = { x: QUESTION_PANEL_X, y: 453, label };
   }
 
   advanceAfterFeedback() {
-    if (this.phase !== 'feedback' || this.result) {
+    if (this.phase !== 'feedback' || this.result || this.currentModal) {
       return;
     }
 
@@ -423,67 +348,36 @@ export default class MixtureDetectiveScene extends Phaser.Scene {
     this.finalChipViews = [];
     this.nextButtonMeta = null;
     this.checkButtonMeta = null;
+    this.submitButtonMeta = null;
+    this.submitButton = null;
 
-    const title = this.add.text(455, 166, 'FINAL COMPARISON', textStyle(32, '#ffd76a'));
-    title.setOrigin(0.5);
-    title.setShadow(3, 3, '#000000', 0, false, true);
-    const prompt = this.add.text(455, 203, 'COMPLETE BOTH SENTENCES ABOUT SAMPLE A AND SAMPLE B.', textStyle(22, '#fff2c9'));
-    prompt.setOrigin(0.5);
-    prompt.setWordWrapWidth(720);
-    prompt.setLineSpacing(-2);
-
-    this.roundLayer.add([title, prompt]);
-    this.createSampleCard(mixtureDetectiveGame.finalComparison.samples[0], 250, 392, 0x58cc02);
-    this.createSampleCard(mixtureDetectiveGame.finalComparison.samples[1], 610, 392, 0x2278c9);
+    this.createSampleCard(mixtureDetectiveGame.finalComparison.samples[0], 230, 300, 0x406d1e);
+    this.createSampleCard(mixtureDetectiveGame.finalComparison.samples[1], 644, 300, 0x225683);
     this.createFinalPanel();
-    this.feedback.setText('COMPLETE THE COMPARISON SENTENCE', 'CHOOSE THE TYPE AND THE REASON FOR EACH SAMPLE.');
+    this.feedback.setText('FINAL COMPARISON', 'Choose each type and its reason.');
     this.updateHudText();
     this.updateTestState();
   }
 
   createFinalPanel() {
-    const panel = this.add.container(1034, 382);
-    panel.setDepth(10);
-    const background = this.add.graphics();
-    background.fillStyle(0x3b2547, 0.98);
-    background.lineStyle(5, 0xffefb5, 1);
-    background.fillRoundedRect(-205, -198, 410, 396, 8);
-    background.strokeRoundedRect(-205, -198, 410, 396, 8);
-
+    const panel = this.add.container(QUESTION_PANEL_X, QUESTION_PANEL_Y).setDepth(10);
+    panel.add(supplyPanel(this, 0, 0, 370, 372, { fill: 0x3b2547, edge: 0xb78336 }));
+    panel.add(supplyHeading(this, 0, -158, 'FINAL COMPARISON', 24, '#e2c6ee'));
+    this.roundLayer.add(panel);
     const rows = [
       { slot: 'aType', label: 'SAMPLE A IS', choices: [['uniform', 'UNIFORM'], ['nonuniform', 'NON-UNIFORM']] },
       { slot: 'aReason', label: 'A BECAUSE', choices: [['looks-same', 'LOOKS SAME'], ['visible-parts', 'HAS PARTS']] },
       { slot: 'bType', label: 'SAMPLE B IS', choices: [['uniform', 'UNIFORM'], ['nonuniform', 'NON-UNIFORM']] },
       { slot: 'bReason', label: 'B BECAUSE', choices: [['looks-same', 'LOOKS SAME'], ['visible-parts', 'HAS PARTS']] },
     ];
-
-    panel.add(background);
-    this.roundLayer.add(panel);
-    rows.forEach((row, rowIndex) => {
-      const rowY = -146 + rowIndex * 82;
-      const label = this.add.text(-164, rowY - 24, row.label, textStyle(18, '#d7b6ff', 'left'));
-      label.setOrigin(0, 0.5);
-      panel.add(label);
-
-      row.choices.forEach(([value, choiceLabel], choiceIndex) => {
-        const chip = this.createFinalChip(row.slot, value, choiceLabel, 1034 - 82 + choiceIndex * 164, 382 + rowY + 14);
-        this.roundLayer.add(chip.container);
-      });
+    rows.forEach((row, i) => {
+      const y = 196 + i * 72;
+      panel.add(supplyText(this, -152, y - QUESTION_PANEL_Y - 23, row.label, 17, '#e2c6ee', 'left'));
+      row.choices.forEach(([value, label], n) => this.roundLayer.add(this.createFinalChip(row.slot, value, label, QUESTION_PANEL_X - 80 + n * 160, y + 5).container));
     });
-
-    const check = createPixelButton(this, 1034, 586, 'CHECK', () => this.checkFinalComparison(), {
-      width: 198,
-      height: 54,
-      fontSize: 25,
-      textColor: '#2f2a2a',
-    });
-    check.setDepth(14);
+    const check = supplyControl(this, QUESTION_PANEL_X, 466, 'CHECK', () => this.checkFinalComparison(), { width: 210, height: 40, fill: 0x345b16, edge: 0x88b837 });
     this.roundLayer.add(check);
-    this.checkButtonMeta = {
-      x: 1034,
-      y: 586,
-      label: 'CHECK',
-    };
+    this.checkButtonMeta = { x: QUESTION_PANEL_X, y: 466, label: 'CHECK' };
   }
 
   createFinalChip(slot, value, label, x, y) {
@@ -498,6 +392,7 @@ export default class MixtureDetectiveScene extends Phaser.Scene {
     zone.on('pointerover', () => container.setScale(1.04));
     zone.on('pointerout', () => container.setScale(1));
     zone.on('pointerup', () => {
+      if (this.currentModal || this.result) return;
       this.finalSelections[slot] = value;
       this.refreshFinalChips();
       this.updateTestState();
@@ -534,7 +429,7 @@ export default class MixtureDetectiveScene extends Phaser.Scene {
   }
 
   checkFinalComparison() {
-    if (this.phase !== 'final' || this.result) {
+    if (this.phase !== 'final' || this.result || this.currentModal) {
       return;
     }
 
@@ -551,7 +446,7 @@ export default class MixtureDetectiveScene extends Phaser.Scene {
 
     if (correct) {
       this.score += mixtureDetectiveGame.score.finalComparison;
-      this.feedback.setText(`CASE SOLVED +${mixtureDetectiveGame.score.finalComparison}`, mixtureDetectiveGame.finalComparison.hint.toUpperCase());
+      this.feedback.setText(`CASE SOLVED +${mixtureDetectiveGame.score.finalComparison}`, mixtureDetectiveGame.finalComparison.hint);
       createSparkles(this, 1034, 382);
       this.updateHudText();
       this.finishGame(true);
@@ -559,7 +454,9 @@ export default class MixtureDetectiveScene extends Phaser.Scene {
     }
 
     this.mistakes += 1;
-    this.feedback.setText(`CHECK THE COMPARISON - MISTAKE ${this.mistakes} / ${mixtureDetectiveGame.maxMistakes}`, mixtureDetectiveGame.finalComparison.hint.toUpperCase());
+    this.streak = 0;
+    this.updateHudText();
+    this.feedback.setText(`TRY AGAIN (${this.mistakes}/${mixtureDetectiveGame.maxMistakes})`, mixtureDetectiveGame.finalComparison.hint);
     this.shake(this.roundLayer);
     this.updateTestState();
 
@@ -573,7 +470,7 @@ export default class MixtureDetectiveScene extends Phaser.Scene {
   }
 
   getSampleOption(sampleKey) {
-    if (this.phase !== 'question' || this.result) {
+    if (this.phase !== 'question' || this.result || this.currentModal) {
       return null;
     }
 
@@ -604,7 +501,6 @@ export default class MixtureDetectiveScene extends Phaser.Scene {
     this.phase = 'result';
     this.updateHudText();
     this.updateTestState();
-    this.submitResult();
 
     showModal(this, {
       name: won ? 'result-win' : 'result-lose',
@@ -655,8 +551,20 @@ export default class MixtureDetectiveScene extends Phaser.Scene {
 
   updateHudText() {
     this.hud?.setScore(this.score);
-    this.hud?.setTime(this.timeRemaining);
-    this.hud?.setProgress(this.correctCount, mixtureDetectiveGame.questions.length);
+    this.hud?.setTime(Math.ceil(this.timeRemaining));
+    this.hud?.setProgress();
+    this.caseText?.setText(this.phase === 'final' ? 'FINAL CASE' : `CASE ${String(this.currentRoundIndex + 1).padStart(2, '0')}`);
+    this.progressDots?.forEach(({ panel, label }, i) => {
+      const done = i < this.correctCount;
+      const active = i === this.currentRoundIndex && this.phase !== 'final';
+      panel.clear();
+      panel.fillStyle(done ? 0x375b20 : active ? 0xcba22a : 0x383835);
+      panel.fillRect(-24, -24, 48, 48);
+      panel.lineStyle(3, done ? 0x7bab3b : active ? 0xffd76a : 0x827b69);
+      panel.strokeRect(-24, -24, 48, 48);
+      label.setColor(active && !done ? '#292017' : '#e8dcc0');
+    });
+    this.progressText?.setText(`${this.correctCount} / ${mixtureDetectiveGame.questions.length} QUESTIONS SOLVED`);
   }
 
   setupKeyboardShortcuts() {
@@ -676,9 +584,14 @@ export default class MixtureDetectiveScene extends Phaser.Scene {
   }
 
   goBackOrCloseModal() {
+    if (this.minigameHelpOpen) {
+      closeMinigameHelp(this);
+      return;
+    }
     if (this.currentModal) {
       closeOpenModal(this);
-      this.returnToQuarter();
+      if (this.result) this.returnToQuarter();
+      else this.updateTestState();
       return;
     }
 
@@ -715,25 +628,11 @@ export default class MixtureDetectiveScene extends Phaser.Scene {
     });
   }
 
-  buildSubmissionPayload() {
-    return {
-      correct_question_count: this.correctCount,
-      mistake_count: this.mistakes,
-      final_selections: { ...this.finalSelections },
-      time_remaining_seconds: Math.max(0, Math.round((this.timeRemaining ?? 0) * 100) / 100),
-    };
-  }
-
-  submitResult() {
-    submitMinigameResult(this, {
-      lessonKey: this.lessonId,
-      gameKey: mixtureDetectiveGame.id,
-      payloadBuilder: () => this.buildSubmissionPayload(),
-    });
-  }
-
   buildTestState() {
     return {
+      minigameHelpOpen: Boolean(this.minigameHelpOpen),
+      minigameHelpButton: this.helpButtonMeta,
+      minigameControls: this.navigationMeta,
       selectedIsland: this.islandId,
       selectedQuarter: this.quarterId,
       selectedMajor: this.majorId,
@@ -756,6 +655,12 @@ export default class MixtureDetectiveScene extends Phaser.Scene {
         width: option.width,
         height: option.height,
       })),
+      paused: false,
+      hintsRemaining: 0,
+      detectiveControls: this.controlsMeta,
+      detectiveStreak: this.streak,
+      detectiveSelectedOption: this.selectedOptionId,
+      detectiveSubmitButton: this.submitButtonMeta,
       detectiveCorrectCount: this.correctCount,
       detectiveMistakes: this.mistakes,
       detectiveFinalSelections: { ...this.finalSelections },
@@ -775,16 +680,4 @@ export default class MixtureDetectiveScene extends Phaser.Scene {
   updateTestState() {
     setTestState(this.buildTestState());
   }
-}
-
-function questionTextSize(label) {
-  if (label.length > 70) {
-    return 15;
-  }
-
-  if (label.length > 38) {
-    return 17;
-  }
-
-  return 21;
 }

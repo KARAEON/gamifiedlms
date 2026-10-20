@@ -1,5 +1,7 @@
-<x-guest-layout title="Teacher Sign In | Learning Insights Platform" variant="apple">
-    <div class="mx-auto flex min-h-screen w-full max-w-7xl items-center px-6 py-10 lg:px-12">
+<x-guest-layout title="Teacher Sign In | Lumi Adventures" variant="game" :show-school-brand="false">
+    <main class="adventure-auth mx-auto min-h-screen w-full max-w-7xl px-5 pb-10 pt-5 sm:px-8 lg:px-12">
+        <x-game-auth-header />
+        <div class="flex min-h-[calc(100vh-112px)] items-center py-8">
         <div class="grid w-full items-center gap-12 lg:grid-cols-[1.05fr_0.95fr]">
             <section class="hidden lg:block" data-stagger>
                 <span class="apple-kicker">Teacher and admin access</span>
@@ -29,7 +31,7 @@
             <section class="apple-card mx-auto w-full max-w-md p-8 text-slate-900" data-reveal>
                 <div class="mb-7 text-center">
                     <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Teacher Sign In</p>
-                    <h2 class="mt-2 text-3xl font-semibold tracking-[-0.02em] text-slate-900">Learning Insights Platform</h2>
+                    <h2 class="mt-2 text-3xl font-semibold tracking-[-0.02em] text-slate-900">Lumi Adventures</h2>
                     <p class="mt-2 text-sm text-slate-500">
                         Need a teacher account?
                         <a href="{{ route('register') }}" class="font-semibold text-slate-800 transition hover:text-black">Create one</a>
@@ -107,5 +109,6 @@
                 </div>
             </section>
         </div>
-    </div>
+        </div>
+    </main>
 </x-guest-layout>

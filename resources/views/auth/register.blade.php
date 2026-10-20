@@ -1,5 +1,7 @@
-<x-guest-layout title="Teacher Registration | Learning Insights Platform" variant="apple">
-    <div class="mx-auto flex min-h-screen w-full max-w-7xl items-center px-6 py-8 lg:px-12">
+<x-guest-layout title="Teacher Registration | Lumi Adventures" variant="game" :show-school-brand="false">
+    <main class="adventure-auth mx-auto min-h-screen w-full max-w-7xl px-5 pb-10 pt-5 sm:px-8 lg:px-12">
+        <x-game-auth-header />
+        <div class="flex min-h-[calc(100vh-112px)] items-center py-8">
         <div class="grid w-full items-start gap-10 lg:grid-cols-[1.05fr_0.95fr]">
             <section class="hidden lg:block" data-stagger>
                 <span class="apple-kicker">Teacher onboarding</span>
@@ -112,5 +114,6 @@
                 </div>
             </section>
         </div>
-    </div>
+        </div>
+    </main>
 </x-guest-layout>

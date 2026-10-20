@@ -1,3 +1,9 @@
+@font-face {
+    font-family: "Lumi Lower Pixel";
+    src: url("/assets/fonts/lower-pixel/LowresPixel-Regular.otf") format("opentype");
+    font-display: swap;
+}
+
 .game-landing {
     --game-cream: #fff2c9;
     --game-gold: #ffd76a;
@@ -13,6 +19,173 @@
     background: #193b66 var(--game-bg-image) center 48% / cover no-repeat;
     font-family: "Lumi Lower Pixel", "Courier New", monospace;
     image-rendering: pixelated;
+}
+
+.adventure-auth-shell {
+    isolation: isolate;
+    background: #142b4a;
+    color: #fff2c9;
+    font-family: Inter, "Helvetica Neue", Arial, sans-serif;
+}
+
+.adventure-auth-shell::before,
+.adventure-auth-shell::after {
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    content: "";
+    pointer-events: none;
+}
+
+.adventure-auth-shell::before {
+    background: linear-gradient(125deg, rgba(9, 25, 47, .91), rgba(18, 47, 78, .74) 52%, rgba(15, 33, 62, .88));
+}
+
+.adventure-auth-shell::after {
+    opacity: .18;
+    background-image: linear-gradient(rgba(255, 242, 201, .24) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 242, 201, .24) 1px, transparent 1px);
+    background-size: 32px 32px;
+    mask-image: linear-gradient(to bottom, black, transparent 80%);
+}
+
+.adventure-auth-backdrop {
+    position: absolute;
+    z-index: -2;
+    inset: 0;
+    background: #173c66 url("/assets/backgrounds/clouds-bg.png") center 42% / cover no-repeat;
+    image-rendering: pixelated;
+}
+
+.adventure-auth {
+    position: relative;
+    z-index: 1;
+    color: #fff2c9;
+}
+
+.adventure-auth-header {
+    display: flex;
+    min-height: 76px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 4px 0 18px;
+    border-bottom: 1px solid rgba(255, 242, 201, .28);
+}
+
+.adventure-auth-header .game-brand__logo {
+    border-color: #ffd76a;
+    background: rgba(13, 34, 61, .88);
+}
+
+.adventure-auth-nav {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.adventure-auth-nav .pixel-button {
+    min-height: 40px;
+    padding: 8px 12px;
+    font-size: 11px;
+}
+
+.adventure-auth .apple-kicker,
+.adventure-auth [class~="text-slate-500"] {
+    color: #a9c9dd;
+}
+
+.adventure-auth h1,
+.adventure-auth h2,
+.adventure-auth h3 {
+    color: #fff8df;
+}
+
+.adventure-auth [class~="text-slate-900"],
+.adventure-auth [class~="text-slate-800"],
+.adventure-auth [class~="text-slate-700"],
+.adventure-auth [class~="text-slate-600"] {
+    color: #d8e8f0;
+}
+
+.adventure-auth a:not(.game-brand):not(.pixel-button) {
+    color: #ffe08a;
+}
+
+.adventure-auth .apple-card,
+.adventure-auth .apple-card-soft,
+.adventure-auth .panel-soft {
+    border: 2px solid rgba(255, 215, 106, .46);
+    border-radius: 7px;
+    background: rgba(13, 32, 56, .84);
+    box-shadow: 5px 5px 0 rgba(4, 15, 28, .42), inset 0 0 0 1px rgba(255, 255, 255, .08);
+    backdrop-filter: blur(12px);
+}
+
+.adventure-auth .apple-card {
+    border-color: #ffd76a;
+    padding: clamp(1.25rem, 3vw, 2rem);
+}
+
+.adventure-auth .input-field,
+.adventure-auth .apple-input {
+    border: 2px solid #7598b4;
+    border-radius: 5px;
+    background: #f4f4e9;
+    color: #1d344b;
+    box-shadow: inset 0 -3px 0 rgba(23, 51, 77, .12);
+}
+
+.adventure-auth .input-field:focus,
+.adventure-auth .apple-input:focus {
+    border-color: #ffd76a;
+    outline: 3px solid rgba(102, 229, 255, .32);
+}
+
+.adventure-auth .btn-primary,
+.adventure-auth .btn-secondary {
+    min-height: 48px;
+    border: 3px solid #9e6b47;
+    border-radius: 4px;
+    background: #ffd76a;
+    color: #263c49;
+    box-shadow: 4px 4px 0 rgba(4, 15, 28, .62), inset 0 0 0 2px rgba(255, 255, 255, .42);
+    font-family: "Lumi Lower Pixel", "Courier New", monospace;
+    text-transform: uppercase;
+}
+
+.adventure-auth .btn-primary:hover,
+.adventure-auth .btn-secondary:hover {
+    background: #ffe69b;
+    color: #172f46;
+}
+
+.adventure-auth .apple-kicker {
+    display: inline-flex;
+    border: 2px solid rgba(102, 229, 255, .7);
+    border-radius: 4px;
+    background: rgba(12, 36, 61, .78);
+    color: #8cecff;
+    padding: 8px 12px;
+    font-family: "Lumi Lower Pixel", "Courier New", monospace;
+    text-transform: uppercase;
+}
+
+@media (max-width: 640px) {
+    .adventure-auth-header {
+        align-items: flex-start;
+        flex-direction: column;
+        padding-bottom: 14px;
+    }
+
+    .adventure-auth-nav {
+        justify-content: flex-start;
+    }
+
+    .adventure-auth-nav .pixel-button {
+        min-height: 36px;
+        font-size: 10px;
+    }
 }
 
 .game-landing::before,

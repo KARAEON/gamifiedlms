@@ -1,29 +1,31 @@
-<x-guest-layout title="Join Class | Learning Insights Platform" variant="apple">
-    <div class="mx-auto flex min-h-screen w-full max-w-7xl items-center px-6 py-10 lg:px-12">
+<x-guest-layout title="Join Class | Lumi Adventures" variant="game" :show-school-brand="false">
+    <main class="adventure-auth mx-auto min-h-screen w-full max-w-7xl px-5 pb-10 pt-5 sm:px-8 lg:px-12">
+        <x-game-auth-header />
+        <div class="flex min-h-[calc(100vh-112px)] items-center py-8">
         <div class="grid w-full items-start gap-12 lg:grid-cols-[1.02fr_0.98fr]">
             <section class="hidden lg:block" data-stagger>
                 <span class="apple-kicker">Join with a teacher code</span>
                 <h1 class="mt-4 max-w-xl text-5xl font-semibold leading-[1.04] tracking-[-0.04em] text-slate-900">
-                    Create your student account.
+                    Your next adventure starts here.
                 </h1>
                 <p class="mt-5 max-w-lg text-lg leading-relaxed text-slate-600">
-                    Start by entering the join code from your teacher. Once the section is verified, enter your name and email to create your student account.
+                    Enter the code from your teacher to unlock your class and set up your explorer profile.
                 </p>
                 <div class="mt-9 space-y-3">
                     <div class="apple-card-soft p-4">
-                        <p class="text-sm font-semibold text-slate-800">Section-based access</p>
-                        <p class="mt-1 text-sm text-slate-600">The join code determines your section automatically.</p>
+                        <p class="text-sm font-semibold text-slate-800">Your classroom world</p>
+                        <p class="mt-1 text-sm text-slate-600">Your teacher's code takes you to the right class adventure.</p>
                     </div>
                     <div class="apple-card-soft p-4">
-                        <p class="text-sm font-semibold text-slate-800">No student password</p>
-                        <p class="mt-1 text-sm text-slate-600">You will sign in later using the section code and your name.</p>
+                        <p class="text-sm font-semibold text-slate-800">A simple way back</p>
+                        <p class="mt-1 text-sm text-slate-600">Use your class code and name whenever you return to play.</p>
                     </div>
                 </div>
             </section>
 
             <section class="apple-card mx-auto w-full max-w-xl p-7 text-slate-900" data-reveal>
                 <div class="mb-6 text-center">
-                    <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Student Join</p>
+                    <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Adventure Pass</p>
                     <h2 class="mt-2 text-3xl font-semibold tracking-[-0.02em] text-slate-900">Join your class</h2>
                     <p class="mt-2 text-sm text-slate-500">
                         Already have an account?
@@ -119,5 +121,6 @@
                 </div>
             </section>
         </div>
-    </div>
+        </div>
+    </main>
 </x-guest-layout>

@@ -77,8 +77,19 @@
 }
 
 .adventure-auth-header .game-brand__logo {
-    border-color: #ffd76a;
+    width: 50px;
+    height: 50px;
+    flex-basis: 50px;
+    border: 2px solid #ffd76a;
+    border-radius: 50%;
     background: rgba(13, 34, 61, .88);
+    box-shadow: 0 0 0 3px rgba(255, 215, 106, .2), inset 0 0 0 2px rgba(255, 255, 255, .12);
+}
+
+.adventure-auth-header .game-brand__logo img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
 }
 
 .adventure-auth-nav {

@@ -1,6 +1,7 @@
 @import 'tailwindcss';
 @import './staff.css';
 @import './teacher.css';
+@import './landing.css';
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../vendor/livewire/livewire/src/Features/SupportPagination/views/*.blade.php';

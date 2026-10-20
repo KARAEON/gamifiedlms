@@ -1,3 +1,9 @@
+FROM composer:2 AS dependencies
+
+WORKDIR /app
+COPY composer.json composer.lock ./
+RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader --no-scripts
+
 FROM node:22-bookworm-slim AS assets
 
 WORKDIR /app
@@ -6,6 +12,7 @@ RUN npm ci
 COPY resources ./resources
 COPY public ./public
 COPY vite.config.js ./
+COPY --from=dependencies /app/vendor ./vendor
 RUN npm run build
 
 FROM node:22-bookworm-slim AS game-assets
@@ -17,12 +24,6 @@ COPY PhaserGameupd ./
 RUN npm run build \
     && cp dist/assets/index-*.js /tmp/student-game.js \
     && cp dist/assets/index-*.css /tmp/student-game.css
-
-FROM composer:2 AS dependencies
-
-WORKDIR /app
-COPY composer.json composer.lock ./
-RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader --no-scripts
 
 FROM php:8.3-apache
 

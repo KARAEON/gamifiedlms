@@ -259,6 +259,7 @@
     flex: 0 0 54px;
     place-items: center;
     border: 3px solid var(--game-cream);
+    border-radius: 50%;
     background: rgba(23, 43, 67, .88);
     box-shadow: 4px 4px 0 rgba(23, 43, 67, .76), inset 0 0 0 2px rgba(255, 215, 106, .76);
 }
@@ -268,6 +269,7 @@
     height: 38px;
     object-fit: contain;
     image-rendering: auto;
+    border-radius: 50%;
 }
 
 .game-brand__copy {

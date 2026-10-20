@@ -22,7 +22,7 @@
 }
 .teacher-workspace .staff-brand { margin: 0 4px 21px; }
 .teacher-workspace .staff-brand a { gap: 11px; color: #fff2c9; }
-.teacher-brand-crest { display: grid; place-items: center; width: 46px; height: 53px; background: #15283b; border: 2px solid #a4b7c0; border-radius: 7px 7px 15px 15px; box-shadow: inset 0 0 0 3px #314b60, 0 3px 0 #0f2032; }
+.teacher-brand-crest { display: grid; place-items: center; width: 48px; height: 48px; background: #15283b; border: 2px solid #a4b7c0; border-radius: 50%; box-shadow: 0 0 0 3px #314b60, inset 0 0 0 2px #ffffff12; }
 .teacher-workspace .teacher-brand-crest .teacher-pixel-icon { width: 35px; height: 35px; }
 .teacher-workspace .teacher-brand-wordmark strong { font-family: 'Lumi Arcade', monospace; font-size: 45px; font-weight: 400; line-height: .9; letter-spacing: 5px; color: #fff2c9; text-shadow: 2px 3px #147b99; }
 .teacher-workspace .teacher-brand-wordmark small { font-size: 9px; color: #7ed9e9; letter-spacing: .28em; margin-top: 7px; font-weight: 800; }
@@ -44,7 +44,7 @@
 .teacher-workspace .staff-sidebar nav .teacher-pixel-icon { width: 25px; height: 25px; }
 .teacher-workspace .staff-sidebar-footer { padding-top: 20px; }
 .teacher-school-mark { display: flex; align-items: center; gap: 9px; padding: 13px 9px; border-top: 1px solid #ffffff15; color: #c6d7e5; font-size: 9px; font-weight: 600; }
-.teacher-school-mark img { width: 29px; height: 29px; }
+.teacher-school-mark img { width: 29px; height: 29px; border-radius: 50%; }
 .teacher-school-mark small { display: block; color: #93a9bd; font-size: 8px; line-height: 1.6; margin-top: 2px; font-weight: 400; }
 .teacher-workspace .staff-user { border-color: #ffffff18; color: #fff2d1; padding-top: 12px; margin-top: 8px; }
 .teacher-workspace .staff-user small { color: #97b3c8; }

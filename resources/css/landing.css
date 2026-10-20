@@ -22,6 +22,10 @@
 }
 
 .adventure-auth-shell {
+    --game-cream: #fff2c9;
+    --game-gold: #ffd76a;
+    --game-cyan: #66e5ff;
+    --game-ink: #263c49;
     isolation: isolate;
     background: #142b4a;
     color: #fff2c9;

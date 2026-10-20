@@ -1,18 +1,100 @@
 <x-app-layout title="Reports">
     <div class="space-y-6" x-data="{ reportType: '{{ old('report_type', 'student') }}' }">
-        <section class="panel-hero p-6">
-            <div class="relative z-10">
-                <p class="section-kicker text-brand-100">Monitoring and Documentation</p>
-                <h2 class="mt-1 text-3xl font-semibold text-white">Professional Report Generator</h2>
-                <p class="mt-2 max-w-3xl text-sm leading-relaxed text-blue-100">
-                    Build student, section, and summary reports with printable layouts and export-ready formats for planning and thesis presentations.
-                </p>
+        <x-staff.page-heading title="Reports" description="Review generated reports and share learning evidence with your School Head." eyebrow="Teaching and learning">
+<button type="button" class="btn-primary" data-open-dialog="generate-report">Generate New Report</button>
+</x-staff.page-heading>
+
+
+
+        <section class="panel p-5">
+            <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+                <div>
+                    <p class="section-kicker">Report History</p>
+                    <h3 class="section-title">Recent Generated Reports</h3>
+                </div>
+            </div>
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Type</th>
+                            <th>Target</th>
+                            <th>Generated At</th>
+                            <th>School Head Status</th>
+                            <th>Remarks</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($reports as $report)
+                            @php
+                                $delivery = $report->latestSchoolHeadDelivery;
+                                $deliveryStatus = $delivery?->status;
+                            @endphp
+                            <tr>
+                                <td class="font-semibold text-slate-800">{{ $report->title }}</td>
+                                <td>{{ ucfirst($report->report_type) }}</td>
+                                <td>
+                                    @if ($report->student)
+                                        Student: {{ $report->student->name }}
+                                    @elseif ($report->section)
+                                        Section: {{ $report->section->name }}
+                                    @else
+                                        System Summary
+                                    @endif
+                                </td>
+                                <td>{{ optional($report->generated_at)->format('M d, Y h:i A') }}</td>
+                                <td>
+                                    @if ($deliveryStatus === 'submitted')
+                                        <span class="badge border-amber-200 bg-amber-50 text-amber-700">Submitted</span>
+                                        <p class="mt-1 text-xs text-slate-500">{{ optional($delivery?->submitted_at)->format('M d, Y h:i A') }}</p>
+                                    @elseif ($deliveryStatus === 'acknowledged')
+                                        <span class="badge border-emerald-200 bg-emerald-50 text-emerald-700">Acknowledged</span>
+                                        <p class="mt-1 text-xs text-slate-500">{{ optional($delivery?->acknowledged_at)->format('M d, Y h:i A') }}</p>
+                                    @else
+                                        <span class="badge border-slate-200 bg-slate-50 text-slate-700">Not Submitted</span>
+                                    @endif
+                                </td>
+                                <td>{{ \Illuminate\Support\Str::limit($report->remarks ?? '-', 70) }}</td>
+                                <td>
+                                    <button type="button" class="btn-secondary" data-open-dialog="submit-report-{{ $report->id }}" @disabled($deliveryStatus === 'submitted')>{{ $deliveryStatus === 'submitted' ? 'Awaiting review' : 'Submit to School Head' }}</button>
+                                    <x-staff.dialog id="submit-report-{{ $report->id }}" title="Submit report to School Head">
+                                        <p class="mb-4 text-sm">{{ $report->title }}</p><form method="POST" action="{{ route('teacher.reports.submit_school_head', $report) }}" class="space-y-2">
+                                        @csrf
+                                        <input type="text" name="teacher_note" class="input-field" placeholder="Optional note to school head">
+                                        <button class="btn-secondary px-3 py-2 text-xs" @disabled($deliveryStatus === 'submitted')>
+                                            {{ $deliveryStatus === 'submitted' ? 'Awaiting Review' : 'Submit to School Head' }}
+                                        </button>
+                                    </form></x-staff.dialog>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="7" class="text-center text-slate-500">No reports generated yet.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+            <div class="mt-4">
+                {{ $reports->links() }}
             </div>
         </section>
+    </div>
 
-        <section class="grid gap-6 xl:grid-cols-5" data-stagger>
-            <article class="panel p-5 xl:col-span-3">
-                <h3 class="section-title">Generate New Report</h3>
+<details class="panel p-5"><summary class="font-semibold">Report guidance</summary>
+                <h3 class="section-title">Report Quality Checklist</h3>
+                <ul class="mt-3 space-y-2 text-sm text-slate-700">
+                    <li class="rounded-xl bg-slate-50 p-3 ring-1 ring-slate-100">Use at least a 30-day range for stronger trend reliability.</li>
+                    <li class="rounded-xl bg-slate-50 p-3 ring-1 ring-slate-100">For interventions, review high risk topics and low-score rates together.</li>
+                    <li class="rounded-xl bg-slate-50 p-3 ring-1 ring-slate-100">Use PDF for formal presentations and CSV for spreadsheet modeling.</li>
+                    <li class="rounded-xl bg-slate-50 p-3 ring-1 ring-slate-100">Add teacher remarks to guide remediation and enrichment planning.</li>
+                </ul>
+            </details>
+<x-staff.dialog id="generate-report" title="Generate New Report">
+
+
                 <p class="section-copy">Select report scope, filters, and output type.</p>
                 @if ($errors->any())
                     <div class="mt-4 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
@@ -79,91 +161,6 @@
 
                     <button class="btn-primary w-full sm:w-auto">Generate Report</button>
                 </form>
-            </article>
 
-            <article class="panel p-5 xl:col-span-2">
-                <h3 class="section-title">Report Quality Checklist</h3>
-                <ul class="mt-3 space-y-2 text-sm text-slate-700">
-                    <li class="rounded-xl bg-slate-50 p-3 ring-1 ring-slate-100">Use at least a 30-day range for stronger trend reliability.</li>
-                    <li class="rounded-xl bg-slate-50 p-3 ring-1 ring-slate-100">For interventions, review high risk topics and low-score rates together.</li>
-                    <li class="rounded-xl bg-slate-50 p-3 ring-1 ring-slate-100">Use PDF for formal presentations and CSV for spreadsheet modeling.</li>
-                    <li class="rounded-xl bg-slate-50 p-3 ring-1 ring-slate-100">Add teacher remarks to guide remediation and enrichment planning.</li>
-                </ul>
-            </article>
-        </section>
-
-        <section class="panel p-5">
-            <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
-                <div>
-                    <p class="section-kicker">Report History</p>
-                    <h3 class="section-title">Recent Generated Reports</h3>
-                </div>
-            </div>
-            <div class="table-wrap">
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Title</th>
-                            <th>Type</th>
-                            <th>Target</th>
-                            <th>Generated At</th>
-                            <th>School Head Status</th>
-                            <th>Remarks</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse ($reports as $report)
-                            @php
-                                $delivery = $report->latestSchoolHeadDelivery;
-                                $deliveryStatus = $delivery?->status;
-                            @endphp
-                            <tr>
-                                <td class="font-semibold text-slate-800">{{ $report->title }}</td>
-                                <td>{{ ucfirst($report->report_type) }}</td>
-                                <td>
-                                    @if ($report->student)
-                                        Student: {{ $report->student->name }}
-                                    @elseif ($report->section)
-                                        Section: {{ $report->section->name }}
-                                    @else
-                                        System Summary
-                                    @endif
-                                </td>
-                                <td>{{ optional($report->generated_at)->format('M d, Y h:i A') }}</td>
-                                <td>
-                                    @if ($deliveryStatus === 'submitted')
-                                        <span class="badge border-amber-200 bg-amber-50 text-amber-700">Submitted</span>
-                                        <p class="mt-1 text-xs text-slate-500">{{ optional($delivery?->submitted_at)->format('M d, Y h:i A') }}</p>
-                                    @elseif ($deliveryStatus === 'acknowledged')
-                                        <span class="badge border-emerald-200 bg-emerald-50 text-emerald-700">Acknowledged</span>
-                                        <p class="mt-1 text-xs text-slate-500">{{ optional($delivery?->acknowledged_at)->format('M d, Y h:i A') }}</p>
-                                    @else
-                                        <span class="badge border-slate-200 bg-slate-50 text-slate-700">Not Submitted</span>
-                                    @endif
-                                </td>
-                                <td>{{ \Illuminate\Support\Str::limit($report->remarks ?? '-', 70) }}</td>
-                                <td>
-                                    <form method="POST" action="{{ route('teacher.reports.submit_school_head', $report) }}" class="space-y-2">
-                                        @csrf
-                                        <input type="text" name="teacher_note" class="input-field" placeholder="Optional note to school head">
-                                        <button class="btn-secondary px-3 py-2 text-xs" @disabled($deliveryStatus === 'submitted')>
-                                            {{ $deliveryStatus === 'submitted' ? 'Awaiting Review' : 'Submit to School Head' }}
-                                        </button>
-                                    </form>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="7" class="text-center text-slate-500">No reports generated yet.</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-            <div class="mt-4">
-                {{ $reports->links() }}
-            </div>
-        </section>
-    </div>
+</x-staff.dialog>
 </x-app-layout>

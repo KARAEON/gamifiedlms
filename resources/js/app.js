@@ -1,5 +1,9 @@
 import './bootstrap';
-import Alpine from 'alpinejs';
+import StandaloneAlpine from 'alpinejs';
+import { Livewire, Alpine as LivewireAlpine } from '../../vendor/livewire/livewire/dist/livewire.esm';
+const isStaffWorkspace = document.body.classList.contains('staff-workspace');
+const Alpine = isStaffWorkspace ? LivewireAlpine : StandaloneAlpine;
+import { initializeStaffWorkspace } from './staff-workspace';
 
 window.Alpine = Alpine;
 
@@ -193,6 +197,22 @@ function buildChart(canvas, config) {
         }
     }
 
+    if (document.body.classList.contains('staff-workspace')) {
+        config.options.events = ['mousemove', 'mouseout', 'click', 'touchstart', 'touchmove'];
+        canvas.setAttribute('role', 'img');
+        const title = canvas.closest('article')?.querySelector('h2,h3')?.textContent.trim() || 'Performance chart';
+        canvas.setAttribute('aria-label', `${title}. Use the data table below for exact values.`);
+        const existingData = document.getElementById(`${canvas.id}-data`);
+        existingData?.remove();
+        const details = document.createElement('details'); details.className = 'staff-chart-data'; details.id = `${canvas.id}-data`;
+        const summary = document.createElement('summary'); summary.textContent = 'View chart data'; details.append(summary);
+        const wrap = document.createElement('div'); wrap.className = 'table-wrap'; const table = document.createElement('table'); table.className = 'data-table';
+        const head = table.createTHead().insertRow();
+        ['Period / category', ...(config.data.datasets || []).map((d) => d.label || 'Value')].forEach((label) => { const th = document.createElement('th'); th.textContent = label; th.scope = 'col'; head.append(th); });
+        const body = table.createTBody();
+        (config.data.labels || []).forEach((label, index) => { const row = body.insertRow(); row.insertCell().textContent = label; (config.data.datasets || []).forEach((dataset) => { row.insertCell().textContent = dataset.data[index] ?? '\u2014'; }); });
+        wrap.append(table); details.append(wrap); canvas.parentElement.append(details);
+    }
     return new window.Chart(canvas, config);
 }
 
@@ -234,6 +254,10 @@ function renderChartOnView(canvasId, factory) {
 }
 
 function initializeMotion() {
+    if (document.body.classList.contains('staff-workspace')) {
+        initializeStaffWorkspace();
+        return;
+    }
     initReveal(document);
     initHeaderDepth();
     initParallax();
@@ -269,4 +293,5 @@ document.addEventListener('DOMContentLoaded', initializeMotion);
 document.addEventListener('livewire:navigated', initializeMotion);
 document.addEventListener('livewire:load', initializeMotion);
 
-Alpine.start();
+if (isStaffWorkspace) Livewire.start();
+else Alpine.start();

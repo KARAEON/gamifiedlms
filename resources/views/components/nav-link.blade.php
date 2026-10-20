@@ -27,6 +27,9 @@
         'PF' => '<svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c1.6-3 4-4.5 7-4.5S17.4 17 19 20"/><path d="M3 12h3"/><path d="M18 12h3"/></svg>',
     ];
 
+    $icons['WF'] = '<svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/><path d="M10 6h7v8M6 10v7h8"/></svg>';
+    $icons['PL'] = '<svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l8 4v5c0 5-4 8-8 9-4-1-8-4-8-9V7z"/><path d="m8 12 3 3 5-6"/></svg>';
+    $icons['AU'] = '<svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
     $iconSvg = $icons[$icon] ?? $icons['D'];
 @endphp
 
@@ -34,7 +37,7 @@
     @if($active)
         <span class="absolute inset-y-2 left-1.5 w-1 rounded-full bg-white/80"></span>
     @endif
-    <span class="nav-icon {{ $active ? 'border-white/10 bg-white/10 text-white' : 'group-hover:border-slate-300 group-hover:bg-slate-50 group-hover:text-slate-700' }}">
+    <span aria-hidden="true" class="nav-icon {{ $active ? 'border-white/10 bg-white/10 text-white' : 'group-hover:border-slate-300 group-hover:bg-slate-50 group-hover:text-slate-700' }}">
         {!! $iconSvg !!}
     </span>
     <span>{{ $slot }}</span>

@@ -13,58 +13,9 @@
                     {{ $student->is_active ? 'Active' : 'Archived' }}
                 </span>
             </div>
-        </section>
+        <button type="button" class="btn-secondary mt-4" data-open-dialog="edit-students">Edit student</button></section>
 
-        <section class="panel p-6">
-            <h2 class="text-lg font-semibold text-slate-900">Edit Student</h2>
-            <form method="POST" action="{{ route('teacher.students.update', $student) }}" class="mt-4 grid gap-3 sm:grid-cols-2">
-                @csrf
-                @method('PATCH')
-                <div>
-                    <label class="mb-1 block text-sm font-medium text-slate-700">Last Name</label>
-                    <input type="text" name="last_name" value="{{ old('last_name', $student->studentProfile?->last_name) }}" class="input-field" required>
-                </div>
-                <div>
-                    <label class="mb-1 block text-sm font-medium text-slate-700">First Name</label>
-                    <input type="text" name="first_name" value="{{ old('first_name', $student->studentProfile?->first_name) }}" class="input-field" required>
-                </div>
-                <div class="sm:col-span-2">
-                    <label class="mb-1 block text-sm font-medium text-slate-700">Middle Name</label>
-                    <input type="text" name="middle_name" value="{{ old('middle_name', $student->studentProfile?->middle_name) }}" class="input-field">
-                </div>
-                <div>
-                    <label class="mb-1 block text-sm font-medium text-slate-700">Email</label>
-                    <input type="email" name="email" value="{{ old('email', $student->email) }}" class="input-field" required>
-                </div>
-                <div>
-                    <label class="mb-1 block text-sm font-medium text-slate-700">Learner Reference</label>
-                    <input type="text" name="learner_reference" value="{{ old('learner_reference', $student->studentProfile?->learner_reference) }}" class="input-field">
-                </div>
-                <div>
-                    <label class="mb-1 block text-sm font-medium text-slate-700">Section</label>
-                    <select name="section_id" class="input-field" required>
-                        @foreach ($sections as $section)
-                            <option value="{{ $section->id }}" @selected(old('section_id', $student->studentProfile?->section_id) == $section->id)>{{ $section->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div>
-                    <label class="mb-1 block text-sm font-medium text-slate-700">Guardian Name</label>
-                    <input type="text" name="guardian_name" value="{{ old('guardian_name', $student->studentProfile?->guardian_name) }}" class="input-field">
-                </div>
-                <div>
-                    <label class="mb-1 block text-sm font-medium text-slate-700">Learning Goal</label>
-                    <input type="text" name="learning_goal" value="{{ old('learning_goal', $student->studentProfile?->learning_goal) }}" class="input-field">
-                </div>
-                <label class="sm:col-span-2 flex items-center gap-2 text-sm text-slate-600">
-                    <input type="checkbox" name="is_active" value="1" class="h-4 w-4 rounded border-slate-300 text-brand-600" @checked($student->is_active)>
-                    Active account
-                </label>
-                <div class="sm:col-span-2 flex justify-end">
-                    <button class="btn-primary">Save Changes</button>
-                </div>
-            </form>
-        </section>
+
 
         <section class="panel p-5">
             <h2 class="text-lg font-semibold text-slate-900">Recent Performance</h2>
@@ -121,6 +72,53 @@
             </div>
         </section>
     </div>
+<x-staff.dialog id="edit-students" title="Edit student"><form method="POST" action="{{ route('teacher.students.update', $student) }}" class="mt-4 grid gap-3 sm:grid-cols-2">
+                @csrf
+                @method('PATCH')
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-slate-700">Last Name</label>
+                    <input type="text" name="last_name" value="{{ old('last_name', $student->studentProfile?->last_name) }}" class="input-field" required>
+                </div>
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-slate-700">First Name</label>
+                    <input type="text" name="first_name" value="{{ old('first_name', $student->studentProfile?->first_name) }}" class="input-field" required>
+                </div>
+                <div class="sm:col-span-2">
+                    <label class="mb-1 block text-sm font-medium text-slate-700">Middle Name</label>
+                    <input type="text" name="middle_name" value="{{ old('middle_name', $student->studentProfile?->middle_name) }}" class="input-field">
+                </div>
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-slate-700">Email</label>
+                    <input type="email" name="email" value="{{ old('email', $student->email) }}" class="input-field" required>
+                </div>
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-slate-700">Learner Reference</label>
+                    <input type="text" name="learner_reference" value="{{ old('learner_reference', $student->studentProfile?->learner_reference) }}" class="input-field">
+                </div>
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-slate-700">Section</label>
+                    <select name="section_id" class="input-field" required>
+                        @foreach ($sections as $section)
+                            <option value="{{ $section->id }}" @selected(old('section_id', $student->studentProfile?->section_id) == $section->id)>{{ $section->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-slate-700">Guardian Name</label>
+                    <input type="text" name="guardian_name" value="{{ old('guardian_name', $student->studentProfile?->guardian_name) }}" class="input-field">
+                </div>
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-slate-700">Learning Goal</label>
+                    <input type="text" name="learning_goal" value="{{ old('learning_goal', $student->studentProfile?->learning_goal) }}" class="input-field">
+                </div>
+                <label class="sm:col-span-2 flex items-center gap-2 text-sm text-slate-600">
+                    <input type="checkbox" name="is_active" value="1" class="h-4 w-4 rounded border-slate-300 text-brand-600" @checked($student->is_active)>
+                    Active account
+                </label>
+                <div class="sm:col-span-2 flex justify-end">
+                    <button class="btn-primary">Save Changes</button>
+                </div>
+            </form></x-staff.dialog>
 </x-app-layout>
 
 

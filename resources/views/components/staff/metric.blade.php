@@ -1,0 +1,2 @@
+@props(['label', 'value', 'hint' => null, 'tone' => 'default', 'icon' => 'chart'])
+<article {{ $attributes->class(['metric-card', 'staff-metric-'.$tone]) }}>@if (auth()->user()?->role?->value === 'teacher')<span class="teacher-metric-icon"><x-teacher.icon :name="$icon" /></span>@endif<p class="metric-label">{{ $label }}</p><p class="metric-value">{{ $value }}</p>@if ($hint)<p class="section-copy">{{ $hint }}</p>@endif</article>

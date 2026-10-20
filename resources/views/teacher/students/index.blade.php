@@ -1,20 +1,9 @@
 <x-app-layout title="Student Management">
-    <div x-data="{ createModal: false }" class="space-y-6">
-        <section class="panel p-6">
-            <div class="flex flex-wrap items-center justify-between gap-4">
-                <div>
-                    <h1 class="text-2xl font-semibold text-slate-900">Student Management</h1>
-                    <p class="mt-1 text-sm text-slate-600">Manage student accounts, sections, and learning readiness.</p>
-                </div>
-                <button @click="createModal = true" class="btn-primary">Add Student</button>
-            </div>
-        </section>
+    <div  class="space-y-6">
+        <x-staff.page-heading title="Student Management" description="Manage student accounts, sections, and learning readiness." eyebrow="Teaching and learning"><button data-open-dialog="create-students" type="button" class="btn-primary">Add Student</button></x-staff.page-heading>
 
         <section class="filter-panel">
-            <div class="mb-4">
-                <p class="section-kicker">Filter and Search</p>
-                <h2 class="section-title">Student Directory</h2>
-            </div>
+            <h2 class="section-title mb-4">Student directory</h2>
             <form class="grid gap-3 md:grid-cols-4">
                 <input type="text" name="search" value="{{ request('search') }}" placeholder="Search name or email" class="input-field">
                 <select name="section_id" class="input-field">
@@ -62,7 +51,7 @@
                                     <div class="flex items-center gap-2">
                                         <a href="{{ route('teacher.students.show', $student) }}" class="btn-secondary px-3 py-1.5 text-xs">View</a>
                                         @if ($student->is_active)
-                                            <form action="{{ route('teacher.students.archive', $student) }}" method="POST" onsubmit="return confirm('Archive this student?')">
+                                            <form action="{{ route('teacher.students.archive', $student) }}" method="POST" data-confirm-archive>
                                                 @csrf
                                                 @method('PATCH')
                                                 <button class="rounded-lg border border-rose-200 px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-50">Archive</button>
@@ -74,7 +63,7 @@
                         @empty
                             <tr>
                                 <td colspan="5" class="py-6">
-                                    <div class="empty-state">No students found for the selected filters.</div>
+                                    <x-staff.empty-state title="No learners match these filters" description="Try another name, section, or status, or reset the directory filters." />
                                 </td>
                             </tr>
                         @endforelse
@@ -87,14 +76,8 @@
             </div>
         </section>
 
-        <div x-cloak x-show="createModal" x-transition.opacity class="modal-backdrop flex items-center justify-center px-4">
-            <div @click.outside="createModal = false" x-transition.scale.95 class="modal-shell max-w-2xl">
-                <div class="mb-4 flex items-center justify-between">
-                    <h2 class="text-lg font-semibold text-slate-900">Create Student Account</h2>
-                    <button @click="createModal = false" class="rounded-lg p-2 text-slate-500 hover:bg-slate-100">x</button>
-                </div>
-
-                <form method="POST" action="{{ route('teacher.students.store') }}" class="grid gap-3 sm:grid-cols-2">
+<x-staff.dialog id="create-students" title="Add student">
+<form method="POST" action="{{ route('teacher.students.store') }}" class="grid gap-3 sm:grid-cols-2">
                     @csrf
                     <div>
                         <label class="mb-1 block text-sm font-medium text-slate-700">Last Name</label>
@@ -137,15 +120,10 @@
                         Students will sign in using their section join code and name. No student password is created here.
                     </div>
                     <div class="sm:col-span-2 flex justify-end gap-2 pt-2">
-                        <button type="button" @click="createModal = false" class="btn-secondary">Cancel</button>
+                        <button type="button" data-close-dialog class="btn-secondary">Cancel</button>
                         <button type="submit" class="btn-primary">Create Student</button>
                     </div>
                 </form>
-            </div>
-        </div>
+</x-staff.dialog>
     </div>
 </x-app-layout>
-
-
-
-

@@ -1,10 +1,6 @@
 <x-app-layout title="Teacher Profile">
     <div class="mx-auto max-w-3xl space-y-6">
-        <section class="panel p-6">
-            <p class="section-kicker">Teacher Profile</p>
-            <h1 class="section-title">Account and Specialization</h1>
-            <p class="section-copy">Manage your account and instructional details.</p>
-        </section>
+        <x-staff.page-heading title="My profile" description="Manage your account, teaching specialization, and instructional details." eyebrow="Account settings" />
 
         <section class="panel p-6">
             <form method="POST" action="{{ route('teacher.profile.update') }}" class="space-y-4">

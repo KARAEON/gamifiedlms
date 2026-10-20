@@ -1,14 +1,6 @@
 <x-app-layout title="Section Management">
-    <div x-data="{ createModal: false }" class="space-y-6">
-        <section class="panel p-6">
-            <div class="flex flex-wrap items-center justify-between gap-4">
-                <div>
-                    <h1 class="text-2xl font-semibold text-slate-900">Section Management</h1>
-                    <p class="mt-1 text-sm text-slate-600">Create sections and monitor class-level performance.</p>
-                </div>
-                <button @click="createModal = true" class="btn-primary">Create Section</button>
-            </div>
-        </section>
+    <div  class="space-y-6">
+        <x-staff.page-heading title="Section Management" description="Create sections and monitor class-level performance." eyebrow="Teaching and learning"><button data-open-dialog="create-sections" type="button" class="btn-primary">Create Section</button></x-staff.page-heading>
 
         <section class="panel p-5">
             <div class="table-wrap">
@@ -41,7 +33,7 @@
                         @empty
                             <tr>
                                 <td colspan="6" class="py-6">
-                                    <div class="empty-state">No sections created yet.</div>
+                                    <x-staff.empty-state title="Create your first section" description="Organize learners into classes and share a section join code." />
                                 </td>
                             </tr>
                         @endforelse
@@ -51,13 +43,8 @@
             <div class="mt-4">{{ $sections->links() }}</div>
         </section>
 
-        <div x-cloak x-show="createModal" x-transition.opacity class="modal-backdrop flex items-center justify-center px-4">
-            <div @click.outside="createModal = false" x-transition.scale.95 class="modal-shell max-w-xl">
-                <div class="mb-4 flex items-center justify-between">
-                    <h2 class="text-lg font-semibold text-slate-900">Create Section</h2>
-                    <button @click="createModal = false" class="rounded-lg p-2 text-slate-500 hover:bg-slate-100">x</button>
-                </div>
-                <form method="POST" action="{{ route('teacher.sections.store') }}" class="space-y-3">
+<x-staff.dialog id="create-sections" title="Create section">
+<form method="POST" action="{{ route('teacher.sections.store') }}" class="space-y-3">
                     @csrf
                     <div>
                         <label class="mb-1 block text-sm font-medium text-slate-700">Section Name</label>
@@ -76,14 +63,10 @@
                         Active section
                     </label>
                     <div class="flex justify-end gap-2 pt-1">
-                        <button type="button" @click="createModal = false" class="btn-secondary">Cancel</button>
+                        <button type="button" data-close-dialog class="btn-secondary">Cancel</button>
                         <button class="btn-primary">Create Section</button>
                     </div>
                 </form>
-            </div>
-        </div>
+</x-staff.dialog>
     </div>
 </x-app-layout>
-
-
-

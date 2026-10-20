@@ -4,5 +4,5 @@
     $title = $title ?? config('app.name', 'GLMS');
 @endphp
 
-@include('layouts.app', ['title' => $title, 'slot' => $slot])
+@include(auth()->user()?->role?->value === 'student' ? 'layouts.app' : 'layouts.staff', ['title' => $title, 'slot' => $slot])
 

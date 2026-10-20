@@ -1,4 +1,4 @@
-<x-app-layout title="Teacher Analytics Dashboard">
+<x-app-layout title="Classroom overview">
     @php
         $scoreTrendLabels = collect($analytics['score_trend'])->pluck('date')->map(fn ($date) => \Illuminate\Support\Carbon::parse($date)->format('M d'));
         $scoreTrendValues = collect($analytics['score_trend'])->pluck('value');
@@ -14,48 +14,53 @@
         $trendPointCount = $scoreTrendLabels->count();
     @endphp
 
-    <div class="mobile-fullbleed-fix space-y-6 overflow-x-hidden w-full max-w-full">
-        <section class="panel-hero w-full max-w-full p-7">
-            <div class="absolute -right-14 -top-14 h-44 w-44 rounded-full bg-white/10"></div>
-            <div class="absolute bottom-0 right-8 h-16 w-16 rounded-full bg-white/15"></div>
-            <div class="relative flex flex-wrap items-end justify-between gap-6 overflow-hidden">
-                <div class="max-w-3xl">
-                    <p class="text-xs font-bold uppercase tracking-[0.16em] text-brand-100">Instructional Intelligence</p>
-                    <h2 class="mt-2 text-3xl font-semibold leading-tight text-white">Analytics Command Center for Science Mastery</h2>
-                    <p class="mt-3 text-sm leading-relaxed text-blue-100">
-                        Review class performance, identify weak topics, and prepare remediation strategies with confidence.
-                    </p>
-                    <div class="mt-4 grid gap-3 sm:grid-cols-3" data-stagger>
-                        <div class="glass-strip px-3 py-2">
-                            <p class="text-[11px] uppercase tracking-[0.12em] text-blue-100">Students</p>
-                            <p class="text-lg font-semibold text-white">{{ $analytics['students_count'] }}</p>
-                        </div>
-                        <div class="glass-strip px-3 py-2">
-                            <p class="text-[11px] uppercase tracking-[0.12em] text-blue-100">Avg Accuracy</p>
-                            <p class="text-lg font-semibold text-white">{{ number_format($analytics['avg_class_performance'], 1) }}%</p>
-                        </div>
-                        <div class="glass-strip px-3 py-2">
-                            <p class="text-[11px] uppercase tracking-[0.12em] text-blue-100">Intervention Alerts</p>
-                            <p class="text-lg font-semibold text-white">{{ $interventionCount }}</p>
-                        </div>
-                    </div>
-                    <p class="mt-3 text-xs font-semibold uppercase tracking-[0.12em] text-blue-100">
-                        @if ($trendSummary['has_previous'])
-                            {{ $trendSummary['window_days'] }}-day trend:
-                            <span class="{{ $trendSummary['delta'] >= 0 ? 'text-emerald-200' : 'text-rose-200' }}">
-                                {{ $trendSummary['delta'] >= 0 ? '+' : '' }}{{ number_format($trendSummary['delta'], 2) }}%
-                            </span>
-                            vs previous period
-                        @else
-                            {{ $trendSummary['window_days'] }}-day trend baseline established.
-                        @endif
-                    </p>
-                </div>
+    <div class="teacher-dashboard space-y-6 w-full max-w-full">
+        <x-staff.page-heading title="Adventure overview" description="Your classroom at a glance. Every small win counts." eyebrow="Your teaching journey">
+<a href="{{ route('teacher.workflow.index') }}" class="btn-primary"><x-teacher.icon name="map" /> Review mastery</a><a href="{{ route('teacher.reports.index') }}" class="btn-secondary"><x-teacher.icon name="scroll" /> Reports</a></x-staff.page-heading>
 
-                <form class="apple-card-soft w-full max-w-full space-y-3 bg-white/95 p-4 text-slate-800 md:max-w-md">
+
+        <section class="teacher-welcome" aria-labelledby="teacher-welcome-title">
+            <img class="teacher-welcome-art" src="{{ asset('assets/world/lumora-world.png') }}" alt="" fetchpriority="high">
+            <div class="teacher-hero-stars" aria-hidden="true"><span>✦</span><span>✧</span><span>✦</span></div>
+            <div class="teacher-welcome-copy">
+                <span class="teacher-welcome-eyebrow"><span aria-hidden="true">✦</span> Welcome back, {{ auth()->user()->name }}</span>
+                <h2 id="teacher-welcome-title">LET'S MAKE<br>LEARNING <em>EPIC.</em></h2>
+                <p>Big discoveries start with you. Guide your learners, celebrate their progress, and bring the next adventure to life.</p>
+                <a href="{{ route('teacher.sections.index') }}" class="teacher-welcome-link"><x-teacher.icon name="compass" /> Explore your classes <span aria-hidden="true">&rarr;</span></a>
+            </div>
+            <div class="teacher-world-caption"><x-teacher.icon name="flag" /><span>LUMORA WORLD<small>A little curiosity. Endless possibilities.</small></span></div>
+        </section>
+
+        <section class="teacher-stats grid gap-3 md:grid-cols-2 xl:grid-cols-5" aria-label="Classroom statistics">
+            <x-staff.metric label="Learners" value="{{ $analytics['students_count'] }}" hint="On their learning journey" icon="learners" />
+            <x-staff.metric label="Your sections" value="{{ $analytics['sections_count'] }}" hint="Adventures to guide" icon="sections" />
+            <x-staff.metric label="Class performance" value="{{ number_format($analytics['avg_class_performance'], 1) }}%" hint="Average learner accuracy" icon="trophy" />
+            <x-staff.metric label="Learning attempts" value="{{ $analytics['total_attempts'] }}" hint="Steps toward mastery" icon="crystal" />
+            <x-staff.metric label="Need a little help" value="{{ $interventionCount }}" hint="Learners needing support" tone="alert" icon="shield" />
+        </section>
+
+        <div class="teacher-quest-heading"><div><p class="section-kicker">Ready when you are</p><h2>Choose your next quest</h2></div><span>Great learning starts here <span aria-hidden="true">✦</span></span></div>
+        <nav class="teacher-quests" aria-label="Teaching shortcuts">
+            <a href="{{ route('teacher.lessons.index') }}" class="teacher-quest teacher-quest-library">
+                <div class="teacher-quest-scene"><img src="{{ asset('assets/world/reading-island.png') }}" alt="" loading="lazy"><span class="teacher-quest-number">01 / PREPARE</span><span class="teacher-quest-badge"><x-teacher.icon name="book" /></span></div>
+                <div class="teacher-quest-copy"><h3>Build the next adventure</h3><p>Bring lessons and topics to life.</p><span>Open lesson library <span aria-hidden="true">&rarr;</span></span></div>
+            </a>
+            <a href="{{ route('teacher.scores.index') }}" class="teacher-quest teacher-quest-progress">
+                <div class="teacher-quest-scene"><img src="{{ asset('assets/world/numeric-island.png') }}" alt="" loading="lazy"><span class="teacher-quest-number">02 / DISCOVER</span><span class="teacher-quest-badge"><x-teacher.icon name="trophy" /></span></div>
+                <div class="teacher-quest-copy"><h3>Follow every achievement</h3><p>See how your learners are growing.</p><span>Explore game scores <span aria-hidden="true">&rarr;</span></span></div>
+            </a>
+            <a href="{{ route('teacher.insights.index') }}" class="teacher-quest teacher-quest-support">
+                <div class="teacher-quest-scene"><img src="{{ asset('assets/world/concord-grove.png') }}" alt="" loading="lazy"><span class="teacher-quest-number">03 / ENCOURAGE</span><span class="teacher-quest-badge"><x-teacher.icon name="spark" /></span></div>
+                <div class="teacher-quest-copy"><h3>Help a learner shine</h3><p>A little support goes a long way.</p><span>Find your next step <span aria-hidden="true">&rarr;</span></span></div>
+            </a>
+        </nav>
+
+        <aside class="teacher-guide"><img src="{{ asset('assets/characters/quill/quill-default.png') }}" alt="Quill, your adventure guide" loading="lazy"><div><strong>A note from Quill <span aria-hidden="true">✦</span></strong><p>Every attempt is a step forward. Check in on a learner today and help their confidence grow.</p></div><a href="{{ route('teacher.students.index') }}">Meet your learners <span aria-hidden="true">&rarr;</span></a></aside>
+
+<x-staff.toolbar title="Monitoring period"><form method="GET" class="grid gap-3 md:grid-cols-[1fr_2fr_auto] items-end">
                     <div>
-                        <p class="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500">Dashboard Window</p>
-                        <p class="text-sm font-semibold text-slate-700">Filter the monitoring period</p>
+                        <p class="section-kicker">Date range</p>
+                        <p class="text-sm font-semibold text-slate-700">Learning activity period</p>
                     </div>
                     <div class="grid min-w-0 gap-3 sm:grid-cols-2">
                         <div>
@@ -67,39 +72,50 @@
                             <input type="date" name="date_to" value="{{ $filters['date_to'] }}" class="input-field">
                         </div>
                     </div>
-                    <button class="btn-primary w-full">Refresh Analytics</button>
+                    <button class="btn-primary w-full">Apply date range</button>
                 </form>
-            </div>
-        </section>
+<p class="mt-3 text-xs text-slate-500">@if ($trendSummary['has_previous']){{ (int) round($trendSummary['window_days']) }}-day change: {{ $trendSummary['delta'] >= 0 ? '+' : '' }}{{ number_format($trendSummary['delta'], 2) }} percentage points compared with the previous period.@else No previous period is available for comparison.@endif</p></x-staff.toolbar>
 
-        <section class="grid gap-4 md:grid-cols-2 xl:grid-cols-5" data-stagger>
-            <article class="metric-card">
-                <p class="metric-label">Total Students</p>
-                <p class="metric-value">{{ $analytics['students_count'] }}</p>
-                <p class="mt-1 text-xs text-slate-500">Active learners in system</p>
-            </article>
-            <article class="metric-card">
-                <p class="metric-label">Total Sections</p>
-                <p class="metric-value">{{ $analytics['sections_count'] }}</p>
-                <p class="mt-1 text-xs text-slate-500">Handled class groups</p>
-            </article>
-            <article class="metric-card">
-                <p class="metric-label">Class Performance</p>
-                <p class="metric-value text-brand-700">{{ number_format($analytics['avg_class_performance'], 1) }}%</p>
-                <p class="mt-1 text-xs text-slate-500">Overall mastery average</p>
-            </article>
-            <article class="metric-card">
-                <p class="metric-label">Attempt Records</p>
-                <p class="metric-value">{{ $analytics['total_attempts'] }}</p>
-                <p class="mt-1 text-xs text-slate-500">Tracked learning attempts</p>
-            </article>
-            <article class="metric-card">
-                <p class="metric-label">Intervention Cases</p>
-                <p class="metric-value text-rose-700">{{ $interventionCount }}</p>
-                <p class="mt-1 text-xs text-slate-500">Flagged by risk and low-score signals</p>
-            </article>
-        </section>
 
+
+<section class="grid gap-6 lg:grid-cols-2" data-stagger data-no-reveal="true">
+            <article class="panel p-5">
+                <div class="mb-4 flex items-center justify-between">
+                    <div>
+                        <p class="section-kicker">Class Health</p>
+                        <h3 class="section-title">Students Needing Intervention</h3>
+                    </div>
+                    <a href="{{ route('teacher.insights.index') }}" class="btn-secondary px-3 py-2 text-xs">Decision Support</a>
+                </div>
+                <div class="space-y-3">
+                    @forelse (collect($analytics['students_needing_intervention'])->take(4) as $student)
+                        <div class="apple-stat-item apple-tint-rose">
+                            <a class="text-sm font-semibold text-brand-700" href="{{ route('teacher.students.show', $student['student_id']) }}">{{ $student['name'] }}</a>
+                            <p class="text-xs text-slate-500">{{ $student['section'] ?? 'Unassigned section' }}</p>
+                            <div class="mt-2 flex items-center justify-between text-xs font-semibold">
+                                <span class="text-rose-700">{{ number_format($student['average_accuracy'], 1) }}% average</span>
+                                <span class="text-slate-600">{{ $student['attempts'] }} attempts</span>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="apple-stat-item apple-tint-emerald text-sm text-emerald-700">
+                            No learners currently flagged for intervention in this period.
+                        </div>
+                    @endforelse
+                </div>
+            </article>
+<article class="chart-shell" data-no-reveal="true">
+                <p class="section-kicker">Section Benchmark</p>
+                <h3 class="section-title">Section Comparison</h3>
+                @if ($sectionLabels->isEmpty())
+                    <div class="empty-state mt-4">No section performance data available.</div>
+                @else
+                    <div class="mt-4 overflow-hidden">
+                        <canvas id="teacher-section-comparison" height="150"></canvas>
+                    </div>
+                @endif
+            </article>
+</section>
         <section class="grid gap-6 xl:grid-cols-3" data-stagger data-no-reveal="true">
             <article class="chart-shell w-full max-w-full xl:col-span-2" data-no-reveal="true">
                 <div class="mb-4 flex items-start justify-between gap-3">
@@ -128,45 +144,7 @@
             </article>
         </section>
 
-        <section class="grid gap-6 lg:grid-cols-2" data-stagger data-no-reveal="true">
-            <article class="chart-shell" data-no-reveal="true">
-                <p class="section-kicker">Section Benchmark</p>
-                <h3 class="section-title">Section Comparison</h3>
-                @if ($sectionLabels->isEmpty())
-                    <div class="empty-state mt-4">No section performance data available.</div>
-                @else
-                    <div class="mt-4 overflow-hidden">
-                        <canvas id="teacher-section-comparison" height="150"></canvas>
-                    </div>
-                @endif
-            </article>
 
-            <article class="panel p-5">
-                <div class="mb-4 flex items-center justify-between">
-                    <div>
-                        <p class="section-kicker">Class Health</p>
-                        <h3 class="section-title">Students Needing Intervention</h3>
-                    </div>
-                    <a href="{{ route('teacher.insights.index') }}" class="btn-secondary px-3 py-2 text-xs">Decision Support</a>
-                </div>
-                <div class="space-y-3">
-                    @forelse ($analytics['students_needing_intervention'] as $student)
-                        <div class="apple-stat-item apple-tint-rose">
-                            <p class="text-sm font-semibold text-slate-900">{{ $student['name'] }}</p>
-                            <p class="text-xs text-slate-500">{{ $student['section'] ?? 'Unassigned section' }}</p>
-                            <div class="mt-2 flex items-center justify-between text-xs font-semibold">
-                                <span class="text-rose-700">{{ number_format($student['average_accuracy'], 1) }}% average</span>
-                                <span class="text-slate-600">{{ $student['attempts'] }} attempts</span>
-                            </div>
-                        </div>
-                    @empty
-                        <div class="apple-stat-item apple-tint-emerald text-sm text-emerald-700">
-                            No learners currently flagged for intervention in this period.
-                        </div>
-                    @endforelse
-                </div>
-            </article>
-        </section>
 
         <section class="grid gap-6 xl:grid-cols-2" data-stagger>
             <article class="panel p-5">

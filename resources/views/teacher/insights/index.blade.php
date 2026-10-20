@@ -1,26 +1,27 @@
 <x-app-layout title="Decision Support">
     <div class="space-y-6">
-        <section class="panel-hero p-6">
+        <x-staff.page-heading title="Decision support" description="Turn learning evidence into focused classroom support and intervention plans." eyebrow="Evidence and insights" />
+<section class="panel p-5">
             <div class="relative z-10">
                 <p class="section-kicker text-brand-100">Intervention Planning</p>
-                <h2 class="mt-1 text-3xl font-semibold text-white">Decision-Making Support Dashboard</h2>
-                <p class="mt-2 max-w-3xl text-sm leading-relaxed text-blue-100">
+                <h2 class="section-title">Classroom signals</h2>
+                <p class="mt-2 max-w-3xl text-sm leading-relaxed text-slate-500">
                     Translate analytics into action with prioritized focus areas, section signals, and learner intervention lists.
                 </p>
                 <div class="mt-4 grid gap-3 sm:grid-cols-3" data-stagger>
                     <div class="glass-strip px-3 py-2">
-                        <p class="text-[11px] uppercase tracking-[0.12em] text-blue-100">Trend Delta</p>
-                        <p class="text-lg font-semibold {{ $trendSummary['delta'] >= 0 ? 'text-emerald-200' : 'text-rose-200' }}">
+                        <p class="text-[11px] uppercase tracking-[0.12em] text-slate-500">Trend Delta</p>
+                        <p class="text-lg font-semibold {{ $trendSummary['delta'] >= 0 ? 'text-emerald-700' : 'text-rose-700' }}">
                             {{ $trendSummary['has_previous'] ? ($trendSummary['delta'] >= 0 ? '+' : '').number_format($trendSummary['delta'], 2).'%' : 'Baseline' }}
                         </p>
                     </div>
                     <div class="glass-strip px-3 py-2">
-                        <p class="text-[11px] uppercase tracking-[0.12em] text-blue-100">Section Gap</p>
-                        <p class="text-lg font-semibold text-white">{{ number_format($sectionMasteryGap, 2) }}</p>
+                        <p class="text-[11px] uppercase tracking-[0.12em] text-slate-500">Section Gap</p>
+                        <p class="text-lg font-semibold text-slate-900">{{ number_format($sectionMasteryGap, 2) }}</p>
                     </div>
                     <div class="glass-strip px-3 py-2">
-                        <p class="text-[11px] uppercase tracking-[0.12em] text-blue-100">Intervention Cases</p>
-                        <p class="text-lg font-semibold text-white">{{ $studentsBelowThreshold->count() }}</p>
+                        <p class="text-[11px] uppercase tracking-[0.12em] text-slate-500">Intervention Cases</p>
+                        <p class="text-lg font-semibold text-slate-900">{{ $studentsBelowThreshold->count() }}</p>
                     </div>
                 </div>
             </div>
@@ -29,14 +30,14 @@
         <section class="panel p-5" x-data="teacherAiInsights('{{ route('teacher.insights.ai.generate') }}')" data-no-reveal="true">
             <div class="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                    <p class="section-kicker">AI Intervention Briefing</p>
-                    <h3 class="section-title">One-Click Narrative Analysis</h3>
-                    <p class="section-copy">Generate a concise classroom narrative, at-risk strategy, and critical student focus from recent performance data.</p>
+                    <p class="section-kicker">AI-generated intervention briefing</p>
+                    <h3 class="section-title">Classroom analysis</h3>
+                    <p class="section-copy">AI-generated guidance based on recent learning evidence. Review the recommendations before planning support.</p>
                 </div>
                 <div class="flex flex-wrap items-center gap-2">
                     <button type="button" class="btn-primary" @click="runAnalysis" :disabled="loading">
                         <span x-show="!loading">Run AI Analysis</span>
-                        <span x-show="loading" x-cloak>Processing...</span>
+                        <span x-show="loading" x-cloak role="status">Analyzing learning evidence...</span>
                     </button>
                     <button type="button" class="btn-secondary" @click="showRoster = !showRoster" x-show="roster.length > 0" x-cloak>
                         <span x-text="showRoster ? 'Hide Gradebook' : 'View Gradebook'"></span>
@@ -46,10 +47,10 @@
 
             <div class="mt-3 flex flex-wrap items-center gap-2 text-xs">
                 <span x-show="source" x-cloak :class="source === 'ollama' ? 'badge border-emerald-200 bg-emerald-50 text-emerald-700' : 'badge border-amber-200 bg-amber-50 text-amber-700'" x-text="source === 'ollama' ? 'Narrative mode: Enhanced' : 'Narrative mode: Standard'"></span>
-                <span x-show="window?.date_from && window?.date_to" x-cloak class="badge border-slate-200 bg-slate-50 text-slate-600" x-text="`Window: ${window.date_from} to ${window.date_to}`"></span>
+                <span x-show="window?.date_from && window?.date_to" x-cloak class="badge border-slate-200 bg-slate-50 text-slate-600" x-text="`Window: ${window?.date_from ?? ''} to ${window?.date_to ?? ''}`"></span>
             </div>
 
-            <p x-show="warning" x-cloak class="mt-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700" x-text="warning"></p>
+            <p role="status" aria-live="polite" x-show="warning" x-cloak class="mt-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700" x-text="warning"></p>
 
             <div class="mt-4 grid gap-3 lg:grid-cols-3">
                 <article class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">

@@ -1,9 +1,6 @@
 <x-app-layout title="Game Scores">
     <div class="space-y-6">
-        <section class="panel p-6">
-            <h1 class="text-2xl font-semibold text-slate-900">Student Game Scores</h1>
-            <p class="mt-1 text-sm text-slate-600">Monitor activity results, compare score quality, and review recent attempts across learners.</p>
-        </section>
+        <x-staff.page-heading title="Student Game Scores" description="Monitor activity results, compare score quality, and review recent attempts across learners." eyebrow="Teaching and learning"></x-staff.page-heading>
 
         <section class="filter-panel">
             <form method="GET" action="{{ route('teacher.scores.index') }}" class="grid gap-3 md:grid-cols-2 xl:grid-cols-8">

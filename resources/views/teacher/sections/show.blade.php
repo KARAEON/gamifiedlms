@@ -12,7 +12,7 @@
                     {{ $section->is_active ? 'Active' : 'Inactive' }}
                 </span>
             </div>
-        </section>
+        <button type="button" class="btn-secondary mt-4" data-open-dialog="edit-sections">Edit section</button></section>
 
         <section class="grid gap-4 md:grid-cols-3">
             <article class="metric-card">
@@ -181,9 +181,9 @@
             </div>
         </section>
 
-        <section class="panel p-5">
-            <h2 class="text-lg font-semibold text-slate-900">Edit Section</h2>
-            <form method="POST" action="{{ route('teacher.sections.update', $section) }}" class="mt-4 grid gap-3 sm:grid-cols-2">
+
+    </div>
+<x-staff.dialog id="edit-sections" title="Edit section"><form method="POST" action="{{ route('teacher.sections.update', $section) }}" class="mt-4 grid gap-3 sm:grid-cols-2">
                 @csrf
                 @method('PATCH')
                 <div>
@@ -205,9 +205,7 @@
                 <div class="sm:col-span-2 flex justify-end">
                     <button class="btn-primary">Save Section</button>
                 </div>
-            </form>
-        </section>
-    </div>
+            </form></x-staff.dialog>
 </x-app-layout>
 
 

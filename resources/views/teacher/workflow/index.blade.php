@@ -1,12 +1,8 @@
 <x-app-layout title="Instructional Workflow">
     <div class="space-y-6">
-        <section class="panel p-6">
-            <h1 class="text-2xl font-semibold text-slate-900">Teacher-Centered Instructional Workflow</h1>
-            <p class="mt-1 text-sm text-slate-600">
-                Run the cycle: teach competency, evaluate mastery, apply the 80/75 rule, reteach when needed, and monitor remediation/enrichment assignments.
-            </p>
-        </section>
+        <x-staff.page-heading title="Instructional flow" description="Evaluate class mastery, record progression decisions, and track reteaching and learner support." eyebrow="Teaching and learning"></x-staff.page-heading>
 
+<ol class="staff-stepper" aria-label="Instructional cycle"><li><span>1</span>Select class and competency</li><li><span>2</span>Evaluate mastery</li><li><span>3</span>Proceed or reteach</li><li><span>4</span>Track interventions</li></ol>
         <section class="filter-panel">
             <div class="mb-4">
                 <p class="section-kicker">Workflow Filters</p>
@@ -98,7 +94,7 @@
                         <p class="section-kicker">Mastery Decision Gate</p>
                         <h2 class="section-title">{{ $snapshot['topic']->title }} | {{ $snapshot['lesson']?->title }}</h2>
                         <p class="mt-1 text-sm text-slate-600">
-                            Rule: Proceed only when at least 80% of class reaches at least 75% mastery.
+                            Rule: Proceed when at least {{ number_format($snapshot['attainment_threshold'], 1) }}% of the class reaches {{ number_format($snapshot['mastery_threshold'], 1) }}% mastery.
                         </p>
                     </div>
                     <span class="badge {{ $snapshot['decision'] === 'proceed' ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-rose-200 bg-rose-50 text-rose-700' }}">

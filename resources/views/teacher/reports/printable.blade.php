@@ -6,13 +6,13 @@
     <style>
         body {
             font-family: DejaVu Sans, sans-serif;
-            color: #1e293b;
+            color: #24332d;
             font-size: 11px;
             margin: 24px;
         }
 
         .header {
-            border-bottom: 2px solid #dbeafe;
+            border-bottom: 2px solid #dce3dc;
             padding-bottom: 10px;
             margin-bottom: 14px;
         }
@@ -37,11 +37,11 @@
         .brand-chip {
             display: inline-block;
             padding: 4px 8px;
-            border: 1px solid #bfdbfe;
-            background: #eff6ff;
+            border: 1px solid #dce3dc;
+            background: #f3f5f0;
             border-radius: 999px;
             font-size: 9px;
-            color: #1e40af;
+            color: #174c3c;
             text-transform: uppercase;
             letter-spacing: .06em;
         }
@@ -49,7 +49,7 @@
         .title {
             font-size: 20px;
             font-weight: 700;
-            color: #0f2f67;
+            color: #174c3c;
             margin: 0;
         }
 
@@ -68,9 +68,9 @@
             width: 31%;
             vertical-align: top;
             margin-right: 2%;
-            border: 1px solid #dbeafe;
+            border: 1px solid #dce3dc;
             border-radius: 8px;
-            background: #eff6ff;
+            background: #f3f5f0;
             padding: 8px 10px;
             box-sizing: border-box;
         }
@@ -90,13 +90,13 @@
         .summary-value {
             font-size: 14px;
             font-weight: 700;
-            color: #0f2f67;
+            color: #174c3c;
         }
 
         h2 {
             font-size: 13px;
             margin: 14px 0 8px;
-            color: #0f2f67;
+            color: #174c3c;
         }
 
         table {
@@ -106,7 +106,7 @@
         }
 
         th, td {
-            border: 1px solid #dbeafe;
+            border: 1px solid #dce3dc;
             padding: 6px;
             text-align: left;
             vertical-align: top;
@@ -128,7 +128,7 @@
             display: inline-block;
             padding: 3px 6px;
             border-radius: 999px;
-            border: 1px solid #dbeafe;
+            border: 1px solid #dce3dc;
             background: #f8fafc;
             font-size: 9px;
             color: #334155;
@@ -139,7 +139,7 @@
         .note {
             margin-top: 14px;
             padding: 8px 10px;
-            border: 1px solid #dbeafe;
+            border: 1px solid #dce3dc;
             background: #f8fafc;
             border-radius: 8px;
             font-size: 10px;

@@ -1,9 +1,6 @@
 <x-app-layout title="Audit Trail">
     <div class="space-y-6">
-        <section class="panel p-6">
-            <h1 class="text-2xl font-semibold text-slate-900">System Audit Trail</h1>
-            <p class="mt-1 text-sm text-slate-600">Trace high-impact actions for governance, compliance, and incident review.</p>
-        </section>
+        <x-staff.page-heading title="System Audit Trail" description="Trace high-impact actions for governance, compliance, and incident review." eyebrow="School governance"></x-staff.page-heading>
 
         <section class="filter-panel">
             <form method="GET" action="{{ route('admin.audit.index') }}" class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">

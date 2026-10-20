@@ -9,11 +9,12 @@
         .meta { color: #475569; margin-bottom: 14px; }
         table { width: 100%; border-collapse: collapse; margin-top: 8px; }
         th, td { border: 1px solid #cbd5e1; padding: 6px; text-align: left; }
-        th { background: #f1f5f9; }
+        th { background: #f3f5f0; }
         .footer { margin-top: 16px; font-size: 11px; color: #64748b; }
     </style>
 </head>
 <body>
+    <p class="meta">Catbalogan I SPED Center ? School Head</p>
     <h1>{{ ucfirst($scope) }} Report</h1>
     <div class="meta">
         Generated: {{ optional($generatedAt)->format('M d, Y h:i A') }}<br>

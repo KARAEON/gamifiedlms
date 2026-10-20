@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { startFromMenu } from './helpers/intro.js';
 
 test.setTimeout(240_000);
 
@@ -71,6 +72,17 @@ async function dragGame(page, fromX, fromY, toX, toY) {
 
 async function getState(page) {
   return page.evaluate(() => window.__TEST__.state());
+}
+
+async function checkHowToPlay(page, sceneKey) {
+  const help = (await getState(page)).minigameHelpButton;
+  expect(help).toBeTruthy();
+  await clickGame(page, help.x, help.y);
+  await expect.poll(async () => (await getState(page)).openModal).toBe('minigame-help');
+  await expect.poll(async () => (await getState(page)).minigameHelpOpen).toBe(true);
+  await page.keyboard.press('Escape');
+  await expect.poll(async () => (await getState(page)).minigameHelpOpen).toBe(false);
+  expect((await getState(page)).sceneKey).toBe(sceneKey);
 }
 
 async function clickCard(page, card) {
@@ -220,9 +232,10 @@ async function sortActiveSupplyItem(page) {
 async function openQuarterOne(page) {
   await page.goto('/?test=1');
   await waitForReady(page, 'MenuScene');
-  await clickGame(page, 640, 344);
-  await waitForReady(page, 'IslandSelectScene');
-  await clickGame(page, 640, 620);
+  await startFromMenu(page);
+  await clickGame(page, 200, 515);
+  await expect.poll(async () => (await getState(page)).selectedIsland).toBe('vulcan-caverns');
+  await clickGame(page, 200, 515);
   await waitForReady(page, 'IslandMapScene');
   await clickGame(page, 620, 524);
   await waitForReady(page, 'QuarterDetailScene');
@@ -233,6 +246,9 @@ async function clickDetectiveCorrectOption(page) {
   const option = state.detectiveOptions.find((candidate) => candidate.correct);
   expect(option).toBeTruthy();
   await clickGame(page, option.x, option.y);
+  const selected = await getState(page);
+  expect(selected.detectiveSelectedOption).toBe(option.id);
+  await clickGame(page, selected.detectiveSubmitButton.x, selected.detectiveSubmitButton.y);
 }
 
 async function clickDetectiveWrongOption(page) {
@@ -240,6 +256,9 @@ async function clickDetectiveWrongOption(page) {
   const option = state.detectiveOptions.find((candidate) => !candidate.correct);
   expect(option).toBeTruthy();
   await clickGame(page, option.x, option.y);
+  const selected = await getState(page);
+  expect(selected.detectiveSelectedOption).toBe(option.id);
+  await clickGame(page, selected.detectiveSubmitButton.x, selected.detectiveSubmitButton.y);
 }
 
 async function clickDetectiveNext(page) {
@@ -319,6 +338,8 @@ async function clickInventClassification(page, predicate) {
 
 async function clickInventAppearance(page, predicate) {
   const state = await getState(page);
+  await clickGame(page, state.inventDescriptionFields.appearance.x, state.inventDescriptionFields.appearance.y);
+  await expect.poll(async () => (await getState(page)).openModal).toBe('invent-choice');
   const option = state.inventAppearanceOptions.find(predicate);
   expect(option).toBeTruthy();
   await clickGame(page, option.x, option.y);
@@ -326,6 +347,8 @@ async function clickInventAppearance(page, predicate) {
 
 async function clickInventUse(page, predicate) {
   const state = await getState(page);
+  await clickGame(page, state.inventDescriptionFields.use.x, state.inventDescriptionFields.use.y);
+  await expect.poll(async () => (await getState(page)).openModal).toBe('invent-choice');
   const option = state.inventUseOptions.find(predicate);
   expect(option).toBeTruthy();
   await clickGame(page, option.x, option.y);
@@ -390,27 +413,28 @@ test.describe('Lumi Adventures UI flow', () => {
     await waitForReady(page, 'MenuScene');
     await expect.poll(() => canvasLooksNonBlank(page)).toBe(true);
 
-    await clickGame(page, 640, 344);
-    await waitForReady(page, 'IslandSelectScene');
+    await startFromMenu(page);
     await expect.poll(() => canvasLooksNonBlank(page)).toBe(true);
 
     for (let index = 0; index < 8; index += 1) {
-      await clickGame(page, 255, 378);
+      await clickGame(page, 263, 143);
     }
-    await expect.poll(async () => (await page.evaluate(() => window.__TEST__.state())).lockedFeedback).toBe('numeric-ruins');
+    await expect.poll(async () => (await page.evaluate(() => window.__TEST__.state())).lockedFeedback).toBe('unknown');
     await expect.poll(async () => (await page.evaluate(() => window.__TEST__.state())).sceneKey).toBe('IslandSelectScene');
     await expect.poll(async () => {
       const state = await getState(page);
-      const numericIsland = state.islandPositions.find((island) => island.id === 'numeric-ruins');
-      return numericIsland?.x;
-    }).toBe(255);
+      const lockedIsland = state.islandPositions.find((island) => island.id === 'unknown');
+      return lockedIsland?.x;
+    }).toBe(263);
     await expect.poll(async () => {
       const state = await getState(page);
-      const numericIsland = state.islandPositions.find((island) => island.id === 'numeric-ruins');
-      return numericIsland?.y;
-    }).toBe(378);
+      const lockedIsland = state.islandPositions.find((island) => island.id === 'unknown');
+      return lockedIsland?.y;
+    }).toBe(143);
 
-    await clickGame(page, 640, 620);
+    await clickGame(page, 200, 515);
+    await expect.poll(async () => (await getState(page)).selectedIsland).toBe('vulcan-caverns');
+    await clickGame(page, 200, 515);
     await waitForReady(page, 'IslandMapScene');
     await expect.poll(() => canvasLooksNonBlank(page)).toBe(true);
     await expect.poll(async () => (await page.evaluate(() => window.__TEST__.state())).mapQuarterNodeCount).toBe(4);
@@ -426,8 +450,8 @@ test.describe('Lumi Adventures UI flow', () => {
     await waitForReady(page, 'QuarterDetailScene');
     await expect.poll(() => canvasLooksNonBlank(page)).toBe(true);
     await expect.poll(async () => (await page.evaluate(() => window.__TEST__.state())).selectedQuarter).toBe('q1');
-    await expect.poll(async () => (await page.evaluate(() => window.__TEST__.state())).quarterMajorCount).toBe(3);
-    await expect.poll(async () => (await page.evaluate(() => window.__TEST__.state())).quarterLessonCount).toBe(15);
+    await expect.poll(async () => (await page.evaluate(() => window.__TEST__.state())).quarterMajorCount).toBe(4);
+    await expect.poll(async () => (await page.evaluate(() => window.__TEST__.state())).quarterLessonCount).toBe(20);
 
     await clickGame(page, 430, 450);
     await expect.poll(async () => (await getState(page)).openModal).toBe('major');
@@ -440,6 +464,7 @@ test.describe('Lumi Adventures UI flow', () => {
     await expect.poll(async () => (await getState(page)).openModal).toBe('minigame-info-mix-match-memory-quest');
     await clickModalStart(page);
     await waitForReady(page, 'MixMatchScene');
+    await checkHowToPlay(page, 'MixMatchScene');
     await expect.poll(() => canvasLooksNonBlank(page)).toBe(true);
     await expect.poll(async () => (await getState(page)).minigameId).toBe('mix-match-memory-quest');
     await expect.poll(async () => (await getState(page)).totalCardCount).toBe(12);
@@ -498,7 +523,7 @@ test.describe('Lumi Adventures UI flow', () => {
     await waitForReady(page, 'SupplyCartScene');
     await expect.poll(() => canvasLooksNonBlank(page)).toBe(true);
     await expect.poll(async () => (await getState(page)).minigameId).toBe('supply-cart-sorting');
-    await expect.poll(async () => (await getState(page)).totalItemCount).toBe(6);
+    await expect.poll(async () => (await getState(page)).totalItemCount).toBe(12);
     await expect.poll(async () => (await getState(page)).activeItemId).toBe('salt-water');
     await page.screenshot({ path: testInfo.outputPath('supplycart-initial.png') });
 
@@ -526,7 +551,7 @@ test.describe('Lumi Adventures UI flow', () => {
     await expect.poll(async () => (await getState(page)).score).toBe(15);
     await expect.poll(async () => (await getState(page)).activeItemId).toBe('juice');
 
-    while ((await getState(page)).completedItemCount < 6) {
+    while ((await getState(page)).completedItemCount < 12) {
       const beforeCount = (await getState(page)).completedItemCount;
       await sortActiveSupplyItem(page);
       await expect.poll(async () => (await getState(page)).completedItemCount).toBe(beforeCount + 1);
@@ -581,6 +606,7 @@ test.describe('Lumi Adventures UI flow', () => {
     await expect.poll(async () => (await getState(page)).openModal).toBe('minigame-info-mixture-detective');
     await clickModalStart(page);
     await waitForReady(page, 'MixtureDetectiveScene');
+    await checkHowToPlay(page, 'MixtureDetectiveScene');
     await expect.poll(() => canvasLooksNonBlank(page)).toBe(true);
     await expect.poll(async () => (await getState(page)).minigameId).toBe('mixture-detective');
     await expect.poll(async () => (await getState(page)).detectivePhase).toBe('question');
@@ -653,6 +679,7 @@ test.describe('Lumi Adventures UI flow', () => {
     await expect.poll(async () => (await getState(page)).openModal).toBe('minigame-info-science-court');
     await clickModalStart(page);
     await waitForReady(page, 'ScienceCourtScene');
+    await checkHowToPlay(page, 'ScienceCourtScene');
     await expect.poll(() => canvasLooksNonBlank(page)).toBe(true);
     await expect.poll(async () => (await getState(page)).minigameId).toBe('science-court');
     await expect.poll(async () => (await getState(page)).courtCaseCount).toBe(5);
@@ -724,6 +751,7 @@ test.describe('Lumi Adventures UI flow', () => {
     await expect.poll(async () => (await getState(page)).openModal).toBe('minigame-info-invent-a-mix-workshop');
     await clickModalStart(page);
     await waitForReady(page, 'InventMixScene');
+    await checkHowToPlay(page, 'InventMixScene');
     await expect.poll(() => canvasLooksNonBlank(page)).toBe(true);
     await expect.poll(async () => (await getState(page)).minigameId).toBe('invent-a-mix-workshop');
     await expect.poll(async () => (await getState(page)).inventMissionCount).toBe(3);

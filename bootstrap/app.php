@@ -41,7 +41,6 @@ return Application::configure(basePath: dirname(__DIR__))
             $targetRoute = match (true) {
                 $request->is('student/login') => 'student.access.create',
                 $request->is('join'), $request->is('join/*') => 'student.join.create',
-                $request->is('register') => 'register',
                 default => 'login',
             };
 

@@ -1,15 +1,132 @@
-<x-app-layout title="Admin Reports">
+<x-app-layout title="School reports">
     <div class="space-y-6">
-        <section class="panel p-6">
-            <h1 class="text-2xl font-semibold text-slate-900">Admin Report Workspace</h1>
-            <p class="mt-1 text-sm text-slate-600">
-                Download school analytics reports by scope and log official submissions for decision and compliance tracking.
-            </p>
-        </section>
+        <x-staff.page-heading title="School reports" description="Review teacher submissions and prepare official school performance reports." eyebrow="School governance">
+<button type="button" class="btn-primary" data-open-dialog="download-report">Download Analytics Report</button>
+<button type="button" class="btn-secondary" data-open-dialog="log-submission">Log Report Submission</button>
+</x-staff.page-heading>
 
-        <section class="grid gap-6 xl:grid-cols-2">
-            <article class="panel p-5">
-                <h2 class="text-lg font-semibold text-slate-900">Download Analytics Report</h2>
+
+
+        <section class="panel p-5">
+            <h2 class="text-lg font-semibold text-slate-900">Teacher Submissions to School Head</h2>
+            <div class="mt-4 table-wrap">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Report</th>
+                            <th>Teacher</th>
+                            <th>Type</th>
+                            <th>Target</th>
+                            <th>Status</th>
+                            <th>Teacher Note</th>
+                            <th>Submitted At</th>
+                            <th>Acknowledge</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($teacherReportSubmissions as $delivery)
+                            <tr>
+                                <td class="font-semibold text-slate-800">{{ $delivery->report?->title ?? 'Unknown Report' }}</td>
+                                <td>{{ $delivery->submitter?->name ?? ($delivery->report?->teacher?->name ?? 'Unknown Teacher') }}</td>
+                                <td>{{ ucfirst($delivery->report?->report_type ?? '-') }}</td>
+                                <td>
+                                    @if ($delivery->report?->student)
+                                        Student: {{ $delivery->report->student->name }}
+                                    @elseif ($delivery->report?->section)
+                                        Section: {{ $delivery->report->section->name }}
+                                    @else
+                                        System Summary
+                                    @endif
+                                </td>
+                                <td>
+                                    <span class="badge {{ $delivery->status === 'submitted' ? 'border-amber-200 bg-amber-50 text-amber-700' : 'border-emerald-200 bg-emerald-50 text-emerald-700' }}">
+                                        {{ ucfirst($delivery->status) }}
+                                    </span>
+                                </td>
+                                <td>{{ \Illuminate\Support\Str::limit($delivery->teacher_note ?? '-', 60) }}</td>
+                                <td>{{ optional($delivery->submitted_at)->format('M d, Y h:i A') ?? '-' }}</td>
+                                <td>
+                                    @if ($delivery->status === 'submitted')
+                                        <button type="button" class="btn-secondary" data-open-dialog="acknowledge-report-{{ $delivery->id }}">Review and acknowledge</button>
+                                        <x-staff.dialog id="acknowledge-report-{{ $delivery->id }}" title="Acknowledge teacher report"><p class="mb-4 text-sm">{{ $delivery->report?->title }}</p><form method="POST" action="{{ route('admin.reports.teacher_submissions.acknowledge', $delivery) }}" class="space-y-2">
+                                            @csrf
+                                            @method('PATCH')
+                                            <input type="text" name="admin_note" class="input-field" placeholder="Optional acknowledgement note">
+                                            <button class="btn-secondary px-3 py-2 text-xs">Acknowledge</button>
+                                        </form></x-staff.dialog>
+                                    @else
+                                        <p class="text-xs text-slate-500">By: {{ $delivery->acknowledger?->name ?? 'Admin' }}</p>
+                                        <p class="text-xs text-slate-500">{{ optional($delivery->acknowledged_at)->format('M d, Y h:i A') }}</p>
+                                    @endif
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="8" class="py-6"><div class="empty-state">No teacher submissions yet.</div></td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="mt-4">
+                {{ $teacherReportSubmissions->links() }}
+            </div>
+        </section>
+<section class="panel p-5">
+            <h2 class="text-lg font-semibold text-slate-900">Submission History</h2>
+            <div class="mt-4 table-wrap">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Scope</th>
+                            <th>Reference</th>
+                            <th>Date Window</th>
+                            <th>Destination</th>
+                            <th>Status</th>
+                            <th>Submitted By</th>
+                            <th>Submitted At</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($submissions as $submission)
+                            <tr>
+                                <td>{{ ucfirst($submission->report_scope) }}</td>
+                                <td>{{ $submission->scope_reference ?: '-' }}</td>
+                                <td>
+                                    @if ($submission->date_from || $submission->date_to)
+                                        {{ optional($submission->date_from)->format('M d, Y') ?? '-' }} to {{ optional($submission->date_to)->format('M d, Y') ?? '-' }}
+                                    @else
+                                        -
+                                    @endif
+                                </td>
+                                <td>{{ $submission->destination ?: '-' }}</td>
+                                <td>
+                                    <span class="badge {{ $submission->status === 'submitted' ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-slate-200 bg-slate-50 text-slate-700' }}">
+                                        {{ ucfirst($submission->status) }}
+                                    </span>
+                                </td>
+                                <td>{{ $submission->submitter?->name ?? 'Unknown' }}</td>
+                                <td>{{ optional($submission->submitted_at)->format('M d, Y h:i A') ?? '-' }}</td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="7" class="py-6"><div class="empty-state">No report submissions logged yet.</div></td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="mt-4">
+                {{ $submissions->links() }}
+            </div>
+        </section>
+    </div>
+
+<x-staff.dialog id="download-report" title="Download Analytics Report">
+
+
                 <form method="POST" action="{{ route('admin.reports.download') }}" class="mt-4 grid gap-3">
                     @csrf
                     <div>
@@ -62,13 +179,14 @@
                     <input type="text" name="subject" class="input-field" placeholder="Subject filter (optional)">
                     <input type="text" name="grade_keyword" class="input-field" placeholder="Grade keyword filter (optional)">
                     <div class="flex justify-end">
-                        <button class="btn-primary">Download CSV</button>
+                        <button class="btn-primary">Generate report</button>
                     </div>
                 </form>
-            </article>
 
-            <article class="panel p-5">
-                <h2 class="text-lg font-semibold text-slate-900">Log Report Submission</h2>
+</x-staff.dialog>
+<x-staff.dialog id="log-submission" title="Log Report Submission">
+
+
                 <form method="POST" action="{{ route('admin.reports.submit') }}" class="mt-4 grid gap-3">
                     @csrf
                     <div>
@@ -91,123 +209,6 @@
                         <button class="btn-primary">Log Submission</button>
                     </div>
                 </form>
-            </article>
-        </section>
 
-        <section class="panel p-5">
-            <h2 class="text-lg font-semibold text-slate-900">Submission History</h2>
-            <div class="mt-4 table-wrap">
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Scope</th>
-                            <th>Reference</th>
-                            <th>Date Window</th>
-                            <th>Destination</th>
-                            <th>Status</th>
-                            <th>Submitted By</th>
-                            <th>Submitted At</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse ($submissions as $submission)
-                            <tr>
-                                <td>{{ ucfirst($submission->report_scope) }}</td>
-                                <td>{{ $submission->scope_reference ?: '-' }}</td>
-                                <td>
-                                    @if ($submission->date_from || $submission->date_to)
-                                        {{ optional($submission->date_from)->format('M d, Y') ?? '-' }} to {{ optional($submission->date_to)->format('M d, Y') ?? '-' }}
-                                    @else
-                                        -
-                                    @endif
-                                </td>
-                                <td>{{ $submission->destination ?: '-' }}</td>
-                                <td>
-                                    <span class="badge {{ $submission->status === 'submitted' ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-slate-200 bg-slate-50 text-slate-700' }}">
-                                        {{ ucfirst($submission->status) }}
-                                    </span>
-                                </td>
-                                <td>{{ $submission->submitter?->name ?? 'Unknown' }}</td>
-                                <td>{{ optional($submission->submitted_at)->format('M d, Y h:i A') ?? '-' }}</td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="7" class="py-6"><div class="empty-state">No report submissions logged yet.</div></td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="mt-4">
-                {{ $submissions->links() }}
-            </div>
-        </section>
-
-        <section class="panel p-5">
-            <h2 class="text-lg font-semibold text-slate-900">Teacher Submissions to School Head</h2>
-            <div class="mt-4 table-wrap">
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Report</th>
-                            <th>Teacher</th>
-                            <th>Type</th>
-                            <th>Target</th>
-                            <th>Status</th>
-                            <th>Teacher Note</th>
-                            <th>Submitted At</th>
-                            <th>Acknowledge</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse ($teacherReportSubmissions as $delivery)
-                            <tr>
-                                <td class="font-semibold text-slate-800">{{ $delivery->report?->title ?? 'Unknown Report' }}</td>
-                                <td>{{ $delivery->submitter?->name ?? ($delivery->report?->teacher?->name ?? 'Unknown Teacher') }}</td>
-                                <td>{{ ucfirst($delivery->report?->report_type ?? '-') }}</td>
-                                <td>
-                                    @if ($delivery->report?->student)
-                                        Student: {{ $delivery->report->student->name }}
-                                    @elseif ($delivery->report?->section)
-                                        Section: {{ $delivery->report->section->name }}
-                                    @else
-                                        System Summary
-                                    @endif
-                                </td>
-                                <td>
-                                    <span class="badge {{ $delivery->status === 'submitted' ? 'border-amber-200 bg-amber-50 text-amber-700' : 'border-emerald-200 bg-emerald-50 text-emerald-700' }}">
-                                        {{ ucfirst($delivery->status) }}
-                                    </span>
-                                </td>
-                                <td>{{ \Illuminate\Support\Str::limit($delivery->teacher_note ?? '-', 60) }}</td>
-                                <td>{{ optional($delivery->submitted_at)->format('M d, Y h:i A') ?? '-' }}</td>
-                                <td>
-                                    @if ($delivery->status === 'submitted')
-                                        <form method="POST" action="{{ route('admin.reports.teacher_submissions.acknowledge', $delivery) }}" class="space-y-2">
-                                            @csrf
-                                            @method('PATCH')
-                                            <input type="text" name="admin_note" class="input-field" placeholder="Optional acknowledgement note">
-                                            <button class="btn-secondary px-3 py-2 text-xs">Acknowledge</button>
-                                        </form>
-                                    @else
-                                        <p class="text-xs text-slate-500">By: {{ $delivery->acknowledger?->name ?? 'Admin' }}</p>
-                                        <p class="text-xs text-slate-500">{{ optional($delivery->acknowledged_at)->format('M d, Y h:i A') }}</p>
-                                    @endif
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="8" class="py-6"><div class="empty-state">No teacher submissions yet.</div></td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="mt-4">
-                {{ $teacherReportSubmissions->links() }}
-            </div>
-        </section>
-    </div>
+</x-staff.dialog>
 </x-app-layout>

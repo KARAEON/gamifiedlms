@@ -47,7 +47,7 @@ class PolicyController extends Controller
         ]);
 
         if ($validated['scope'] === 'section' && empty($validated['section_id'])) {
-            return redirect()->route('admin.policies.index')->withErrors([
+            return redirect()->route('admin.policies.index')->withInput()->withErrors([
                 'section_id' => 'Section is required for section-scoped policy.',
             ]);
         }
@@ -109,7 +109,7 @@ class PolicyController extends Controller
         ]);
 
         if ($validated['scope'] === 'section' && empty($validated['section_id'])) {
-            return redirect()->route('admin.policies.index')->withErrors([
+            return redirect()->route('admin.policies.index')->withInput()->withErrors([
                 'section_id' => 'Section is required for section-scoped policy.',
             ]);
         }

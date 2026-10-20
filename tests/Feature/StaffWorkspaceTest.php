@@ -43,6 +43,17 @@ class StaffWorkspaceTest extends TestCase
         $this->get(route('teacher.students.index'))->assertForbidden();
     }
 
+    public function test_invalid_section_policy_preserves_input_for_the_dialog(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $this->actingAs($admin)->from(route('admin.policies.index'))->post(route('admin.policies.store'), [
+            'name' => 'Class policy', 'scope' => 'section', 'mastery_threshold' => 75,
+            'attainment_threshold' => 80, 'gamified_weight' => 20, 'formative_weight' => 40,
+            'summative_weight' => 40, '_workspace_form' => 'policy-editor',
+        ])->assertRedirect(route('admin.policies.index'))->assertSessionHasErrors('section_id')
+            ->assertSessionHasInput('name', 'Class policy')->assertSessionHasInput('_workspace_form', 'policy-editor');
+    }
+
     public function test_student_dashboard_keeps_its_existing_layout(): void
     {
         $student = User::factory()->student()->create();

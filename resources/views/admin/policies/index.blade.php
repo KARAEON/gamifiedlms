@@ -1,73 +1,10 @@
 <x-app-layout title="Grading Policy Management">
     <div class="space-y-6">
-        <section class="panel p-6">
-            <h1 class="text-2xl font-semibold text-slate-900">Grading and Mastery Policies</h1>
-            <p class="mt-1 text-sm text-slate-600">
-                Configure mastery thresholds, class attainment gates, and grade component weights per section/subject.
-            </p>
-        </section>
+        <x-staff.page-heading title="Grading and mastery policies" description="Manage thresholds and component weights that guide assessment and progression." eyebrow="School governance">
+<button type="button" class="btn-primary" data-open-dialog="create-policy">Create Policy</button>
+</x-staff.page-heading>
 
-        <section class="grid gap-6 xl:grid-cols-2">
-            <article class="panel p-5">
-                <h2 class="text-lg font-semibold text-slate-900">Create Policy</h2>
-                <form method="POST" action="{{ route('admin.policies.store') }}" class="mt-4 grid gap-3">
-                    @csrf
-                    <input type="text" name="name" class="input-field" placeholder="Policy name" required>
-                    <div class="grid gap-3 md:grid-cols-2">
-                        <select name="scope" class="input-field" required>
-                            <option value="global">Global</option>
-                            <option value="section">Section</option>
-                        </select>
-                        <select name="section_id" class="input-field">
-                            <option value="">No section (global)</option>
-                            @foreach ($sections as $section)
-                                <option value="{{ $section->id }}">{{ $section->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <input type="text" name="subject" class="input-field" placeholder="Subject filter (optional)">
-                    <div class="grid gap-3 md:grid-cols-2">
-                        <input type="date" name="effective_from" class="input-field">
-                        <input type="date" name="effective_to" class="input-field">
-                    </div>
-                    <div class="grid gap-3 md:grid-cols-2">
-                        <input type="number" min="50" max="100" step="0.01" name="mastery_threshold" value="75" class="input-field" placeholder="Mastery threshold">
-                        <input type="number" min="50" max="100" step="0.01" name="attainment_threshold" value="80" class="input-field" placeholder="Attainment threshold">
-                    </div>
-                    <div class="grid gap-3 md:grid-cols-3">
-                        <input type="number" min="0" max="100" name="gamified_weight" value="20" class="input-field" placeholder="Gamified weight">
-                        <input type="number" min="0" max="100" name="formative_weight" value="40" class="input-field" placeholder="Formative weight">
-                        <input type="number" min="0" max="100" name="summative_weight" value="40" class="input-field" placeholder="Summative weight">
-                    </div>
-                    <label class="flex items-center gap-2 text-sm text-slate-600">
-                        <input type="checkbox" name="weekly_summative_required" value="1" checked class="h-4 w-4 rounded border-slate-300 text-brand-600">
-                        Weekly summative required
-                    </label>
-                    <label class="flex items-center gap-2 text-sm text-slate-600">
-                        <input type="checkbox" name="is_active" value="1" checked class="h-4 w-4 rounded border-slate-300 text-brand-600">
-                        Active policy
-                    </label>
-                    <div class="flex justify-end">
-                        <button class="btn-primary">Create Policy</button>
-                    </div>
-                </form>
-            </article>
 
-            <article class="panel p-5">
-                <h2 class="text-lg font-semibold text-slate-900">Policy Rules</h2>
-                <div class="mt-4 space-y-3 text-sm text-slate-700">
-                    <p class="rounded-xl bg-slate-50 p-3 ring-1 ring-slate-100">
-                        Ensure component weights sum to exactly 100%.
-                    </p>
-                    <p class="rounded-xl bg-slate-50 p-3 ring-1 ring-slate-100">
-                        Use section-specific policies to override global defaults for targeted interventions.
-                    </p>
-                    <p class="rounded-xl bg-slate-50 p-3 ring-1 ring-slate-100">
-                        Mastery and attainment thresholds directly drive the teacher progression decision gate.
-                    </p>
-                </div>
-            </article>
-        </section>
 
         <section class="panel p-5">
             <h2 class="text-lg font-semibold text-slate-900">Policy Registry</h2>
@@ -136,4 +73,65 @@
             <div class="mt-4">{{ $policies->links() }}</div>
         </section>
     </div>
+
+<details class="panel p-5"><summary class="font-semibold">Policy guidance</summary>
+                <h2 class="text-lg font-semibold text-slate-900">Policy Rules</h2>
+                <div class="mt-4 space-y-3 text-sm text-slate-700">
+                    <p class="rounded-xl bg-slate-50 p-3 ring-1 ring-slate-100">
+                        Ensure component weights sum to exactly 100%.
+                    </p>
+                    <p class="rounded-xl bg-slate-50 p-3 ring-1 ring-slate-100">
+                        Use section-specific policies to override global defaults for targeted interventions.
+                    </p>
+                    <p class="rounded-xl bg-slate-50 p-3 ring-1 ring-slate-100">
+                        Mastery and attainment thresholds directly drive the teacher progression decision gate.
+                    </p>
+                </div>
+            </details>
+<x-staff.dialog id="create-policy" title="Create Policy">
+
+
+                <form method="POST" action="{{ route('admin.policies.store') }}" class="mt-4 grid gap-3">
+                    @csrf
+                    <input type="text" name="name" class="input-field" placeholder="Policy name" required>
+                    <div class="grid gap-3 md:grid-cols-2">
+                        <select name="scope" class="input-field" required>
+                            <option value="global">Global</option>
+                            <option value="section">Section</option>
+                        </select>
+                        <select name="section_id" class="input-field">
+                            <option value="">No section (global)</option>
+                            @foreach ($sections as $section)
+                                <option value="{{ $section->id }}">{{ $section->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <input type="text" name="subject" class="input-field" placeholder="Subject filter (optional)">
+                    <div class="grid gap-3 md:grid-cols-2">
+                        <input type="date" name="effective_from" class="input-field">
+                        <input type="date" name="effective_to" class="input-field">
+                    </div>
+                    <div class="grid gap-3 md:grid-cols-2">
+                        <input type="number" min="50" max="100" step="0.01" name="mastery_threshold" value="75" class="input-field" placeholder="Mastery threshold">
+                        <input type="number" min="50" max="100" step="0.01" name="attainment_threshold" value="80" class="input-field" placeholder="Attainment threshold">
+                    </div>
+                    <div class="grid gap-3 md:grid-cols-3">
+                        <input type="number" min="0" max="100" name="gamified_weight" value="20" class="input-field" placeholder="Gamified weight">
+                        <input type="number" min="0" max="100" name="formative_weight" value="40" class="input-field" placeholder="Formative weight">
+                        <input type="number" min="0" max="100" name="summative_weight" value="40" class="input-field" placeholder="Summative weight">
+                    </div>
+                    <label class="flex items-center gap-2 text-sm text-slate-600">
+                        <input type="checkbox" name="weekly_summative_required" value="1" checked class="h-4 w-4 rounded border-slate-300 text-brand-600">
+                        Weekly summative required
+                    </label>
+                    <label class="flex items-center gap-2 text-sm text-slate-600">
+                        <input type="checkbox" name="is_active" value="1" checked class="h-4 w-4 rounded border-slate-300 text-brand-600">
+                        Active policy
+                    </label>
+                    <div class="flex justify-end">
+                        <button class="btn-primary">Create Policy</button>
+                    </div>
+                </form>
+
+</x-staff.dialog>
 </x-app-layout>

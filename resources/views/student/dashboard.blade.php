@@ -1,11 +1,17 @@
 <!doctype html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
+        @php
+            $studentGameScriptPath = public_path('assets/student-game.js');
+            $studentGameStylePath = public_path('assets/student-game.css');
+            $studentGameScriptVersion = is_file($studentGameScriptPath) ? substr(hash_file('sha256', $studentGameScriptPath), 0, 16) : '1';
+            $studentGameStyleVersion = is_file($studentGameStylePath) ? substr(hash_file('sha256', $studentGameStylePath), 0, 16) : '1';
+        @endphp
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
         <title>Student Game</title>
-        <link rel="stylesheet" href="{{ asset('assets/student-game.css') }}">
+        <link rel="stylesheet" href="{{ asset('assets/student-game.css') }}?v={{ $studentGameStyleVersion }}">
         <style>
             .student-game-hud {
                 position: fixed;
@@ -89,7 +95,7 @@
         <script>
             window.GLMS_PHASER = @json($phaserContext);
         </script>
-        <script type="module" src="{{ asset('assets/student-game.js') }}"></script>
+        <script type="module" src="{{ asset('assets/student-game.js') }}?v={{ $studentGameScriptVersion }}"></script>
     </head>
     <body>
         <div id="game-container"></div>

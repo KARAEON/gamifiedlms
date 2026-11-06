@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\PolicyController as AdminPolicyController;
 use App\Http\Controllers\Admin\ReportController as AdminReportController;
 use App\Http\Controllers\Admin\SchoolTermController as AdminSchoolTermController;
 use App\Http\Controllers\DashboardRedirectController;
+use App\Http\Controllers\AppearanceController;
 use App\Http\Controllers\Student\ActivityController as StudentActivityController;
 use App\Http\Controllers\Student\DashboardController as StudentDashboardController;
 use App\Http\Controllers\Student\GradingController as StudentGradingController;
@@ -52,6 +53,11 @@ Route::middleware(['guest', 'canonical.auth-host'])->group(function (): void {
 Route::middleware('auth')->group(function (): void {
     Route::match(['get', 'post'], '/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
     Route::get('/dashboard', DashboardRedirectController::class)->name('dashboard');
+});
+
+Route::middleware(['auth', 'role:teacher,admin'])->prefix('settings')->as('settings.')->group(function (): void {
+    Route::get('/appearance', [AppearanceController::class, 'edit'])->name('appearance');
+    Route::patch('/appearance', [AppearanceController::class, 'update'])->name('appearance.update');
 });
 
 Route::middleware(['auth', 'role:student'])->prefix('student')->as('student.')->group(function (): void {

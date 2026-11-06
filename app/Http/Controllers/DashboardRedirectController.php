@@ -14,6 +14,7 @@ class DashboardRedirectController extends Controller
 
         return match ($role) {
             UserRole::ADMIN => redirect()->route('admin.dashboard'),
+            UserRole::SCHOOL_HEAD => redirect()->route('admin.dashboard'),
             UserRole::TEACHER => redirect()->route('teacher.dashboard'),
             default => redirect()->route('student.dashboard'),
         };

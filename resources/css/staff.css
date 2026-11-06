@@ -165,3 +165,70 @@
 .staff-main section.grid:has(> .panel), .staff-main section.grid:has(> .chart-shell) { align-items: start; }
 .staff-workspace .empty-state { text-align: left; }
 .staff-workspace .data-table td[colspan] { text-align: left; }
+
+/* Classic Catbalogan school theme for staff who prefer the original school palette. */
+.staff-workspace.staff-classic-workspace {
+    --staff-forest: #a83d68; --staff-ink: #382732; --staff-muted: #765f70;
+    --staff-line: #efdce6; --staff-gold: #c87898;
+    background: #fff7fa; color: var(--staff-ink); font-family: Inter, 'Helvetica Neue', Arial, sans-serif;
+}
+.staff-classic-workspace .staff-sidebar { border-color: #efdce6; background: #fff; }
+.staff-classic-workspace .staff-adventure-workspace-intro { display: none; }
+.staff-classic-workspace .staff-sidebar nav a { align-items: center; }
+.staff-classic-workspace .staff-sidebar nav .teacher-pixel-icon,
+.staff-classic-workspace .teacher-header-guild .teacher-pixel-icon,
+.staff-classic-workspace .teacher-nav-marker { display: none; }
+.staff-classic-workspace .staff-brand a { gap: 11px; color: var(--staff-ink); }
+.classic-brand-crest { display: grid; place-items: center; width: 48px; height: 48px; flex: 0 0 48px; overflow: hidden; border: 1px solid #efdce6; border-radius: 50%; background: #fff; }
+.classic-brand-crest img { width: 42px; height: 42px; object-fit: contain; }
+.classic-brand-wordmark strong { display: block; color: #8f3157; font-size: 15px; font-weight: 800; letter-spacing: .03em; }
+.classic-brand-wordmark small { display: block; margin-top: 3px; color: #987588; font-size: 9px; font-weight: 700; letter-spacing: .12em; }
+.staff-classic-workspace .staff-workspace-label { color: #a83d68; border-color: #efdce6; }
+.staff-classic-workspace .staff-nav-group > p { color: #987588; }
+.staff-classic-workspace .staff-sidebar nav a, .staff-classic-workspace .staff-sidebar-footer > a { color: #765f70; }
+.staff-classic-workspace .staff-sidebar a[aria-current='page'], .staff-classic-workspace .staff-sidebar-footer > a.bg-slate-900 { background: #faeaf1; color: #8f3157; }
+.staff-classic-workspace .staff-sidebar a:hover { background: #fff2f7; color: #8f3157; }
+.staff-classic-workspace .teacher-school-mark { color: #765f70; border-color: #efdce6; }
+.staff-classic-workspace .teacher-school-mark small { color: #987588; }
+.staff-classic-workspace .staff-user { border-color: #efdce6; }
+.staff-classic-workspace .staff-user small { color: #987588; }
+.staff-classic-workspace .staff-avatar { background: #faeaf1; color: #8f3157; }
+.staff-classic-workspace .staff-header { border-color: #efdce6; background: #fffafd; }
+.staff-classic-workspace .staff-header-title { color: #765f70; }
+.staff-classic-workspace .staff-notice { border-color: #efd4e0; background: #fff2f7; color: #8f3157; }
+.staff-classic-workspace .panel-hero { background: #a83d68; }
+.staff-classic-workspace .section-kicker, .staff-classic-workspace :is(.text-brand-600,.text-brand-700) { color: #a83d68; }
+.staff-classic-workspace .btn-primary { background: #a83d68; border-color: #a83d68; }
+.staff-classic-workspace .btn-primary:hover { background: #8f3157; }
+.staff-classic-workspace .btn-secondary { border-color: #efd4e0; color: #8f3157; }
+.staff-classic-workspace .btn-secondary:hover { background: #fff2f7; }
+.staff-classic-workspace :is(.input-field,.apple-input):focus { border-color: #c66c91; box-shadow: 0 0 0 2px #faeaf1; }
+.staff-classic-workspace .staff-status-success { background: #faeaf1; color: #8f3157; border-color: #efd4e0; }
+.staff-classic-workspace .data-table thead th { background: #fff2f7; color: #765f70; border-color: #efdce6; }
+.staff-classic-workspace .data-table tbody td { border-color: #f4e8ee; }
+.staff-classic-workspace .data-table tbody tr:hover { background: #fff8fb; }
+
+.theme-choice { display: block; cursor: pointer; overflow: hidden; border: 1px solid #dce3dc; border-radius: 14px; background: #fff; transition: border-color .15s, box-shadow .15s, transform .15s; }
+.theme-choice:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgb(36 51 45 / 8%); }
+.theme-choice:has(input:checked) { border-color: #a47725; box-shadow: 0 0 0 3px #f8edda; }
+.theme-choice > input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.theme-choice:has(input:focus-visible) { outline: 3px solid #a47725; outline-offset: 3px; }
+.theme-choice__preview { position: relative; display: flex; height: 145px; gap: 10px; overflow: hidden; padding: 16px; }
+.theme-choice__preview--game { background: linear-gradient(135deg, #18334c, #315879); }
+.theme-choice__preview--classic { background: #fff7fa; }
+.theme-preview-sidebar { width: 25%; border-radius: 7px; background: #10273b; box-shadow: 0 2px 8px #0d1c3240; }
+.theme-preview-content { display: flex; flex: 1; flex-direction: column; gap: 8px; padding: 16px 10px; border-radius: 7px; background: #fff; }
+.theme-preview-content i { display: block; height: 16px; border-radius: 4px; background: #e8edf1; }
+.theme-preview-content i:first-child { width: 75%; height: 23px; background: #f6cc73; }
+.theme-choice__preview--classic .theme-preview-sidebar { background: #a83d68; }
+.theme-choice__preview--classic .theme-preview-content i { background: #f6e5ed; }
+.theme-choice__preview--classic .theme-preview-content i:first-child { background: #e5a6c0; }
+.theme-choice__badge { position: absolute; right: 22px; bottom: 22px; padding: 4px 7px; border-radius: 4px; background: #ffd76a; color: #263c49; font-size: 8px; font-weight: 800; letter-spacing: .06em; }
+.theme-choice__preview--classic .theme-choice__badge { background: #a83d68; color: #fff; }
+.theme-choice__copy { display: grid; gap: 5px; padding: 16px 18px 18px; }
+.theme-choice__copy strong { color: #24332d; font-size: 14px; }
+.theme-choice__copy > span { color: #60716a; font-size: 12px; line-height: 1.6; }
+.staff-classic-workspace .theme-choice:has(input:checked) { border-color: #a83d68; box-shadow: 0 0 0 3px #faeaf1; }
+.staff-classic-workspace .theme-choice:has(input:focus-visible) { outline-color: #a83d68; }
+.staff-classic-workspace .theme-choice__copy strong { color: #382732; }
+.staff-classic-workspace .theme-choice__copy > span { color: #765f70; }

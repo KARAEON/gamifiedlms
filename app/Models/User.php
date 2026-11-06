@@ -28,6 +28,7 @@ class User extends Authenticatable
         'email',
         'role',
         'is_active',
+        'theme_preference',
         'password',
     ];
 
@@ -159,6 +160,6 @@ class User extends Authenticatable
 
     public function isAdmin(): bool
     {
-        return $this->role === UserRole::ADMIN;
+        return $this->role === UserRole::ADMIN || $this->role === UserRole::SCHOOL_HEAD;
     }
 }

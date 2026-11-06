@@ -17,12 +17,13 @@ class EnsureRole
             abort(403);
         }
 
-        $roleValues = array_map(
-            static fn (string $role): string => UserRole::tryFrom($role)?->value ?? $role,
-            $roles
-        );
+        $normalizeRole = static fn (string $role): string => match ($role) {
+            UserRole::SCHOOL_HEAD->value => UserRole::ADMIN->value,
+            default => UserRole::tryFrom($role)?->value ?? $role,
+        };
+        $roleValues = array_map($normalizeRole, $roles);
 
-        if (! in_array($user->role->value, $roleValues, true)) {
+        if (! in_array($normalizeRole($user->role->value), $roleValues, true)) {
             abort(403, 'You are not authorized to access this area.');
         }
 

@@ -13,6 +13,7 @@
 </head>
 @php
     $teacher = auth()->user()->role->value === 'teacher';
+    $theme = auth()->user()->theme_preference ?? 'game';
     $groups = $teacher ? [
         'Overview' => [['dashboard', 'Dashboard']],
         'Classes' => [['sections', 'Sections'], ['students', 'Students']],
@@ -31,21 +32,28 @@
         'policies' => 'shield', 'audit' => 'chart',
     ];
 @endphp
-<body class="staff-workspace staff-shell staff-adventure-workspace">
+<body class="staff-workspace staff-shell {{ $theme === 'classic' ? 'staff-classic-workspace' : 'staff-adventure-workspace' }}">
     <a class="staff-skip-link" href="#workspace-main">Skip to content</a>
     <div class="staff-drawer-backdrop" data-close-sidebar hidden></div>
 
     <aside class="app-sidebar staff-sidebar" id="staff-navigation" aria-label="Workspace navigation">
         <div class="staff-brand">
             <a href="{{ route($prefix.'dashboard') }}">
-                <span class="teacher-brand-crest"><x-teacher.icon name="compass" /></span>
-                <span class="teacher-brand-wordmark"><strong>LUMI</strong><small>ADVENTURES</small></span>
+                @if ($theme === 'classic')
+                    <span class="classic-brand-crest"><img src="{{ asset('images/branding/catbalogan-city-division-logo.png') }}" alt=""></span>
+                    <span class="classic-brand-wordmark"><strong>CATB 1</strong><small>SPED CENTER</small></span>
+                @else
+                    <span class="teacher-brand-crest"><x-teacher.icon name="compass" /></span>
+                    <span class="teacher-brand-wordmark"><strong>LUMI</strong><small>ADVENTURES</small></span>
+                @endif
             </a>
             <button type="button" data-close-sidebar class="btn-ghost staff-mobile-only" aria-label="Close navigation">&times;</button>
         </div>
 
         <p class="staff-workspace-label">{{ $teacher ? 'Teacher workspace' : 'School Head workspace' }}</p>
-        <div class="staff-adventure-workspace-intro"><span aria-hidden="true">✦</span> {{ $teacher ? 'Behind every great adventure is a teacher.' : 'Guiding learning across the school.' }}</div>
+        @if ($theme !== 'classic')
+            <div class="staff-adventure-workspace-intro"><span aria-hidden="true">✦</span> {{ $teacher ? 'Behind every great adventure is a teacher.' : 'Guiding learning across the school.' }}</div>
+        @endif
 
         <nav>
             @foreach ($groups as $group => $items)
@@ -73,6 +81,7 @@
                 <img src="{{ asset('images/branding/catbalogan-city-division-logo.png') }}" alt="">
                 <span>Catbalogan I SPED Center<small>{{ $teacher ? 'Learning, one adventure at a time.' : 'School leadership workspace.' }}</small></span>
             </div>
+            <x-nav-link :href="route('settings.appearance')" :active="request()->routeIs('settings.appearance*')" icon="AC">Appearance</x-nav-link>
             @if ($teacher)
                 <x-nav-link :href="route('teacher.profile.edit')" :active="request()->routeIs('teacher.profile.*')" icon="PF">My profile</x-nav-link>
             @endif
@@ -98,7 +107,7 @@
         </header>
 
         <main id="workspace-main" class="staff-main" tabindex="-1">
-            @if ($teacher && ! request()->routeIs('teacher.dashboard'))
+            @if ($theme !== 'classic' && $teacher && ! request()->routeIs('teacher.dashboard'))
                 <div class="teacher-page-art" aria-hidden="true"><img src="{{ asset('assets/backgrounds/horizon-bg.png') }}" alt=""></div>
             @endif
             @if (request()->routeIs('teacher.students.show', 'teacher.sections.show'))

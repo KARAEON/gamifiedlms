@@ -39,6 +39,7 @@ class AuthenticatedSessionController extends Controller
     {
         return match ($role) {
             UserRole::ADMIN->value => redirect()->route('admin.dashboard'),
+            UserRole::SCHOOL_HEAD->value => redirect()->route('admin.dashboard'),
             UserRole::TEACHER->value => redirect()->route('teacher.dashboard'),
             default => redirect()->route('student.dashboard'),
         };

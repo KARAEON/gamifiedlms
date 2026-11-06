@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\GradeEntry;
 use App\Models\Section;
 use App\Models\User;
+use App\Models\SchoolSetting;
 use App\Services\GradeComputationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -26,7 +27,7 @@ class GradingController extends Controller
             ->get(['id', 'name']);
 
         $subject = (string) $request->query('subject', 'English');
-        $quarter = (int) $request->query('quarter', 1);
+        $quarter = (int) $request->query('quarter', SchoolSetting::currentQuarter());
         $sectionId = (int) $request->query('section_id', ($sections->first()->id ?? 0));
 
         $students = User::query()

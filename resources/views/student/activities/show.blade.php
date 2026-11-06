@@ -10,7 +10,8 @@
                 </div>
                 <div class="rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-600 ring-1 ring-slate-200">
                     <p><span class="font-semibold">Type:</span> {{ \App\Enums\ActivityType::labels()[$activity->activity_type->value] ?? $activity->activity_type->value }}</p>
-                    <p><span class="font-semibold">Questions:</span> {{ $activity->questions->count() }}</p>
+                    <p><span class="font-semibold">Question bank:</span> {{ $activity->questions->count() }} items</p>
+                    <p><span class="font-semibold">This attempt:</span> {{ min((int) ($activity->questions_per_attempt ?? $activity->questions->count()), $activity->questions->count()) }} questions</p>
                     <p><span class="font-semibold">Max Score:</span> {{ $activity->max_score }}</p>
                 </div>
             </div>

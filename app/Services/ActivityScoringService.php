@@ -18,10 +18,15 @@ class ActivityScoringService
     /**
      * @param  array<string, mixed>  $responses
      */
-    public function evaluateAndStore(User $student, Activity $activity, array $responses, int $durationSeconds = 0): Attempt
+    public function evaluateAndStore(User $student, Activity $activity, array $responses, int $durationSeconds = 0, ?array $questionIds = null): Attempt
     {
-        $activity->loadMissing('topic.lesson', 'questions.choices');
-        $questions = $activity->questions;
+        $activity->loadMissing('topic.lesson');
+        $questions = $questionIds
+            ? Question::query()->with('choices')->whereIn('id', $questionIds)->get()->sortBy(fn (Question $question) => array_search($question->id, $questionIds, true))->values()
+            : $activity->loadMissing('questions.choices')->questions;
+        if ($questions->isEmpty() || ($questionIds && $questions->pluck('id')->map(fn ($id) => (int) $id)->all() !== array_map('intval', $questionIds))) {
+            throw new \InvalidArgumentException('The selected question set is invalid.');
+        }
 
         $maxScore = (float) $questions->sum('points');
         $totalCorrect = 0;
@@ -39,6 +44,7 @@ class ActivityScoringService
             'student_id' => $student->id,
             'section_id' => $student->studentProfile?->section_id,
             'activity_id' => $activity->id,
+            'question_ids' => $questions->pluck('id')->map(fn ($id) => (int) $id)->all(),
             'status' => AttemptStatus::COMPLETED,
             'started_at' => $startedAt,
             'completed_at' => $completedAt,

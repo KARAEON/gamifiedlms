@@ -38,6 +38,11 @@ class Topic extends Model
         return $this->hasMany(Activity::class);
     }
 
+    public function questionBanks(): HasMany
+    {
+        return $this->hasMany(QuestionBank::class);
+    }
+
     public function scoreRecords(): HasMany
     {
         return $this->hasMany(ScoreRecord::class);

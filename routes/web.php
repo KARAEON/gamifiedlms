@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\AuditController as AdminAuditController;
 use App\Http\Controllers\Admin\PolicyController as AdminPolicyController;
 use App\Http\Controllers\Admin\ReportController as AdminReportController;
+use App\Http\Controllers\Admin\SchoolTermController as AdminSchoolTermController;
 use App\Http\Controllers\DashboardRedirectController;
 use App\Http\Controllers\Student\ActivityController as StudentActivityController;
 use App\Http\Controllers\Student\DashboardController as StudentDashboardController;
@@ -94,6 +95,9 @@ Route::middleware(['auth', 'role:teacher'])->prefix('teacher')->as('teacher.')->
     Route::post('/activities', [TeacherActivityController::class, 'store'])->name('activities.store');
     Route::patch('/activities/{activity}', [TeacherActivityController::class, 'update'])->name('activities.update');
     Route::post('/activities/{activity}/questions', [TeacherActivityController::class, 'addQuestion'])->name('activities.questions.store');
+    Route::patch('/activities/{activity}/question-bank', [TeacherActivityController::class, 'updateBank'])->name('activities.question-bank.update');
+    Route::patch('/questions/{question}', [TeacherActivityController::class, 'updateQuestion'])->name('questions.update');
+    Route::delete('/questions/{question}', [TeacherActivityController::class, 'deleteQuestion'])->name('questions.destroy');
 
     Route::get('/analytics', [TeacherAnalyticsController::class, 'index'])->name('analytics.index');
     Route::get('/insights', TeacherInsightsController::class)->name('insights.index');
@@ -113,6 +117,8 @@ Route::middleware(['auth', 'role:teacher'])->prefix('teacher')->as('teacher.')->
 
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->as('admin.')->group(function (): void {
     Route::get('/dashboard', AdminDashboardController::class)->name('dashboard');
+    Route::get('/school-term', [AdminSchoolTermController::class, 'index'])->name('school-term.index');
+    Route::patch('/school-term', [AdminSchoolTermController::class, 'update'])->name('school-term.update');
     Route::get('/audit', [AdminAuditController::class, 'index'])->name('audit.index');
     Route::get('/policies', [AdminPolicyController::class, 'index'])->name('policies.index');
     Route::post('/policies', [AdminPolicyController::class, 'store'])->name('policies.store');

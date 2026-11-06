@@ -15,6 +15,7 @@ class Question extends Model
 
     protected $fillable = [
         'activity_id',
+        'question_bank_id',
         'prompt',
         'question_type',
         'payload',
@@ -34,6 +35,11 @@ class Question extends Model
     public function activity(): BelongsTo
     {
         return $this->belongsTo(Activity::class);
+    }
+
+    public function questionBank(): BelongsTo
+    {
+        return $this->belongsTo(QuestionBank::class);
     }
 
     public function choices(): HasMany

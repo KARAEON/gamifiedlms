@@ -3,6 +3,8 @@
 namespace App\Livewire\Student;
 
 use App\Models\Activity;
+use App\Models\Question;
+use App\Models\QuestionBank;
 use App\Services\ActivityScoringService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Validation\ValidationException;
@@ -28,14 +30,27 @@ class ActivityPlayer extends Component
 
     public int $startedAt = 0;
 
+    #[Locked]
+    public array $selectedQuestionIds = [];
+
     public function mount(Activity $activity): void
     {
         $this->authorize('view', $activity);
 
-        $this->activity = $activity->load('topic.lesson', 'questions.choices');
+        $this->activity = $activity->load('topic.lesson');
+        if (in_array($activity->instructional_phase?->value, ['formative', 'summative'], true)) {
+            $bank = QuestionBank::query()->where('topic_id', $activity->topic_id)->where('phase', $activity->instructional_phase->value)->withCount('questions')->first();
+            if ($bank && $bank->questions_count > 0) {
+                $count = min((int) $bank->questions_per_attempt, $bank->questions_count);
+                $this->selectedQuestionIds = $bank->questions()->inRandomOrder()->limit($count)->pluck('id')->map(fn ($id) => (int) $id)->all();
+            }
+        }
+        if ($this->selectedQuestionIds === []) {
+            $this->selectedQuestionIds = $activity->questions()->pluck('id')->map(fn ($id) => (int) $id)->all();
+        }
         $this->startedAt = now()->timestamp;
 
-        foreach ($this->activity->questions as $question) {
+        foreach ($this->questions() as $question) {
             $this->responses[$question->id] = $question->question_type === 'matching' ? [] : '';
         }
     }
@@ -61,7 +76,8 @@ class ActivityPlayer extends Component
                 auth()->user(),
                 $this->activity,
                 $this->responses,
-                max(0, now()->timestamp - $this->startedAt)
+                max(0, now()->timestamp - $this->startedAt),
+                $this->selectedQuestionIds
             );
         } catch (\Throwable $exception) {
             report($exception);
@@ -86,7 +102,7 @@ class ActivityPlayer extends Component
             return;
         }
 
-        foreach ($this->activity->questions as $question) {
+        foreach ($this->questions() as $question) {
             $this->responses[$question->id] = $question->question_type === 'matching' ? [] : '';
         }
 
@@ -96,7 +112,13 @@ class ActivityPlayer extends Component
 
     public function render()
     {
-        return view('livewire.student.activity-player');
+        return view('livewire.student.activity-player', ['questions' => $this->questions()]);
+    }
+
+    protected function questions()
+    {
+        $found = Question::query()->with('choices')->whereIn('id', $this->selectedQuestionIds)->get()->keyBy('id');
+        return collect($this->selectedQuestionIds)->map(fn ($id) => $found->get($id))->filter()->values();
     }
 
     /**
@@ -106,7 +128,7 @@ class ActivityPlayer extends Component
     {
         $rules = [];
 
-        foreach ($this->activity->questions as $question) {
+        foreach ($this->questions() as $question) {
             if ($question->question_type === 'matching') {
                 foreach ($question->matchingPairs() as $pair) {
                     $key = $pair['key'] ?? null;
@@ -130,7 +152,7 @@ class ActivityPlayer extends Component
     protected function messages(): array
     {
         $messages = [];
-        foreach ($this->activity->questions as $question) {
+        foreach ($this->questions() as $question) {
             if ($question->question_type === 'matching') {
                 foreach ($question->matchingPairs() as $pair) {
                     $key = $pair['key'] ?? null;

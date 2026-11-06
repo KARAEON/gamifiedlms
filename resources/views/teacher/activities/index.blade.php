@@ -74,25 +74,65 @@
                                 <button class="btn-primary">Save activity</button>
                             </form>
                         </x-staff.dialog>
-                        <details class="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
-                            <summary class="cursor-pointer text-sm font-semibold text-slate-700">Add Question</summary>
-                            <form method="POST" action="{{ route('teacher.activities.questions.store', $activity) }}" class="mt-3 grid gap-2 sm:grid-cols-2">
-                                @csrf
-                                <textarea name="prompt" rows="2" class="input-field sm:col-span-2" placeholder="Question prompt" required></textarea>
-                                <select name="question_type" class="input-field">
-                                    <option value="multiple_choice">Multiple Choice</option>
-                                    <option value="matching">Matching</option>
-                                    <option value="guess_word">Guess Word</option>
-                                    <option value="pics_word">4 Pics 1 Word</option>
-                                    <option value="visual_challenge">Visual Challenge</option>
-                                </select>
-                                <input type="text" name="correct_answer" class="input-field" placeholder="Correct answer">
-                                <input type="number" min="1" max="100" name="points" class="input-field" value="20" placeholder="Points">
-                                <div class="sm:col-span-2 flex justify-end">
-                                    <button class="btn-secondary px-3 py-2 text-xs">Save Question</button>
+                        @if (in_array($activity->instructional_phase->value, ['formative', 'summative'], true))
+                            @php($bank = $banks->get($activity->topic_id.'-'.$activity->instructional_phase->value))
+                            <details class="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
+                                <summary class="cursor-pointer text-sm font-semibold text-slate-700">
+                                    {{ strtoupper(substr($activity->instructional_phase->value, 0, 2)) }} Question Bank
+                                    <span class="font-normal text-slate-500">({{ $bank?->questions_count ?? 0 }}/50–100 questions)</span>
+                                </summary>
+                                <form method="POST" action="{{ route('teacher.activities.question-bank.update', $activity) }}" class="mt-3 flex flex-wrap items-end gap-2">
+                                    @csrf @method('PATCH')
+                                    <label class="text-xs font-medium">Questions per attempt<input class="input-field mt-1 w-32" type="number" min="1" max="100" name="questions_per_attempt" value="{{ $bank?->questions_per_attempt ?? 10 }}" required></label>
+                                    <button class="btn-secondary px-3 py-2 text-xs">Save count</button>
+                                    <span class="text-xs text-slate-500">{{ ($bank?->questions_count ?? 0) >= 50 && ($bank?->questions_count ?? 0) <= 100 ? 'Ready for activation' : 'Add questions until the bank contains 50–100 items.' }}</span>
+                                </form>
+
+                                <details class="mt-3 rounded-lg border border-slate-200 bg-white p-3">
+                                    <summary class="cursor-pointer text-sm font-semibold">Add a question</summary>
+                                    <form method="POST" action="{{ route('teacher.activities.questions.store', $activity) }}" class="mt-3 grid gap-2 md:grid-cols-2">
+                                        @csrf
+                                        <textarea name="prompt" rows="2" class="input-field md:col-span-2" placeholder="Question prompt" required></textarea>
+                                        <select name="question_type" class="input-field"><option value="multiple_choice">Multiple Choice</option><option value="matching">Matching</option><option value="guess_word">Guess Word</option><option value="pics_word">4 Pics 1 Word</option><option value="visual_challenge">Visual Challenge</option></select>
+                                        <input name="correct_answer" class="input-field" placeholder="Correct answer (not needed for multiple choice)">
+                                        <input type="number" min="1" max="100" name="points" class="input-field" value="1" placeholder="Points">
+                                        <input name="media_path" class="input-field" placeholder="Media URL or path (optional)">
+                                        <textarea name="payload_json" rows="3" class="input-field md:col-span-2" placeholder='Extra data as JSON, e.g. {"clue":"...","answer":"..."}'></textarea>
+                                        <fieldset class="grid gap-2 sm:grid-cols-2 md:col-span-2"><legend class="text-xs font-semibold">Choice answers (multiple choice / visual)</legend>
+                                            @foreach (range(0, 3) as $choiceIndex)
+                                                <div class="flex gap-2"><input name="choices[{{ $choiceIndex }}][label]" class="input-field" placeholder="Choice {{ $choiceIndex + 1 }}"><input name="choices[{{ $choiceIndex }}][value]" class="input-field w-24" placeholder="Value"><label class="flex items-center gap-1 text-xs"><input type="checkbox" name="choices[{{ $choiceIndex }}][is_correct]" value="1"> Correct</label></div>
+                                            @endforeach
+                                        </fieldset>
+                                        <button class="btn-secondary md:col-span-2">Add to bank</button>
+                                    </form>
+                                </details>
+                                <div class="mt-3 space-y-2">
+                                    @foreach (($bank?->questions ?? collect()) as $question)
+                                        <details class="rounded-lg border border-slate-200 bg-white p-3">
+                                            <summary class="cursor-pointer text-sm">#{{ $question->sort_order }} · {{ $question->prompt }}</summary>
+                                            <div class="mt-3 flex justify-end"><form method="POST" action="{{ route('teacher.questions.destroy', $question) }}" onsubmit="return confirm('Delete this bank question?')">@csrf @method('DELETE')<button class="text-xs font-semibold text-rose-700">Delete question</button></form></div>
+                                            <form method="POST" action="{{ route('teacher.questions.update', $question) }}" class="mt-2 grid gap-2 md:grid-cols-2">
+                                                @csrf @method('PATCH')
+                                                <textarea name="prompt" rows="2" class="input-field md:col-span-2" required>{{ $question->prompt }}</textarea>
+                                                <select name="question_type" class="input-field">@foreach (['multiple_choice' => 'Multiple Choice', 'matching' => 'Matching', 'guess_word' => 'Guess Word', 'pics_word' => '4 Pics 1 Word', 'visual_challenge' => 'Visual Challenge'] as $type => $label)<option value="{{ $type }}" @selected($question->question_type === $type)>{{ $label }}</option>@endforeach</select>
+                                                <input name="correct_answer" class="input-field" value="{{ $question->correct_answer }}" placeholder="Correct answer">
+                                                <input type="number" min="1" max="100" name="points" class="input-field" value="{{ $question->points }}" required>
+                                                <input type="number" min="0" name="sort_order" class="input-field" value="{{ $question->sort_order }}" required>
+                                                <input name="media_path" class="input-field" value="{{ $question->media_path }}" placeholder="Media URL or path">
+                                                <textarea name="payload_json" rows="3" class="input-field md:col-span-2" placeholder="Extra data as JSON">{{ json_encode($question->payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) }}</textarea>
+                                                <fieldset class="grid gap-2 sm:grid-cols-2 md:col-span-2"><legend class="text-xs font-semibold">Choice answers</legend>
+                                                    @foreach (range(0, 3) as $choiceIndex)
+                                                        @php($choice = $question->choices->get($choiceIndex))
+                                                        <div class="flex gap-2"><input name="choices[{{ $choiceIndex }}][label]" class="input-field" value="{{ $choice?->label }}" placeholder="Choice {{ $choiceIndex + 1 }}"><input name="choices[{{ $choiceIndex }}][value]" class="input-field w-24" value="{{ $choice?->value }}" placeholder="Value"><label class="flex items-center gap-1 text-xs"><input type="checkbox" name="choices[{{ $choiceIndex }}][is_correct]" value="1" @checked($choice?->is_correct)> Correct</label></div>
+                                                    @endforeach
+                                                </fieldset>
+                                                <button class="btn-secondary md:col-span-2">Save question changes</button>
+                                            </form>
+                                        </details>
+                                    @endforeach
                                 </div>
-                            </form>
-                        </details>
+                            </details>
+                        @endif
                     </article>
                 @empty
                     <x-staff.empty-state title="No activities in this view" description="Reset your filters or create an activity aligned with a topic." />

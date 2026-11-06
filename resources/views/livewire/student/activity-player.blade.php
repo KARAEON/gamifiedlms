@@ -30,14 +30,14 @@
                 </div>
             @endif
 
-            @foreach ($activity->questions as $index => $question)
+            @foreach ($questions as $index => $question)
                 <article class="rounded-2xl border border-slate-200 bg-white/95 p-4 shadow-[0_12px_30px_-24px_rgba(15,23,42,0.35)]" wire:key="question-{{ $question->id }}">
                     <p class="text-xs font-semibold uppercase tracking-wide text-brand-600">Question {{ $index + 1 }}</p>
                     <p class="mt-1 text-base font-medium text-slate-900">{{ $question->prompt }}</p>
 
                     @if ($question->question_type === 'multiple_choice' || $question->question_type === 'visual_challenge')
                         @php
-                            $visualImage = trim((string) data_get($question->payload, 'image', ''));
+                            $visualImage = trim((string) data_get($question->payload, 'image', $question->media_path ?? ''));
                             $hasVisualImage = $visualImage !== '' && ! str_contains(strtolower($visualImage), 'placehold.co');
                         @endphp
                         @if ($hasVisualImage)
@@ -133,7 +133,7 @@
                             placeholder="Type the science word">
                     @elseif ($question->question_type === 'guess_word')
                         @php
-                            $clueImage = $question->guessWordImage();
+                            $clueImage = $question->media_path ?: $question->guessWordImage();
                         @endphp
                         <div class="mt-3 rounded-2xl border border-slate-200 bg-slate-50 p-3">
                             @if ($clueImage)

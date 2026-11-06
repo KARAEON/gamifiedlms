@@ -16,7 +16,7 @@ $groups = $teacher ? [
 'Teaching' => [['lessons', 'Lessons and Topics', 'LS'], ['activities', 'Activities', 'AC'], ['workflow', 'Instructional Flow', 'WF']],
 'Assessment' => [['scores', 'Game Scores', 'GS'], ['grading', 'Grading', 'RP']],
 'Insights' => [['analytics', 'Analytics', 'AN'], ['insights', 'Decision Support', 'IN'], ['reports', 'Reports', 'RP']],
-] : ['School management' => [['dashboard', 'Overview', 'D'], ['reports', 'Reports', 'RP'], ['policies', 'Policies', 'PL'], ['audit', 'Audit Trail', 'AU']]];
+] : ['School management' => [['dashboard', 'Overview', 'D'], ['school-term', 'School Term', 'S'], ['reports', 'Reports', 'RP'], ['policies', 'Policies', 'PL'], ['audit', 'Audit Trail', 'AU']]];
 $prefix = $teacher ? 'teacher.' : 'admin.';
 @endphp
 <body class="staff-workspace staff-shell {{ $teacher ? 'teacher-workspace' : '' }}">

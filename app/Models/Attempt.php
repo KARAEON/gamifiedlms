@@ -17,6 +17,7 @@ class Attempt extends Model
         'student_id',
         'section_id',
         'activity_id',
+        'question_ids',
         'status',
         'started_at',
         'completed_at',
@@ -32,6 +33,7 @@ class Attempt extends Model
     {
         return [
             'status' => AttemptStatus::class,
+            'question_ids' => 'array',
             'started_at' => 'datetime',
             'completed_at' => 'datetime',
         ];

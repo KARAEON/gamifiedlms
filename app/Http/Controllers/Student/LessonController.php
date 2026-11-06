@@ -38,7 +38,17 @@ class LessonController extends Controller
 
         $lesson->load([
             'topics.activities' => fn ($query) => $query->where('is_active', true)->withCount('questions')->orderBy('sort_order'),
+            'topics.questionBanks' => fn ($query) => $query->withCount('questions'),
         ]);
+
+        foreach ($lesson->topics as $topic) {
+            foreach ($topic->activities as $activity) {
+                if (in_array($activity->instructional_phase?->value, ['formative', 'summative'], true)) {
+                    $bank = $topic->questionBanks->firstWhere('phase', $activity->instructional_phase->value);
+                    $activity->setAttribute('questions_count', $bank?->questions_count ?? 0);
+                }
+            }
+        }
 
         $completedByActivity = ScoreRecord::query()
             ->where('student_id', $student->id)

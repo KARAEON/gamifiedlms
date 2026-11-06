@@ -3,6 +3,7 @@
         <section class="panel p-6">
             <h1 class="text-2xl font-semibold text-slate-900">My Grading</h1>
             <p class="mt-1 text-sm text-slate-600">Written Works are computed automatically from your game scores. Performance Tasks and Quarterly Assessment are entered by your teacher.</p>
+            <p class="mt-2 inline-flex rounded-full bg-brand-50 px-3 py-1 text-sm font-semibold text-brand-700">Current school quarter: Q{{ $currentQuarter }}</p>
         </section>
 
         @foreach ($subjects as $subject)
@@ -27,8 +28,8 @@
                         </thead>
                         <tbody>
                             @foreach ($subject['quarters'] as $quarter => $payload)
-                                <tr>
-                                    <td class="py-3">Q{{ $quarter }}</td>
+                                <tr @class(['bg-brand-50/70' => (int) $quarter === $currentQuarter]) data-quarter="{{ $quarter }}" @if ((int) $quarter === $currentQuarter) data-current-quarter="true" @endif>
+                                    <td class="py-3">Q{{ $quarter }} @if ((int) $quarter === $currentQuarter)<span class="ml-1 rounded bg-brand-100 px-2 py-0.5 text-xs font-semibold text-brand-700">Current</span>@endif</td>
                                     <td class="py-3">{{ $payload['written_works']['percentage_score'] !== null ? number_format($payload['written_works']['percentage_score'], 2).'%' : '—' }}</td>
                                     <td class="py-3">{{ $payload['performance_tasks']['percentage_score'] !== null ? number_format($payload['performance_tasks']['percentage_score'], 2).'%' : '—' }}</td>
                                     <td class="py-3">{{ $payload['quarterly_assessment']['percentage_score'] !== null ? number_format($payload['quarterly_assessment']['percentage_score'], 2).'%' : '—' }}</td>

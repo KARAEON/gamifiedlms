@@ -13,6 +13,7 @@ use App\Models\Choice;
 use App\Models\GradingPolicy;
 use App\Models\Lesson;
 use App\Models\Question;
+use App\Models\QuestionBank;
 use App\Models\Report;
 use App\Models\ScoreRecord;
 use App\Models\Section;
@@ -244,11 +245,15 @@ class DemoDataSeeder extends Seeder
 
     protected function seedQuestions(Activity $activity): void
     {
+        $bank = in_array($activity->instructional_phase?->value, [ActivityPhase::FORMATIVE->value, ActivityPhase::SUMMATIVE->value], true)
+            ? QuestionBank::query()->firstOrCreate(['topic_id' => $activity->topic_id, 'phase' => $activity->instructional_phase->value])
+            : null;
         foreach (range(1, 5) as $item) {
             $correctAnswer = $this->correctAnswerFor($activity, $item);
 
             $question = Question::query()->create([
                 'activity_id' => $activity->id,
+                'question_bank_id' => $bank?->id,
                 'prompt' => $this->promptFor($activity, $item),
                 'question_type' => $activity->activity_type->value,
                 'payload' => $this->payloadFor($activity, $item, $correctAnswer),
@@ -268,6 +273,9 @@ class DemoDataSeeder extends Seeder
                     ]);
                 }
             }
+        }
+        if ($bank) {
+            $activity->update(['is_active' => $bank->questions()->count() >= 50 && $bank->questions()->count() <= 100]);
         }
     }
 
@@ -344,7 +352,9 @@ class DemoDataSeeder extends Seeder
             $selectedActivities = $activities->shuffle()->take(fake()->numberBetween(9, 13));
 
             foreach ($selectedActivities as $activity) {
-                $questions = $activity->questions;
+                $questions = in_array($activity->instructional_phase?->value, [ActivityPhase::FORMATIVE->value, ActivityPhase::SUMMATIVE->value], true)
+                    ? QuestionBank::query()->where('topic_id', $activity->topic_id)->where('phase', $activity->instructional_phase->value)->first()?->questions ?? collect()
+                    : $activity->questions;
                 $maxScore = max(1, $questions->sum('points'));
                 $topicPenalty = str_contains(strtolower($activity->topic->title), 'weather') ? -12 : 0;
                 $studentBias = ($studentIndex % 5 === 0) ? -10 : 6;
@@ -358,6 +368,7 @@ class DemoDataSeeder extends Seeder
                     'student_id' => $student->id,
                     'section_id' => $section?->id,
                     'activity_id' => $activity->id,
+                    'question_ids' => $questions->pluck('id')->map(fn ($id) => (int) $id)->all(),
                     'status' => AttemptStatus::COMPLETED,
                     'started_at' => $attemptStart,
                     'completed_at' => (clone $attemptStart)->addMinutes(fake()->numberBetween(3, 15)),

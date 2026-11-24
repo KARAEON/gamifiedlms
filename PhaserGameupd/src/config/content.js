@@ -1,5 +1,9 @@
 import { scienceQuarterGames } from './scienceQuarterGames.js';
 import { subjectWeekTopics } from './subjectWeekTopics.js';
+import { englishWeekOneGames } from './englishWeekOne.js';
+import { mathWeekOneGames } from './mathWeekOne.js';
+
+export const DEFAULT_ISLAND_ID = 'grand-library';
 
 export const islands = [
   {
@@ -38,13 +42,18 @@ export const islands = [
     hitHeight: 240,
     label: 'READING',
   },
+  { id: 'hibla-archipelago', title: 'HIBLA ARCHIPELAGO', assetKey: 'hibla-archipelago', unlocked: false, label: 'HIBLA' },
+  { id: 'hearthwork-terraces', title: 'HEARTHWORK TERRACES', assetKey: 'hearthwork-terraces', unlocked: false, label: 'HEARTHWORK' },
+  { id: 'tala-crossroad', title: 'TALA CROSSROAD', assetKey: 'tala-crossroad', unlocked: false, label: 'TALA' },
+  { id: 'concord-grove', title: 'CONCORD GROVE', assetKey: 'concord-grove', unlocked: false, label: 'CONCORD' },
+  { id: 'grand-library', title: 'GRAND LIBRARY', assetKey: 'grand-library', unlocked: true, label: 'LIBRARY' },
 ];
 
 export const vulcanQuarterNodes = [
   { id: 'q1', label: 'Q1', title: 'Matter', x: 620, y: 524, unlocked: true },
   { id: 'q2', label: 'Q2', title: 'Living Things', x: 1134, y: 543, unlocked: true },
   { id: 'q3', label: 'Q3', title: 'Force, Motion, Energy', x: 989, y: 152, unlocked: true },
-  { id: 'q4', label: 'Q4', title: 'Earth and Space', x: 658, y: 78, unlocked: true },
+  { id: 'q4', label: 'Q4', title: 'Earth and Space', x: 658, y: 156, unlocked: true },
 ];
 
 const makeLessons = (quarterId, majorIndex, topic) => {
@@ -173,6 +182,18 @@ export const islandCurricula = {
 for (const game of scienceQuarterGames) {
   const lesson = vulcanQuarterDetails.q1.majors.flatMap(major => major.lessons).find(item => item.id === game.lessonId);
   if (lesson) { lesson.title = game.title; lesson.placeholder = false; }
+}
+
+for (const game of mathWeekOneGames) {
+  const major = islandCurricula['numeric-ruins'].quarters.q1.majors[0];
+  const lesson = major.lessons.find(lesson => lesson.id === game.lessonId);
+  if (lesson) { lesson.title = game.title; lesson.placeholder = false; major.placeholder = false; }
+}
+
+for (const game of englishWeekOneGames) {
+  const major = islandCurricula['reading-island'].quarters.q1.majors[0];
+  const lesson = major.lessons.find(lesson => lesson.id === game.lessonId);
+  if (lesson) { lesson.title = game.title; lesson.placeholder = false; major.placeholder = false; }
 }
 
 export const mixMatchMixturesGame = {

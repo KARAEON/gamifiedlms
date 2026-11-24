@@ -4,6 +4,8 @@ import { GAME_HEIGHT, GAME_WIDTH } from '../config/gameConfig.js';
 import { playAreaMusic } from '../systems/music.js';
 import { markSceneReady, setTestState } from '../systems/testSeam.js';
 import { colors, coverImage, createBackArrow, textStyle, titleStyle } from '../ui/ui.js';
+import { ISLAND_VISUALS, isIslandUnlocked } from '../config/islandVisuals.js';
+import { LibraryView } from '../ui/libraryView.js';
 
 export default class IslandMapScene extends Phaser.Scene {
   constructor() {
@@ -17,16 +19,33 @@ export default class IslandMapScene extends Phaser.Scene {
   }
 
   create() {
+    if (!isIslandUnlocked(this, this.island)) {
+      this.scene.start('IslandSelectScene', { islandId: this.islandId });
+      return;
+    }
     playAreaMusic(this, this.islandId);
-    coverImage(this, `${this.islandId}-map`);
+    const returnToWorld = () => this.scene.start('IslandSelectScene', { islandId: this.islandId, fromLibrary: this.islandId === 'grand-library' });
+    if (this.islandId === 'grand-library') {
+      const library = new LibraryView(this, returnToWorld);
+      this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => library.destroy());
+      markSceneReady('IslandMapScene', {
+        selectedIsland: this.islandId, mapQuarterNodeCount: 0, mapSmallNodeCount: 0, worldBackground: 'archive-gallery',
+      });
+      return;
+    }
+
+    const background = `${this.islandId}-map`;
+    coverImage(this, background);
     this.add.rectangle(0, 0, GAME_WIDTH, 112, 0x000000, 0.24).setOrigin(0);
 
-    createBackArrow(this, () => this.scene.start('IslandSelectScene', { cloudTransition: false, fadeFromWhite: false }));
+    createBackArrow(this, returnToWorld);
 
-    const title = this.add.text(156, 56, this.island.title.replace(' ', '\n'), titleStyle(40, '#fff2c9', 'left'));
+    const title = this.add.text(156, 43, this.island.title, titleStyle(31, '#fff2c9', 'left'));
     title.setOrigin(0, 0.5);
     title.setLineSpacing(-8);
     title.setShadow(4, 4, '#4d332f', 0, false, true);
+    const destinationHint = this.quarterNodes.length ? 'SELECT A QUARTER' : 'KNOWLEDGE HUB';
+    this.add.text(156, 80, `${ISLAND_VISUALS[this.islandId].subject} · ${destinationHint}`, textStyle(20, '#fff2c9', 'left'));
 
     this.createQuarterNodes();
     if (!this.quarterNodes.length) {
@@ -39,7 +58,7 @@ export default class IslandMapScene extends Phaser.Scene {
       selectedIsland: this.islandId,
       selectedQuarter: null,
       mapQuarterNodeCount: this.quarterNodes.length,
-      worldBackground: `${this.islandId}-map`,
+      worldBackground: background,
       mapSmallNodeCount: 0,
     });
   }

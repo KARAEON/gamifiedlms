@@ -1,4 +1,4 @@
-// Edit the intro sequence and Quill's one-sided dialogue here.
+// Edit the intro sequence and Krae's one-sided dialogue here.
 // The story lines below are placeholders for the final script.
 // Add stitched cinematic segments to `clips` in the order they should play.
 export const INTRO_FLOW = [
@@ -10,27 +10,34 @@ export const INTRO_FLOW = [
   {
     id: 'library',
     type: 'dialogue',
+    character: { id: 'krae', name: 'KRAE' },
     background: 'intro-library-background',
     location: 'GRAND LIBRARY',
     lines: [
-      { pose: 'talk', text: 'You made it! I am Quill, keeper of the Grand Library. This book has brought you to Lumora.' },
-      { pose: 'sad', text: 'A strange mist has scattered our knowledge and hidden the paths between our islands.' },
-      { pose: 'talk', text: 'We need a curious mind to help us uncover what was lost. Will you lend us your courage and curiosity?' },
-      { pose: 'default', text: 'Come with me. There is something you should see.' },
+      { pose: 'talk', text: 'You made it! I’m Krae, keeper of the Grand Library. That glowing book brought you all the way to Lumora.' },
+      { pose: 'cry', text: 'Oh, dear… a strange mist has scattered our knowledge and hidden the paths between the islands.' },
+      { pose: 'talk', text: 'But you’re here now. With your curiosity, we can find what was lost and help Lumora shine again.' },
+      { pose: 'smile', text: 'Come with me. I want to show you the world we’ll explore together.' },
     ],
+  },
+  {
+    id: 'world-intro',
+    type: 'cutscene',
+    fadeFromPrevious: true,
+    clips: [{ key: 'world-intro', durationMs: 21386 }],
   },
   {
     id: 'world-introduction',
     type: 'dialogue',
-    revealDurationMs: 4000,
+    character: { id: 'krae', name: 'KRAE' },
     fadeFromPrevious: true,
-    background: 'lumora-world',
+    background: 'floating-sky',
     location: 'LUMORA',
     lines: [
-      { pose: 'talk', text: 'This is Lumora: a world of islands, each holding a different part of our shared knowledge.' },
-      { pose: 'talk', text: 'Three islands are open to you: Vulcan Caverns, Reading Island, and Numeric Ruins.' },
-      { pose: 'default', text: 'Begin in Vulcan Caverns, or visit the other open islands. Take your time, ask questions, and keep learning.' },
-      { pose: 'talk', text: 'Hover over an island to see its name and subject, then click an open island to visit. On a touch screen, tap once to look and again to visit.' },
+      { pose: 'talk', text: 'Welcome to the world of Lumora! Each floating island holds a different part of our shared knowledge.' },
+      { pose: 'smile', text: 'The Grand Library is our home. From here, you can explore Vulcan Caverns, Reading Island, and Numeric Ruins.' },
+      { pose: 'smile', text: 'Choose whichever island sparks your curiosity. Take your time, ask questions, and enjoy learning.' },
+      { pose: 'talk', text: 'Use the arrows or swipe to bring an island to the center. Select it to visit; the islands behind the mist will open in time.' },
     ],
   },
   { id: 'world', type: 'world', fadeFromPrevious: true },

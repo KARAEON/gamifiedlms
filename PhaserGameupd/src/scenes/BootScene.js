@@ -11,6 +11,8 @@ import { RECOVERY_CIRCUIT_ART_FRAMES } from '../config/recoveryCircuitArtwork.js
 import { VILLAGE_IMPACT_ART_FRAMES } from '../config/villageImpactArtwork.js';
 import { markSceneReady, setTestState } from '../systems/testSeam.js';
 import { textStyle } from '../ui/ui.js';
+import { islands } from '../config/content.js';
+import { prepareIslandFrames } from '../ui/floatingIslandArt.js';
 
 export default class BootScene extends Phaser.Scene {
   constructor() {
@@ -82,6 +84,12 @@ export default class BootScene extends Phaser.Scene {
     this.load.image('vulcan-caverns', '/assets/islands/vulcan-caverns.png');
     this.load.image('numeric-ruins', '/assets/islands/numeric-ruins.png');
     this.load.image('reading-island', '/assets/islands/reading-island.png');
+    this.load.image('floating-sky', '/assets/backgrounds/floating-sky.png');
+    this.load.image('floating-mist', '/assets/backgrounds/floating-mist.png');
+    for (const island of islands.slice(3)) {
+      this.load.image(island.assetKey, `/assets/floating-islands/${island.id}.png`);
+      if (island.id !== 'grand-library') this.load.image(`${island.id}-map`, `/assets/island-maps/${island.id}-map.png`);
+    }
     this.load.image('vulcan-caverns-map', '/assets/island-maps/vulcan-caverns-map.png');
     this.load.image('reading-island-map', '/assets/island-maps/reading-island-map.png');
     this.load.image('numeric-ruins-map', '/assets/island-maps/numeric-ruins-map.png');
@@ -90,8 +98,9 @@ export default class BootScene extends Phaser.Scene {
     this.load.image('world-map-cloudy', '/assets/world/world-map-cloudy.png');
     this.load.image('intro-library-background', '/assets/video/cutscene-1-library.png');
     this.load.video('intro-cutscene-1', '/assets/video/cutscene-1-browser.mp4');
-    for (const pose of ['default', 'talk', 'sad']) {
-      this.load.image(`quill-${pose}`, `/assets/characters/quill/quill-${pose}.png`);
+    this.load.video('world-intro', '/assets/video/world-intro-browser.mp4');
+    for (const pose of ['cry', 'smile', 'talk']) {
+      this.load.image(`krae-${pose}`, `/assets/characters/Krae/Krae-${pose}.png`);
     }
     this.load.image('cloud-zoom-poster', '/assets/video/cloud-zoom-poster.png');
     this.load.video('cloud-zoom', '/assets/video/cloud-zoom.webm', true);
@@ -118,6 +127,7 @@ export default class BootScene extends Phaser.Scene {
   }
 
   create() {
+    prepareIslandFrames(this, islands);
     const revivalTexture = this.textures.get('science-revival-regions');
     const atlas = revivalTexture.getSourceImage(), cellWidth = atlas.width / 3, cellHeight = atlas.height / 2;
     // Each region uses the same crop for its broken and restored art; no stretched illustration.

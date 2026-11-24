@@ -13,6 +13,8 @@ import QuarterDetailScene from '../scenes/QuarterDetailScene.js';
 import ScienceCourtScene from '../scenes/ScienceCourtScene.js';
 import SupplyCartScene from '../scenes/SupplyCartScene.js';
 import ScienceAdventureScene from '../scenes/ScienceAdventureScene.js';
+import EnglishAdventureScene from '../scenes/EnglishAdventureScene.js';
+import MathAdventureScene from '../scenes/MathAdventureScene.js';
 
 export const GAME_WIDTH = 1280;
 export const GAME_HEIGHT = 720;
@@ -47,6 +49,8 @@ export const gameConfig = {
     ScienceCourtScene,
     InventMixScene,
     ScienceAdventureScene,
+    EnglishAdventureScene,
+    MathAdventureScene,
     AssessmentScene,
     CloudTransitionScene,
     IntroScene,

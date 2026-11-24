@@ -3,27 +3,30 @@ import { createPixelButton } from '../ui/ui.js';
 
 // A linear list of clips with one completion callback. Skip affects cinema only.
 export default class CutsceneSequence {
-  constructor(scene, clips, { onComplete, onStatus = () => {} }) {
+  constructor(scene, clips, { onComplete, onReady = () => {}, onStatus = () => {} }) {
     this.scene = scene;
     this.clips = clips;
     this.onComplete = onComplete;
+    this.onReady = onReady;
     this.onStatus = onStatus;
     this.index = 0;
     this.finished = false;
-    this.skip = createPixelButton(scene, GAME_WIDTH - 100, 48, 'SKIP', () => this.complete(), {
+    this.skip = createPixelButton(scene, GAME_WIDTH - 100, 48, 'SKIP', () => {
+      if (scene.input.enabled) this.complete();
+    }, {
       width: 132, height: 44, fontSize: 22, testId: 'skip-cutscene',
     }).setDepth(20);
-    this.onEscape = () => this.complete();
+    this.onEscape = () => { if (scene.input.enabled) this.complete(); };
     scene.input.keyboard?.on('keydown-ESC', this.onEscape);
     this.playNext();
   }
 
   playNext() {
     if (this.finished) return;
-    this.clearVideo();
     const clip = this.clips[this.index++];
     if (!clip) return this.complete();
     if (!this.scene.cache.video.exists(clip.key)) return this.playNext();
+    this.clearVideo();
 
     this.onStatus('loading');
     const video = this.scene.add.video(GAME_WIDTH / 2, GAME_HEIGHT / 2, clip.key).setDepth(1);
@@ -36,12 +39,14 @@ export default class CutsceneSequence {
       this.playNext();
     };
     video.once('created', () => {
+      if (this.finished) return;
       video.setScale(Math.min(GAME_WIDTH / video.width, GAME_HEIGHT / video.height));
       this.onStatus('playing');
       this.guard?.remove();
       const duration = video.getDuration();
       const durationMs = Number.isFinite(duration) && duration > 0 ? duration * 1000 : (clip.durationMs ?? 60000);
       this.guard = this.scene.time.delayedCall(durationMs + 4000, next);
+      this.onReady();
     });
     video.once('complete', next);
     video.once('error', next);
@@ -64,15 +69,24 @@ export default class CutsceneSequence {
 
   complete() {
     if (this.finished) return;
-    this.destroy();
+    // Hold the final frame until the scene has faded out over it.
+    this.finished = true;
+    this.guard?.remove();
+    this.guard = null;
+    this.video?.pause();
+    this.removeControls();
     this.onComplete();
+  }
+
+  removeControls() {
+    this.skip?.destroy(true);
+    this.skip = null;
+    this.scene.input.keyboard?.off('keydown-ESC', this.onEscape);
   }
 
   destroy() {
     this.finished = true;
     this.clearVideo();
-    this.skip?.destroy(true);
-    this.skip = null;
-    this.scene.input.keyboard?.off('keydown-ESC', this.onEscape);
+    this.removeControls();
   }
 }

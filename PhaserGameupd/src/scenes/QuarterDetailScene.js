@@ -1,6 +1,10 @@
 import Phaser from 'phaser';
 import { scienceQuarterGames, SCIENCE_TOOLS } from '../config/scienceQuarterGames.js';
 import { readScienceProgress } from '../systems/scienceProgress.js';
+import { readEnglishProgress } from '../systems/englishProgress.js';
+import { englishWeekOneGames } from '../config/englishWeekOne.js';
+import { mathWeekOneGames } from '../config/mathWeekOne.js';
+import { readMathProgress } from '../systems/mathProgress.js';
 import {
   inventMixWorkshopGame,
   mixMatchMixturesGame,
@@ -34,6 +38,8 @@ const RIGHT_LESSON_OFFSETS = [
 ];
 
 const MINIGAMES = {
+  ...Object.fromEntries(mathWeekOneGames.map(game => [game.lessonId, { sceneKey: 'MathAdventureScene', game, kind: `math-${game.kind}` }])),
+  ...Object.fromEntries(englishWeekOneGames.map(game => [game.lessonId, { sceneKey: 'EnglishAdventureScene', game, kind: `english-${game.kind}` }])),
   ...Object.fromEntries(scienceQuarterGames.map(game => [game.lessonId, { sceneKey: 'ScienceAdventureScene', game, kind: game.kind }])),
   [mixMatchMixturesGame.lessonId]: {
     sceneKey: 'MixMatchScene',
@@ -246,7 +252,7 @@ export default class QuarterDetailScene extends Phaser.Scene {
 
     const shadow = this.add.circle(5, 7, 31, 0x000000, 0.14);
     const base = this.add.circle(0, 0, 31, colors.cream, 1);
-    if (readScienceProgress()[lesson.id]?.completed) base.setFillStyle(0xb4d76d);
+    if (readScienceProgress()[lesson.id]?.completed || readEnglishProgress()[lesson.id]?.completed || readMathProgress()[lesson.id]?.completed) base.setFillStyle(0xb4d76d);
     base.setStrokeStyle(5, 0xc4a55c, 1);
     const inner = this.add.circle(0, 0, 17, 0xfff7cf, 1);
     const label = this.add.text(0, -1, `${lessonIndex + 1}`, textStyle(20, '#5b4322'));
@@ -408,7 +414,7 @@ export default class QuarterDetailScene extends Phaser.Scene {
       height: 285,
       body: (overlay, { panelX, panelY }) => {
         const available = major.lessons.filter(lesson => MINIGAMES[lesson.id]).length;
-        const label = major.week ? `${major.lessons.length} DAILY GAMES COMING SOON` : major.placeholder && available ? `${available} ${available === 1 ? 'ACTIVITY' : 'ACTIVITIES'} AVAILABLE\n${major.lessons.length - available} LESSONS COMING SOON` : major.placeholder ? 'LESSONS COMING SOON' : 'COMPETENCY PLACEHOLDER';
+        const label = major.week ? available ? `${available} DAILY GAMES AVAILABLE${available < major.lessons.length ? `\n${major.lessons.length - available} COMING SOON` : ''}` : `${major.lessons.length} DAILY GAMES COMING SOON` : major.placeholder && available ? `${available} ${available === 1 ? 'ACTIVITY' : 'ACTIVITIES'} AVAILABLE\n${major.lessons.length - available} LESSONS COMING SOON` : major.placeholder ? 'LESSONS COMING SOON' : 'COMPETENCY PLACEHOLDER';
         const body = this.add.text(panelX, panelY + 8, label, textStyle(28, '#66e5ff')).setAlign('center');
         body.setOrigin(0.5);
         return [body];
@@ -516,6 +522,16 @@ export default class QuarterDetailScene extends Phaser.Scene {
   }
 
   createMinigamePreview(kind, panelX, panelY) {
+    if (kind.startsWith('math-')) {
+      const title = this.add.text(panelX, panelY + 18, 'BUILD · TRADE · PLAN', titleStyle(28, '#ffd76a')).setOrigin(0.5);
+      const note = this.add.text(panelX, panelY + 74, 'THREE CHALLENGES + AN EXIT CHECK\nEXPLORE FRACTIONS WITHOUT A TIMER', textStyle(22, '#fff2c9')).setOrigin(0.5);
+      return [title, note];
+    }
+    if (kind.startsWith('english-')) {
+      const title = this.add.text(panelX, panelY + 18, 'LISTEN · BUILD · EXPLORE', titleStyle(28, '#ffd76a')).setOrigin(0.5);
+      const note = this.add.text(panelX, panelY + 74, kind === 'english-festival' ? 'THREE MODEL LINES + YOUR ORIGINAL POEM' : 'THREE CHALLENGES + AN EXIT CHECK\nREPLAY AUDIO · EXPLORE WITHOUT A TIMER', textStyle(22, '#fff2c9')).setOrigin(0.5);
+      return [title, note];
+    }
     if (scienceQuarterGames.some(game => game.kind === kind)) {
       const game = scienceQuarterGames.find(game => game.kind === kind);
       const tool = SCIENCE_TOOLS.find(item => item.id === kind) ?? SCIENCE_TOOLS[0];

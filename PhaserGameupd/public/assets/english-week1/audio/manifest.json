@@ -1,0 +1,542 @@
+{
+  "method": "Offline Windows System.Speech synthesis",
+  "voice": "Microsoft Zira Desktop",
+  "locale": "en-US",
+  "rate": -2,
+  "sampleRate": 22050,
+  "channels": 1,
+  "format": "PCM 16-bit WAV",
+  "note": "Authored text rendered to bundled recordings. Replay requires no network, account, microphone, or speech-recognition service.",
+  "clips": [
+    {
+      "key": "english-contrast-rain-said",
+      "text": "Rain. Said. Rain. Said.",
+      "file": "english-contrast-rain-said.wav"
+    },
+    {
+      "key": "english-e1-r1",
+      "text": "Buzz! A bee circles the bloom.",
+      "file": "english-e1-r1.wav"
+    },
+    {
+      "key": "english-e1-r2",
+      "text": "Under the roof we hear drip, drop.",
+      "file": "english-e1-r2.wav"
+    },
+    {
+      "key": "english-e1-r3",
+      "text": "Crack! The branch breaks; splash! It falls into the pond.",
+      "file": "english-e1-r3.wav"
+    },
+    {
+      "key": "english-e1-exit",
+      "text": "Clang! The bell rings above the gate.",
+      "file": "english-e1-exit.wav"
+    },
+    {
+      "key": "english-e2-r1",
+      "text": "Seven silver sails sway.",
+      "file": "english-e2-r1.wav"
+    },
+    {
+      "key": "english-e2-r2",
+      "text": "Kind cats carry kites.",
+      "file": "english-e2-r2.wav"
+    },
+    {
+      "key": "english-e2-r3",
+      "text": "Bright birds balance berries.",
+      "file": "english-e2-r3.wav"
+    },
+    {
+      "key": "english-e2-exit",
+      "text": "Lazy cats carry coats.",
+      "file": "english-e2-exit.wav"
+    },
+    {
+      "key": "english-e3-r1",
+      "text": "Rain trails across the pale lake.",
+      "file": "english-e3-r1.wav"
+    },
+    {
+      "key": "english-e3-r2",
+      "text": "A blue moon lights the room.",
+      "file": "english-e3-r2.wav"
+    },
+    {
+      "key": "english-e3-r3",
+      "text": "We wait by the pale lake until late.",
+      "file": "english-e3-r3.wav"
+    },
+    {
+      "key": "english-e3-exit",
+      "text": "The slow boat floats home.",
+      "file": "english-e3-exit.wav"
+    },
+    {
+      "key": "english-e4-r1",
+      "text": "The boat hit the net.",
+      "file": "english-e4-r1.wav"
+    },
+    {
+      "key": "english-e4-r2",
+      "text": "The duck shook the sack.",
+      "file": "english-e4-r2.wav"
+    },
+    {
+      "key": "english-e4-r3",
+      "text": "A beam of light falls across the room.",
+      "file": "english-e4-r3.wav"
+    },
+    {
+      "key": "english-e4-exit",
+      "text": "A cap fell beside the rope.",
+      "file": "english-e4-exit.wav"
+    },
+    {
+      "key": "english-e5-r1",
+      "text": "Buzz! Bright bees circle the bloom.",
+      "file": "english-e5-r1.wav"
+    },
+    {
+      "key": "english-e5-r2",
+      "text": "A blue moon lights the room.",
+      "file": "english-e5-r2.wav"
+    },
+    {
+      "key": "english-e5-r3",
+      "text": "The boat hit the net.",
+      "file": "english-e5-r3.wav"
+    },
+    {
+      "key": "english-word-buzz",
+      "text": "buzz",
+      "file": "english-word-buzz.wav"
+    },
+    {
+      "key": "english-word-a",
+      "text": "a",
+      "file": "english-word-a.wav"
+    },
+    {
+      "key": "english-word-bee",
+      "text": "bee",
+      "file": "english-word-bee.wav"
+    },
+    {
+      "key": "english-word-circles",
+      "text": "circles",
+      "file": "english-word-circles.wav"
+    },
+    {
+      "key": "english-word-the",
+      "text": "the",
+      "file": "english-word-the.wav"
+    },
+    {
+      "key": "english-word-bloom",
+      "text": "bloom",
+      "file": "english-word-bloom.wav"
+    },
+    {
+      "key": "english-word-under",
+      "text": "under",
+      "file": "english-word-under.wav"
+    },
+    {
+      "key": "english-word-roof",
+      "text": "roof",
+      "file": "english-word-roof.wav"
+    },
+    {
+      "key": "english-word-we",
+      "text": "we",
+      "file": "english-word-we.wav"
+    },
+    {
+      "key": "english-word-hear",
+      "text": "hear",
+      "file": "english-word-hear.wav"
+    },
+    {
+      "key": "english-word-drip",
+      "text": "drip",
+      "file": "english-word-drip.wav"
+    },
+    {
+      "key": "english-word-drop",
+      "text": "drop",
+      "file": "english-word-drop.wav"
+    },
+    {
+      "key": "english-word-crack",
+      "text": "crack",
+      "file": "english-word-crack.wav"
+    },
+    {
+      "key": "english-word-branch",
+      "text": "branch",
+      "file": "english-word-branch.wav"
+    },
+    {
+      "key": "english-word-breaks",
+      "text": "breaks",
+      "file": "english-word-breaks.wav"
+    },
+    {
+      "key": "english-word-splash",
+      "text": "splash",
+      "file": "english-word-splash.wav"
+    },
+    {
+      "key": "english-word-it",
+      "text": "it",
+      "file": "english-word-it.wav"
+    },
+    {
+      "key": "english-word-falls",
+      "text": "falls",
+      "file": "english-word-falls.wav"
+    },
+    {
+      "key": "english-word-into",
+      "text": "into",
+      "file": "english-word-into.wav"
+    },
+    {
+      "key": "english-word-pond",
+      "text": "pond",
+      "file": "english-word-pond.wav"
+    },
+    {
+      "key": "english-word-clang",
+      "text": "clang",
+      "file": "english-word-clang.wav"
+    },
+    {
+      "key": "english-word-bell",
+      "text": "bell",
+      "file": "english-word-bell.wav"
+    },
+    {
+      "key": "english-word-rings",
+      "text": "rings",
+      "file": "english-word-rings.wav"
+    },
+    {
+      "key": "english-word-above",
+      "text": "above",
+      "file": "english-word-above.wav"
+    },
+    {
+      "key": "english-word-gate",
+      "text": "gate",
+      "file": "english-word-gate.wav"
+    },
+    {
+      "key": "english-word-seven",
+      "text": "seven",
+      "file": "english-word-seven.wav"
+    },
+    {
+      "key": "english-word-silver",
+      "text": "silver",
+      "file": "english-word-silver.wav"
+    },
+    {
+      "key": "english-word-sails",
+      "text": "sails",
+      "file": "english-word-sails.wav"
+    },
+    {
+      "key": "english-word-sway",
+      "text": "sway",
+      "file": "english-word-sway.wav"
+    },
+    {
+      "key": "english-word-green",
+      "text": "green",
+      "file": "english-word-green.wav"
+    },
+    {
+      "key": "english-word-run",
+      "text": "run",
+      "file": "english-word-run.wav"
+    },
+    {
+      "key": "english-word-kind",
+      "text": "kind",
+      "file": "english-word-kind.wav"
+    },
+    {
+      "key": "english-word-cats",
+      "text": "cats",
+      "file": "english-word-cats.wav"
+    },
+    {
+      "key": "english-word-carry",
+      "text": "carry",
+      "file": "english-word-carry.wav"
+    },
+    {
+      "key": "english-word-kites",
+      "text": "kites",
+      "file": "english-word-kites.wav"
+    },
+    {
+      "key": "english-word-city",
+      "text": "city",
+      "file": "english-word-city.wav"
+    },
+    {
+      "key": "english-word-sleep",
+      "text": "sleep",
+      "file": "english-word-sleep.wav"
+    },
+    {
+      "key": "english-word-bright",
+      "text": "bright",
+      "file": "english-word-bright.wav"
+    },
+    {
+      "key": "english-word-birds",
+      "text": "birds",
+      "file": "english-word-birds.wav"
+    },
+    {
+      "key": "english-word-balance",
+      "text": "balance",
+      "file": "english-word-balance.wav"
+    },
+    {
+      "key": "english-word-berries",
+      "text": "berries",
+      "file": "english-word-berries.wav"
+    },
+    {
+      "key": "english-word-blue",
+      "text": "blue",
+      "file": "english-word-blue.wav"
+    },
+    {
+      "key": "english-word-lazy",
+      "text": "lazy",
+      "file": "english-word-lazy.wav"
+    },
+    {
+      "key": "english-word-coats",
+      "text": "coats",
+      "file": "english-word-coats.wav"
+    },
+    {
+      "key": "english-word-rain",
+      "text": "rain",
+      "file": "english-word-rain.wav"
+    },
+    {
+      "key": "english-word-trails",
+      "text": "trails",
+      "file": "english-word-trails.wav"
+    },
+    {
+      "key": "english-word-across",
+      "text": "across",
+      "file": "english-word-across.wav"
+    },
+    {
+      "key": "english-word-pale",
+      "text": "pale",
+      "file": "english-word-pale.wav"
+    },
+    {
+      "key": "english-word-lake",
+      "text": "lake",
+      "file": "english-word-lake.wav"
+    },
+    {
+      "key": "english-word-moon",
+      "text": "moon",
+      "file": "english-word-moon.wav"
+    },
+    {
+      "key": "english-word-lights",
+      "text": "lights",
+      "file": "english-word-lights.wav"
+    },
+    {
+      "key": "english-word-room",
+      "text": "room",
+      "file": "english-word-room.wav"
+    },
+    {
+      "key": "english-word-wait",
+      "text": "wait",
+      "file": "english-word-wait.wav"
+    },
+    {
+      "key": "english-word-by",
+      "text": "by",
+      "file": "english-word-by.wav"
+    },
+    {
+      "key": "english-word-until",
+      "text": "until",
+      "file": "english-word-until.wav"
+    },
+    {
+      "key": "english-word-late",
+      "text": "late",
+      "file": "english-word-late.wav"
+    },
+    {
+      "key": "english-word-dawn",
+      "text": "dawn",
+      "file": "english-word-dawn.wav"
+    },
+    {
+      "key": "english-word-night",
+      "text": "night",
+      "file": "english-word-night.wav"
+    },
+    {
+      "key": "english-word-slow",
+      "text": "slow",
+      "file": "english-word-slow.wav"
+    },
+    {
+      "key": "english-word-boat",
+      "text": "boat",
+      "file": "english-word-boat.wav"
+    },
+    {
+      "key": "english-word-floats",
+      "text": "floats",
+      "file": "english-word-floats.wav"
+    },
+    {
+      "key": "english-word-home",
+      "text": "home",
+      "file": "english-word-home.wav"
+    },
+    {
+      "key": "english-word-hit",
+      "text": "hit",
+      "file": "english-word-hit.wav"
+    },
+    {
+      "key": "english-word-net",
+      "text": "net",
+      "file": "english-word-net.wav"
+    },
+    {
+      "key": "english-word-duck",
+      "text": "duck",
+      "file": "english-word-duck.wav"
+    },
+    {
+      "key": "english-word-shook",
+      "text": "shook",
+      "file": "english-word-shook.wav"
+    },
+    {
+      "key": "english-word-sack",
+      "text": "sack",
+      "file": "english-word-sack.wav"
+    },
+    {
+      "key": "english-word-beam",
+      "text": "beam",
+      "file": "english-word-beam.wav"
+    },
+    {
+      "key": "english-word-of",
+      "text": "of",
+      "file": "english-word-of.wav"
+    },
+    {
+      "key": "english-word-light",
+      "text": "light",
+      "file": "english-word-light.wav"
+    },
+    {
+      "key": "english-word-road",
+      "text": "road",
+      "file": "english-word-road.wav"
+    },
+    {
+      "key": "english-word-cap",
+      "text": "cap",
+      "file": "english-word-cap.wav"
+    },
+    {
+      "key": "english-word-fell",
+      "text": "fell",
+      "file": "english-word-fell.wav"
+    },
+    {
+      "key": "english-word-beside",
+      "text": "beside",
+      "file": "english-word-beside.wav"
+    },
+    {
+      "key": "english-word-rope",
+      "text": "rope",
+      "file": "english-word-rope.wav"
+    },
+    {
+      "key": "english-word-bees",
+      "text": "bees",
+      "file": "english-word-bees.wav"
+    },
+    {
+      "key": "english-word-circle",
+      "text": "circle",
+      "file": "english-word-circle.wav"
+    },
+    {
+      "key": "english-sound-s",
+      "text": "Sail. Silver. Seven.",
+      "file": "english-sound-s.wav"
+    },
+    {
+      "key": "english-sound-k",
+      "text": "Cat. Kite. Carry.",
+      "file": "english-sound-k.wav"
+    },
+    {
+      "key": "english-sound-b",
+      "text": "Bird. Bright. Berry.",
+      "file": "english-sound-b.wav"
+    },
+    {
+      "key": "english-sound-ay",
+      "text": "Day. Rain. Lake.",
+      "file": "english-sound-ay.wav"
+    },
+    {
+      "key": "english-sound-oo",
+      "text": "Moon. Blue. Room.",
+      "file": "english-sound-oo.wav"
+    },
+    {
+      "key": "english-sound-oh",
+      "text": "Boat. Slow. Home.",
+      "file": "english-sound-oh.wav"
+    },
+    {
+      "key": "english-sound-t",
+      "text": "Net. Boat. Hit.",
+      "file": "english-sound-t.wav"
+    },
+    {
+      "key": "english-sound-m",
+      "text": "Room. Beam.",
+      "file": "english-sound-m.wav"
+    },
+    {
+      "key": "english-sound-p",
+      "text": "Cap. Rope.",
+      "file": "english-sound-p.wav"
+    }
+  ]
+}

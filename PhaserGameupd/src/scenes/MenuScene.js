@@ -47,6 +47,18 @@ export default class MenuScene extends Phaser.Scene {
     markSceneReady('MenuScene');
     // Keep the reusable cloud scene independently verifiable after Start changes.
     setTestCommand('playCloudTransition', () => this.scene.start('CloudTransitionScene'));
+    setTestCommand('startMathGame', day => {
+      if (Number.isInteger(day) && day >= 1 && day <= 5) this.scene.start('MathAdventureScene', {
+        islandId: 'numeric-ruins', quarterId: 'q1', majorId: 'numeric-ruins-q1-week-1',
+        lessonId: `numeric-ruins-q1-week-1-day-${day}`,
+      });
+    });
+    setTestCommand('startEnglishGame', day => {
+      if (Number.isInteger(day) && day >= 1 && day <= 5) this.scene.start('EnglishAdventureScene', {
+        islandId: 'reading-island', quarterId: 'q1', majorId: 'reading-island-q1-week-1',
+        lessonId: `reading-island-q1-week-1-day-${day}`,
+      });
+    });
   }
 
   openSettings() {

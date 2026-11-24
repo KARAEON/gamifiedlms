@@ -11,8 +11,8 @@ By installing or using this font, you are agree to the Product Usage Agreement:
 - If you need a custom license please contact us at foundry@ibracreative.com
 
 - Any donation are very much appreciated. Paypal account for donation: https://paypal.me/IbraCreative
-
-Feel free to visit our store for more amazing fonts: https://ibracreative.com
+ 
+Feel free to visit our store for more amazing fonts: https://ibracreative.com 
 Kindly check our instagram for update: @IbraCreative
 
 Warm regards,
@@ -34,4 +34,4 @@ Dengan meng-install font ini, Anda telah mengerti dan menyetujui semua syarat da
 
 Informasi tentang Lisensi apa yang akan anda perlukan, silahkan menghubungi kami di: ibracreativestudio@gmail.com
 
-Terima kasih.\n
+Terima kasih.

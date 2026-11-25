@@ -22,6 +22,13 @@ class PhaserResultService
      */
     public function store(User $student, array $data): array
     {
+        if ($data['entry_type'] !== 'assessment'
+            || Arr::get($this->lessonConfig((string) $data['lesson_key']), 'assessment.phase') !== 'formative') {
+            throw ValidationException::withMessages([
+                'entry_type' => 'Only Formative Test results are recorded.',
+            ]);
+        }
+
         $existing = PhaserGameResult::query()
             ->where('submission_uuid', $data['submission_uuid'])
             ->first();

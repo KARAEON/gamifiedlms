@@ -6,7 +6,6 @@ import { createMixtureIcon } from '../ui/assetIcons.js';
 import { mixtureDetectiveGame } from '../config/content.js';
 import { supplyControl, supplyGlyph, supplyPanel, supplyText, supplyHeading } from '../ui/supplyCartUi.js';
 import { getPostGameAssessmentLabel, startPostGameAssessment } from '../systems/assessmentFlow.js';
-import { submitMinigameResult } from '../systems/resultSubmission.js';
 import { markSceneReady, setTestState } from '../systems/testSeam.js';
 import { createBottomFeedback, createSparkles } from '../ui/minigameUi.js';
 import { closeOpenModal, showModal, textStyle } from '../ui/ui.js';
@@ -33,7 +32,6 @@ export default class MixtureDetectiveScene extends Phaser.Scene {
   }
 
   create() {
-    this.__glmsSubmissions = {};
     this.score = 0;
     this.streak = 0;
     this.selectedOptionId = null;
@@ -500,16 +498,6 @@ export default class MixtureDetectiveScene extends Phaser.Scene {
     }
 
     this.result = won ? 'win' : 'lose';
-    submitMinigameResult(this, {
-      lessonKey: this.lessonId,
-      gameKey: mixtureDetectiveGame.id,
-      payloadBuilder: () => ({
-        correct_question_count: this.correctCount,
-        mistake_count: this.mistakes,
-        final_selections: { ...this.finalSelections },
-        time_remaining_seconds: this.timeRemaining,
-      }),
-    });
     this.phase = 'result';
     this.updateHudText();
     this.updateTestState();

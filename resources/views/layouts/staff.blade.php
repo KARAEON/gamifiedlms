@@ -18,7 +18,7 @@
         'Overview' => [['dashboard', 'Dashboard']],
         'Classes' => [['sections', 'Sections'], ['students', 'Students']],
         'Teaching' => [['lessons', 'Lessons and Topics'], ['activities', 'Activities'], ['workflow', 'Instructional Flow']],
-        'Assessment' => [['scores', 'Game Scores'], ['grading', 'Grading']],
+        'Assessment' => [['scores', 'FT Scores'], ['grading', 'Grading']],
         'Insights' => [['analytics', 'Analytics'], ['insights', 'Decision Support'], ['reports', 'Reports']],
     ] : [
         'School management' => [['dashboard', 'Overview'], ['school-term', 'School Term'], ['reports', 'Reports'], ['policies', 'Policies'], ['audit', 'Audit Trail']],

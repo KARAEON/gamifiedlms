@@ -3,6 +3,10 @@
 namespace Tests\Feature;
 
 use App\Models\PhaserGameResult;
+use App\Models\Activity;
+use App\Models\Attempt;
+use App\Models\Lesson;
+use App\Models\ScoreRecord;
 use App\Models\Section;
 use App\Models\SectionPhaserMajorLock;
 use App\Models\SectionPhaserLessonLock;
@@ -18,7 +22,7 @@ class StudentPhaserResultTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_phaser_score_appears_in_science_written_works_for_its_lesson_quarter(): void
+    public function test_only_formative_test_score_appears_in_science_written_works_and_export(): void
     {
         Carbon::setTestNow('2026-11-26 12:00:00');
 
@@ -29,18 +33,40 @@ class StudentPhaserResultTest extends TestCase
 
             $this->actingAs($student)->postJson(route('student.phaser-results.store'), [
                 'submission_uuid' => '0f9e92c9-2136-469c-8db3-ea0dc2f94436',
-                'entry_type' => 'minigame',
+                'entry_type' => 'assessment',
                 'lesson_key' => 'q1-m1-l1',
-                'game_key' => 'mix-match-memory-quest',
+                'game_key' => 'ft-q1-mixtures-l1',
                 'payload' => [
-                    'matched_set_count' => 4,
-                    'fast_match_count' => 2,
-                    'finished_all' => true,
-                    'time_remaining_seconds' => 18.4,
+                    'answers' => [
+                        'l1-1' => 'Uniform Mixture',
+                        'l1-2' => 'Uniform Mixture',
+                        'l1-3' => 'Its parts are visible',
+                        'l1-4' => 'Components can be seen separately',
+                        'l1-5' => 'Uniform - Salt Water - Same throughout',
+                    ],
                 ],
             ])->assertCreated();
 
-            $result = PhaserGameResult::query()->sole();
+            $result = PhaserGameResult::query()->where('phase', 'formative')->sole();
+            PhaserGameResult::query()->create([
+                'student_id' => $student->id,
+                'section_id' => $section->id,
+                'lesson_key' => 'q1-m1-l1',
+                'lesson_title' => 'Mixtures 1',
+                'game_key' => 'mix-match-memory-quest',
+                'entry_type' => 'minigame',
+                'phase' => 'gamified',
+                'game_title' => 'MIX MATCH MEMORY QUEST',
+                'topic_title' => 'Q1 MATTER - MIXTURES',
+                'submission_uuid' => 'c7b8c0a7-32ef-4ce7-9004-f5a0d1cf1f81',
+                'attempt_number' => 1,
+                'score' => 120,
+                'max_score' => 150,
+                'accuracy' => 80,
+                'result_status' => 'win',
+                'payload' => ['input' => [], 'derived' => []],
+                'completed_at' => now(),
+            ]);
             $grades = app(GradeComputationService::class);
             $scienceQ1 = $grades->computeForStudentSubjectQuarter($student, 'Science', 1);
             $scienceQ4 = $grades->computeForStudentSubjectQuarter($student, 'Science', 4);
@@ -79,7 +105,7 @@ class StudentPhaserResultTest extends TestCase
         }
     }
 
-    public function test_student_can_store_a_phaser_minigame_result(): void
+    public function test_normal_game_result_is_not_recorded(): void
     {
         [$student, $section] = $this->buildStudent();
 
@@ -96,24 +122,60 @@ class StudentPhaserResultTest extends TestCase
             ],
         ]);
 
-        $response->assertCreated()
-            ->assertJson([
-                'stored' => true,
-                'created' => true,
-                'result_status' => 'win',
-                'attempt_number' => 1,
-            ]);
+        $response->assertStatus(422)->assertJsonValidationErrors(['entry_type']);
+        $this->assertDatabaseCount('phaser_game_results', 0);
+    }
 
-        $this->assertDatabaseHas('phaser_game_results', [
-            'student_id' => $student->id,
-            'section_id' => $section->id,
-            'lesson_key' => 'q1-m1-l1',
-            'game_key' => 'mix-match-memory-quest',
-            'entry_type' => 'minigame',
-            'phase' => 'gamified',
-            'game_title' => 'MIX MATCH MEMORY QUEST',
-            'result_status' => 'win',
-        ]);
+    public function test_summative_test_is_not_recorded_as_a_formative_test(): void
+    {
+        [$student] = $this->buildStudent();
+
+        $this->actingAs($student)->postJson(route('student.phaser-results.store'), [
+            'submission_uuid' => 'fb5fe76a-4914-4dc5-9413-80d6686d0d8f',
+            'entry_type' => 'assessment',
+            'lesson_key' => 'q1-m1-l5',
+            'game_key' => 'st-q1-mixtures',
+            'payload' => ['answers' => []],
+        ])->assertStatus(422)->assertJsonValidationErrors(['entry_type']);
+
+        $this->assertDatabaseCount('phaser_game_results', 0);
+    }
+
+    public function test_regular_game_activity_score_does_not_contribute_to_written_works(): void
+    {
+        Carbon::setTestNow('2026-02-15 12:00:00');
+
+        try {
+            [$student, $section] = $this->buildStudent();
+            $lesson = Lesson::factory()->create(['subject' => 'Science']);
+            $game = Activity::factory()->create(['instructional_phase' => 'gamified']);
+            $formativeTest = Activity::factory()->create(['instructional_phase' => 'formative']);
+
+            foreach ([[$game, 90], [$formativeTest, 4]] as [$activity, $score]) {
+                ScoreRecord::factory()->create([
+                    'student_id' => $student->id,
+                    'section_id' => $section->id,
+                    'lesson_id' => $lesson->id,
+                    'activity_id' => $activity->id,
+                    'attempt_id' => Attempt::factory()->create([
+                        'student_id' => $student->id,
+                        'section_id' => $section->id,
+                        'activity_id' => $activity->id,
+                    ])->id,
+                    'score' => $score,
+                    'max_score' => $activity->id === $game->id ? 100 : 5,
+                    'attempted_at' => now(),
+                ]);
+            }
+
+            $writtenWorks = app(GradeComputationService::class)
+                ->computeForStudentSubjectQuarter($student, 'Science', 1)['written_works'];
+
+            $this->assertEquals(4, $writtenWorks['total']);
+            $this->assertEquals(5, $writtenWorks['hps_total']);
+        } finally {
+            Carbon::setTestNow();
+        }
     }
 
     public function test_duplicate_submission_uuid_returns_the_existing_result(): void
@@ -162,16 +224,17 @@ class StudentPhaserResultTest extends TestCase
 
         $response = $this->actingAs($student)->postJson(route('student.phaser-results.store'), [
             'submission_uuid' => '7818d965-584e-4d22-89d2-00ea2969bdb1',
-            'entry_type' => 'minigame',
+            'entry_type' => 'assessment',
             'lesson_key' => 'q1-m1-l2',
-            'game_key' => 'supply-cart-sorting',
+            'game_key' => 'ft-q1-mixtures-l2',
             'payload' => [
-                'correct_sort_count' => 6,
-                'sort_attempt_count' => 6,
-                'correct_use_count' => 6,
-                'completed_item_count' => 6,
-                'best_combo' => 4,
-                'time_remaining_seconds' => 21.5,
+                'answers' => [
+                    'l2-1' => 'Uniform Mixture',
+                    'l2-2' => 'Non-uniform Mixture',
+                    'l2-3' => 'Beverage',
+                    'l2-4' => 'Cereal pieces are visible',
+                    'l2-5' => 'Construction',
+                ],
             ],
         ]);
 
@@ -193,14 +256,17 @@ class StudentPhaserResultTest extends TestCase
 
         $response = $this->actingAs($student)->postJson(route('student.phaser-results.store'), [
             'submission_uuid' => '6529e0d2-2709-44ac-9fdd-3250a8f31fd6',
-            'entry_type' => 'minigame',
+            'entry_type' => 'assessment',
             'lesson_key' => 'q1-m1-l1',
-            'game_key' => 'mix-match-memory-quest',
+            'game_key' => 'ft-q1-mixtures-l1',
             'payload' => [
-                'matched_set_count' => 4,
-                'fast_match_count' => 2,
-                'finished_all' => true,
-                'time_remaining_seconds' => 18.4,
+                'answers' => [
+                    'l1-1' => 'Uniform Mixture',
+                    'l1-2' => 'Uniform Mixture',
+                    'l1-3' => 'Its parts are visible',
+                    'l1-4' => 'Components can be seen separately',
+                    'l1-5' => 'Uniform - Salt Water - Same throughout',
+                ],
             ],
         ]);
 

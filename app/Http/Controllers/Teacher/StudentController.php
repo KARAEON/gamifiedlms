@@ -100,9 +100,12 @@ class StudentController extends Controller
         $this->ensureTeacherCanManageStudent($request, $student);
 
         $student->load('studentProfile.section');
-        $attempts = $student->attempts()->with('activity.topic.lesson')->latest('completed_at')->paginate(10);
-        $scoreRecords = $student->scoreRecords()->with('topic.lesson')->latest('attempted_at')->take(10)->get();
-        $gameResults = $student->phaserGameResults()->latest('completed_at')->take(10)->get();
+        $attempts = $student->attempts()->whereHas('activity', fn ($builder) => $builder->where('instructional_phase', 'formative'))
+            ->with('activity.topic.lesson')->latest('completed_at')->paginate(10);
+        $scoreRecords = $student->scoreRecords()->whereHas('activity', fn ($builder) => $builder->where('instructional_phase', 'formative'))
+            ->with('topic.lesson')->latest('attempted_at')->take(10)->get();
+        $gameResults = $student->phaserGameResults()->where('entry_type', 'assessment')->where('phase', 'formative')
+            ->latest('completed_at')->take(10)->get();
 
         return view('teacher.students.show', [
             'student' => $student,

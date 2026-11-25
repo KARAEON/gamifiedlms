@@ -46,15 +46,17 @@ class GradeComputationService
         $wwRecords = ScoreRecord::query()
             ->where('student_id', $student->id)
             ->whereHas('lesson', fn ($builder) => $builder->where('subject', $subject))
+            ->whereHas('activity', fn ($builder) => $builder->where('instructional_phase', 'formative'))
             ->whereBetween('attempted_at', $this->quarterDateRange($quarter))
             ->get(['score', 'max_score']);
 
-        // Phaser lessons currently belong to the Science curriculum. Keep their
-        // game results in the same Written Works total shown on the grade sheet.
+        // Only Formative Test results contribute to Written Works.
         $phaserRecords = $subject === 'Science'
             ? PhaserGameResult::query()
                 ->where('student_id', $student->id)
                 ->where('lesson_key', 'like', 'q'.$quarter.'-%')
+                ->where('entry_type', 'assessment')
+                ->where('phase', 'formative')
                 ->get(['score', 'max_score'])
             : collect();
 
@@ -193,6 +195,7 @@ class GradeComputationService
         $wwRecords = ScoreRecord::query()
             ->where('student_id', $student->id)
             ->whereHas('lesson', fn ($builder) => $builder->where('subject', $subject))
+            ->whereHas('activity', fn ($builder) => $builder->where('instructional_phase', 'formative'))
             ->whereBetween('attempted_at', $this->quarterDateRange($quarter))
             ->get(['score', 'max_score']);
 
@@ -200,6 +203,8 @@ class GradeComputationService
             ? PhaserGameResult::query()
                 ->where('student_id', $student->id)
                 ->where('lesson_key', 'like', 'q'.$quarter.'-%')
+                ->where('entry_type', 'assessment')
+                ->where('phase', 'formative')
                 ->get(['score', 'max_score'])
             : collect();
 

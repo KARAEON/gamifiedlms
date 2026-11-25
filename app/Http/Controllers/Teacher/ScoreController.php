@@ -54,7 +54,8 @@ class ScoreController extends Controller
         }
 
         $students = $studentsQuery->get(['id', 'name']);
-        $activities = Activity::query()->orderBy('title')->get(['id', 'title', 'activity_type']);
+        $activities = Activity::query()->where('instructional_phase', 'formative')
+            ->orderBy('title')->get(['id', 'title', 'activity_type']);
         $feed = $this->teacherScoreFeedService->build(
             $filters,
             $allowedSectionIds,

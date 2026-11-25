@@ -18,7 +18,7 @@
 
 
         <section class="panel p-5">
-            <h2 class="text-lg font-semibold text-slate-900">Recent Performance</h2>
+            <h2 class="text-lg font-semibold text-slate-900">Recent Formative Performance</h2>
             <div class="table-wrap mt-4">
                 <table class="data-table">
                     <thead>
@@ -50,7 +50,7 @@
         </section>
 
         <section class="panel p-5">
-            <h2 class="text-lg font-semibold text-slate-900">Game Scores</h2>
+            <h2 class="text-lg font-semibold text-slate-900">Formative Test Scores</h2>
             <div class="table-wrap mt-4">
                 <table class="data-table">
                     <thead><tr><th scope="col">Game</th><th scope="col">Lesson</th><th scope="col">Score</th><th scope="col">Accuracy</th><th scope="col">Attempt</th><th scope="col">Date</th></tr></thead>
@@ -65,7 +65,7 @@
                                 <td class="py-3">{{ optional($result->completed_at)->format('M d, Y h:i A') }}</td>
                             </tr>
                         @empty
-                            <tr><td colspan="6" class="py-6"><div class="empty-state">No game scores recorded yet for this learner.</div></td></tr>
+                            <tr><td colspan="6" class="py-6"><div class="empty-state">No Formative Test scores recorded yet for this learner.</div></td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -73,7 +73,7 @@
         </section>
 
         <section class="panel p-5">
-            <h2 class="text-lg font-semibold text-slate-900">Attempt History</h2>
+            <h2 class="text-lg font-semibold text-slate-900">Formative Attempt History</h2>
             <div class="mt-4 space-y-3">
                 @forelse ($attempts as $attempt)
                     <article class="rounded-xl border border-slate-200 p-4">

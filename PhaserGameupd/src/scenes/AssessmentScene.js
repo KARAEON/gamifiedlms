@@ -280,7 +280,7 @@ export default class AssessmentScene extends Phaser.Scene {
 
   showResult() {
     this.result = this.getPercent() >= this.assessment.passPercent ? 'pass' : 'fail';
-    if (/^q1-m1-l[1-5]$/.test(this.lessonId)) {
+    if (/^q1-m1-l[1-4]$/.test(this.lessonId)) {
       submitAssessmentResult(this, {
         lessonKey: this.lessonId,
         gameKey: this.assessment.id,

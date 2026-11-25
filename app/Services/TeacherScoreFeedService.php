@@ -81,7 +81,8 @@ class TeacherScoreFeedService
                 'activity:id,title,activity_type,instructional_phase',
                 'attempt:id,attempt_number',
             ])
-            ->whereHas('student', fn ($builder) => $builder->where('role', UserRole::STUDENT));
+            ->whereHas('student', fn ($builder) => $builder->where('role', UserRole::STUDENT))
+            ->whereHas('activity', fn ($builder) => $builder->where('instructional_phase', 'formative'));
 
         if ($allowedSectionIds->isNotEmpty()) {
             $query->where(function ($builder) use ($allowedSectionIds): void {
@@ -176,7 +177,9 @@ class TeacherScoreFeedService
                 'student:id,name,email',
                 'section:id,name',
             ])
-            ->whereHas('student', fn ($builder) => $builder->where('role', UserRole::STUDENT));
+            ->whereHas('student', fn ($builder) => $builder->where('role', UserRole::STUDENT))
+            ->where('entry_type', 'assessment')
+            ->where('phase', 'formative');
 
         if ($allowedSectionIds->isNotEmpty()) {
             $query->where(function ($builder) use ($allowedSectionIds): void {

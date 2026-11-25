@@ -87,7 +87,7 @@
                     @elseif ($isTeacher)
                         <x-nav-link :href="route('teacher.dashboard')" :active="request()->routeIs('teacher.dashboard')" icon="D">Dashboard</x-nav-link>
                         <x-nav-link :href="route('teacher.students.index')" :active="request()->routeIs('teacher.students.*')" icon="ST">Students</x-nav-link>
-                        <x-nav-link :href="route('teacher.scores.index')" :active="request()->routeIs('teacher.scores.*')" icon="GS">Game Scores</x-nav-link>
+                        <x-nav-link :href="route('teacher.scores.index')" :active="request()->routeIs('teacher.scores.*')" icon="GS">FT Scores</x-nav-link>
                         <x-nav-link :href="route('teacher.grading.index')" :active="request()->routeIs('teacher.grading.*')" icon="RP">Grading</x-nav-link>
                         <x-nav-link :href="route('teacher.sections.index')" :active="request()->routeIs('teacher.sections.*')" icon="SC">Sections</x-nav-link>
                         <x-nav-link :href="route('teacher.lessons.index')" :active="request()->routeIs('teacher.lessons.*') || request()->routeIs('teacher.topics.*')" icon="LS">Lessons and Topics</x-nav-link>

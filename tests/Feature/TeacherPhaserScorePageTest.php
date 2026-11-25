@@ -13,7 +13,7 @@ class TeacherPhaserScorePageTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_teacher_scores_page_shows_phaser_results(): void
+    public function test_teacher_scores_page_shows_only_formative_tests(): void
     {
         $teacher = User::factory()->teacher()->create();
         $student = User::factory()->student()->create([
@@ -50,18 +50,39 @@ class TeacherPhaserScorePageTest extends TestCase
             'completed_at' => now()->subDays(45),
         ]);
 
+        PhaserGameResult::query()->create([
+            'student_id' => $student->id,
+            'section_id' => $section->id,
+            'lesson_key' => 'q1-m1-l1',
+            'lesson_title' => 'Mixtures 1',
+            'game_key' => 'ft-q1-mixtures-l1',
+            'entry_type' => 'assessment',
+            'phase' => 'formative',
+            'game_title' => 'FORMATIVE TEST - MIXTURES LESSON 1',
+            'topic_title' => 'Q1 MATTER - MIXTURES',
+            'submission_uuid' => '0f9e92c9-2136-469c-8db3-ea0dc2f94436',
+            'attempt_number' => 1,
+            'score' => 4,
+            'max_score' => 5,
+            'accuracy' => 80,
+            'result_status' => 'pass',
+            'payload' => ['input' => [], 'derived' => []],
+            'completed_at' => now()->subDays(45),
+        ]);
+
         $this->actingAs($teacher)
             ->get(route('teacher.scores.index', ['source' => 'phaser']))
             ->assertOk()
-            ->assertSee('MIX MATCH MEMORY QUEST')
-            ->assertSee('Phaser Minigame')
+            ->assertSee('FORMATIVE TEST - MIXTURES LESSON 1')
+            ->assertDontSee('MIX MATCH MEMORY QUEST')
             ->assertSee('Phaser Student')
             ->assertSee('Grade 6 - Actual');
 
         $this->actingAs($teacher)
             ->get(route('teacher.students.show', $student))
             ->assertOk()
-            ->assertSee('Game Scores')
-            ->assertSee('MIX MATCH MEMORY QUEST');
+            ->assertSee('Formative Test Scores')
+            ->assertSee('FORMATIVE TEST - MIXTURES LESSON 1')
+            ->assertDontSee('MIX MATCH MEMORY QUEST');
     }
 }

@@ -1,6 +1,6 @@
-<x-app-layout title="Game Scores">
+<x-app-layout title="FT Scores">
     <div class="space-y-6">
-        <x-staff.page-heading title="Student Game Scores" description="Monitor activity results, compare score quality, and review recent attempts across learners." eyebrow="Teaching and learning"></x-staff.page-heading>
+        <x-staff.page-heading title="Student Formative Test Scores" description="Review saved Formative Test results across learners." eyebrow="Teaching and learning"></x-staff.page-heading>
 
         <section class="filter-panel">
             <form method="GET" action="{{ route('teacher.scores.index') }}" class="grid gap-3 md:grid-cols-2 xl:grid-cols-8">
@@ -64,8 +64,7 @@
                     <div>
                         <label class="mb-1 block text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Result Type</label>
                         <select name="result_type" class="input-field">
-                            <option value="">All Phaser results</option>
-                            <option value="minigame" @selected($filters['result_type'] === 'minigame')>Minigame</option>
+                            <option value="">All Formative Tests</option>
                             <option value="assessment" @selected($filters['result_type'] === 'assessment')>Assessment</option>
                         </select>
                     </div>
@@ -118,7 +117,7 @@
             <article class="metric-card">
                 <p class="metric-label">Total Attempts</p>
                 <p class="metric-value">{{ number_format($summary['total_attempts']) }}</p>
-                <p class="mt-1 text-xs text-slate-500">Filtered game submissions</p>
+                <p class="mt-1 text-xs text-slate-500">Filtered Formative Test submissions</p>
             </article>
             <article class="metric-card">
                 <p class="metric-label">Average Score</p>
@@ -145,7 +144,7 @@
                             <th scope="col">Date</th>
                             <th scope="col">Student</th>
                             <th scope="col">Section</th>
-                            <th scope="col">Game</th>
+                            <th scope="col">Test</th>
                             <th scope="col">Phase</th>
                             <th scope="col">Topic</th>
                             <th scope="col">Score</th>
@@ -186,7 +185,7 @@
                         @empty
                             <tr>
                                 <td colspan="10" class="py-6">
-                                    <div class="empty-state">No game scores found for the current filters.</div>
+                                    <div class="empty-state">No Formative Test scores found for the current filters.</div>
                                 </td>
                             </tr>
                         @endforelse

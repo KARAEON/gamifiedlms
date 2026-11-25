@@ -147,14 +147,11 @@ DB_PASSWORD=
 ```bash
 php artisan migrate:fresh --seed
 ```
-5. Build frontend:
+5. Start the local app (Laravel and Vite):
 ```bash
-npm run dev
+npm run start
 ```
-6. Start app:
-```bash
-php artisan serve
-```
+The app is available at `http://127.0.0.1:8000`. This command clears any stale Laravel Vite marker before starting both servers, so an unresponsive Vite process cannot leave the page unstyled on a later run. Use `Ctrl+C` to stop both processes.
 
 ## Important Environment Note
 This codebase targets Laravel 12 and PHP 8.3+.

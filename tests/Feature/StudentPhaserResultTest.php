@@ -8,12 +8,61 @@ use App\Models\SectionPhaserMajorLock;
 use App\Models\SectionPhaserLessonLock;
 use App\Models\StudentProfile;
 use App\Models\User;
+use App\Services\GradeComputationService;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class StudentPhaserResultTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_phaser_score_appears_in_science_written_works_for_its_lesson_quarter(): void
+    {
+        Carbon::setTestNow('2026-11-26 12:00:00');
+
+        try {
+            [$student, $section] = $this->buildStudent();
+            $teacher = User::factory()->teacher()->create();
+            $section->teachers()->attach($teacher->id);
+
+            $this->actingAs($student)->postJson(route('student.phaser-results.store'), [
+                'submission_uuid' => '0f9e92c9-2136-469c-8db3-ea0dc2f94436',
+                'entry_type' => 'minigame',
+                'lesson_key' => 'q1-m1-l1',
+                'game_key' => 'mix-match-memory-quest',
+                'payload' => [
+                    'matched_set_count' => 4,
+                    'fast_match_count' => 2,
+                    'finished_all' => true,
+                    'time_remaining_seconds' => 18.4,
+                ],
+            ])->assertCreated();
+
+            $result = PhaserGameResult::query()->sole();
+            $grades = app(GradeComputationService::class);
+            $scienceQ1 = $grades->computeForStudentSubjectQuarter($student, 'Science', 1);
+            $scienceQ4 = $grades->computeForStudentSubjectQuarter($student, 'Science', 4);
+            $englishQ1 = $grades->computeForStudentSubjectQuarter($student, 'English', 1);
+
+            $this->assertEquals($result->score, $scienceQ1['written_works']['total']);
+            $this->assertEquals($result->max_score, $scienceQ1['written_works']['hps_total']);
+            $this->assertSame(0, $scienceQ4['written_works']['hps_total']);
+            $this->assertSame(0, $englishQ1['written_works']['hps_total']);
+
+            $this->actingAs($teacher)
+                ->get(route('teacher.grading.index', [
+                    'section_id' => $section->id,
+                    'subject' => 'Science',
+                    'quarter' => 1,
+                ]))
+                ->assertOk()
+                ->assertSee((string) $result->score)
+                ->assertSee((string) $result->max_score);
+        } finally {
+            Carbon::setTestNow();
+        }
+    }
 
     public function test_student_can_store_a_phaser_minigame_result(): void
     {

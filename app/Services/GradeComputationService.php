@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\GradeEntry;
+use App\Models\PhaserGameResult;
 use App\Models\ScoreRecord;
 use App\Models\User;
 use Carbon\Carbon;
@@ -48,6 +49,15 @@ class GradeComputationService
             ->whereBetween('attempted_at', $this->quarterDateRange($quarter))
             ->get(['score', 'max_score']);
 
+        // Phaser lessons currently belong to the Science curriculum. Keep their
+        // game results in the same Written Works total shown on the grade sheet.
+        $phaserRecords = $subject === 'Science'
+            ? PhaserGameResult::query()
+                ->where('student_id', $student->id)
+                ->where('lesson_key', 'like', 'q'.$quarter.'-%')
+                ->get(['score', 'max_score'])
+            : collect();
+
         $entry = Schema::hasTable('grade_entries')
             ? GradeEntry::query()
                 ->where('student_id', $student->id)
@@ -57,8 +67,8 @@ class GradeComputationService
             : null;
 
         $writtenWorks = $this->computeComponent(
-            $wwRecords->sum('score'),
-            $wwRecords->sum('max_score'),
+            $wwRecords->sum('score') + $phaserRecords->sum('score'),
+            $wwRecords->sum('max_score') + $phaserRecords->sum('max_score'),
             $weights['ww']
         );
 
@@ -186,6 +196,13 @@ class GradeComputationService
             ->whereBetween('attempted_at', $this->quarterDateRange($quarter))
             ->get(['score', 'max_score']);
 
+        $phaserRecords = $subject === 'Science'
+            ? PhaserGameResult::query()
+                ->where('student_id', $student->id)
+                ->where('lesson_key', 'like', 'q'.$quarter.'-%')
+                ->get(['score', 'max_score'])
+            : collect();
+
         $entry = Schema::hasTable('grade_entries')
             ? GradeEntry::query()
                 ->where('student_id', $student->id)
@@ -194,7 +211,11 @@ class GradeComputationService
                 ->first()
             : null;
 
-        $ww = $this->computeComponent($wwRecords->sum('score'), $wwRecords->sum('max_score'), $weights['ww']);
+        $ww = $this->computeComponent(
+            $wwRecords->sum('score') + $phaserRecords->sum('score'),
+            $wwRecords->sum('max_score') + $phaserRecords->sum('max_score'),
+            $weights['ww'],
+        );
         [$ptTotal, $ptHpsTotal] = $this->resolvePerformanceTaskValues($entry);
         $pt = $this->computeComponent($ptTotal, $ptHpsTotal, $weights['pt']);
         $qa = $this->computeComponent($entry?->quarterly_assessment_score, $entry?->quarterly_assessment_hps, $weights['qa']);

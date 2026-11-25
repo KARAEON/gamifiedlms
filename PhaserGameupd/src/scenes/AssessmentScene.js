@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { getAssessmentForLesson } from '../config/content.js';
+import { selectAssessmentItems } from '../systems/assessmentSelection.js';
 import { submitAssessmentResult } from '../systems/resultSubmission.js';
 import { GAME_HEIGHT, GAME_WIDTH } from '../config/gameConfig.js';
 import { markSceneReady, setTestState } from '../systems/testSeam.js';
@@ -28,7 +29,8 @@ export default class AssessmentScene extends Phaser.Scene {
     this.returnScrollY = Number.isFinite(data.returnScrollY) ? data.returnScrollY : 0;
     this.minigameResult = data.minigameResult ?? null;
     this.minigameScore = Number.isFinite(data.minigameScore) ? data.minigameScore : 0;
-    this.assessment = window.GLMS_PHASER?.assessments?.[this.lessonId] ?? getAssessmentForLesson(this.lessonId);
+    const assessment = window.GLMS_PHASER?.assessments?.[this.lessonId] ?? getAssessmentForLesson(this.lessonId);
+    this.assessment = selectAssessmentItems(this.lessonId, assessment);
     this.currentModal = null;
   }
 
@@ -284,7 +286,10 @@ export default class AssessmentScene extends Phaser.Scene {
       submitAssessmentResult(this, {
         lessonKey: this.lessonId,
         gameKey: this.assessment.id,
-        payloadBuilder: () => ({ answers: { ...this.answers } }),
+        payloadBuilder: () => ({
+          item_ids: this.assessment.items.map((item) => item.id),
+          answers: { ...this.answers },
+        }),
       });
     }
     this.phase = 'result';

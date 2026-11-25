@@ -275,7 +275,8 @@ class DemoDataSeeder extends Seeder
             }
         }
         if ($bank) {
-            $activity->update(['is_active' => $bank->questions()->count() >= 50 && $bank->questions()->count() <= 100]);
+            $required = $bank->phase === ActivityPhase::SUMMATIVE->value ? 100 : 50;
+            $activity->update(['is_active' => $bank->questions()->count() === $required]);
         }
     }
 

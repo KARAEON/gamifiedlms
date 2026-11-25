@@ -38,21 +38,13 @@ class ActivityPlayer extends Component
         $this->authorize('view', $activity);
 
         $this->activity = $activity->load('topic.lesson');
-        if (in_array($activity->instructional_phase?->value, ['formative', 'summative'], true)) {
-            $bank = QuestionBank::query()->where('topic_id', $activity->topic_id)->where('phase', $activity->instructional_phase->value)->withCount('questions')->first();
-            if ($bank && $bank->questions_count > 0) {
-                $count = min((int) $bank->questions_per_attempt, $bank->questions_count);
-                $this->selectedQuestionIds = $bank->questions()->inRandomOrder()->limit($count)->pluck('id')->map(fn ($id) => (int) $id)->all();
-            }
-        }
+        $this->selectQuestions();
         if ($this->selectedQuestionIds === []) {
             $this->selectedQuestionIds = $activity->questions()->pluck('id')->map(fn ($id) => (int) $id)->all();
         }
         $this->startedAt = now()->timestamp;
 
-        foreach ($this->questions() as $question) {
-            $this->responses[$question->id] = $question->question_type === 'matching' ? [] : '';
-        }
+        $this->resetResponses();
     }
 
     public function submitAnswers(): void
@@ -102,12 +94,42 @@ class ActivityPlayer extends Component
             return;
         }
 
+        $this->selectQuestions();
+        $this->resetResponses();
+        $this->resetErrorBag();
+        $this->result = null;
+        $this->startedAt = now()->timestamp;
+    }
+
+    private function selectQuestions(): void
+    {
+        $previous = $this->selectedQuestionIds;
+        if (in_array($this->activity->instructional_phase?->value, ['formative', 'summative'], true)) {
+            $bank = QuestionBank::query()->where('topic_id', $this->activity->topic_id)
+                ->where('phase', $this->activity->instructional_phase->value)->first();
+            if ($bank) {
+                $pool = $bank->questions()->pluck('id')->map(fn ($id) => (int) $id)->shuffle()->values();
+                $count = min((int) $bank->questions_per_attempt, $pool->count());
+                $selected = $pool->take($count)->all();
+                if ($count > 0 && $selected === $previous && $pool->count() > $count) {
+                    $selected[$count - 1] = $pool[$count];
+                } elseif ($selected === $previous && $count > 1) {
+                    [$selected[0], $selected[1]] = [$selected[1], $selected[0]];
+                }
+                $this->selectedQuestionIds = $selected;
+                return;
+            }
+        }
+
+        $this->selectedQuestionIds = $this->activity->questions()->pluck('id')->map(fn ($id) => (int) $id)->all();
+    }
+
+    private function resetResponses(): void
+    {
+        $this->responses = [];
         foreach ($this->questions() as $question) {
             $this->responses[$question->id] = $question->question_type === 'matching' ? [] : '';
         }
-
-        $this->result = null;
-        $this->startedAt = now()->timestamp;
     }
 
     public function render()

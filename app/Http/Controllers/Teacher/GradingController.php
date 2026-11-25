@@ -323,7 +323,38 @@ class GradingController extends Controller
         $zip->addFromString('xl/worksheets/'.$file,
             '<?xml version="1.0" encoding="UTF-8"?><worksheet xmlns="'.$mainNs.'"><sheetData>'.$sheetRows.'</sheetData></worksheet>');
 
+        $this->removeWorksheetProtection($zip, $mainNs);
+
         return $zip->close();
+    }
+
+    private function removeWorksheetProtection(\ZipArchive $zip, string $namespace): void
+    {
+        for ($index = 0; $index < $zip->numFiles; $index++) {
+            $name = $zip->getNameIndex($index);
+            if (! is_string($name) || ! preg_match('~^xl/worksheets/[^/]+\.xml$~', $name)) {
+                continue;
+            }
+
+            $xml = $zip->getFromIndex($index);
+            if (! is_string($xml) || ! str_contains($xml, 'sheetProtection')) {
+                continue;
+            }
+
+            $document = new \DOMDocument();
+            if (! $document->loadXML($xml)) {
+                continue;
+            }
+            $this->removeSheetProtection($document, $namespace);
+            $zip->addFromString($name, $document->saveXML());
+        }
+    }
+
+    private function removeSheetProtection(\DOMDocument $document, string $namespace): void
+    {
+        foreach (iterator_to_array($document->getElementsByTagNameNS($namespace, 'sheetProtection')) as $protection) {
+            $protection->parentNode->removeChild($protection);
+        }
     }
 
     /** @param array<int, array{name: string, grade: array<string, mixed>}> $records */
@@ -344,6 +375,7 @@ class GradingController extends Controller
             if (! $document->loadXML($xml)) {
                 continue;
             }
+            $this->removeSheetProtection($document, $namespace);
             $sharedMasters = [];
             foreach ($document->getElementsByTagNameNS($namespace, 'f') as $formula) {
                 if ($formula->getAttribute('t') === 'shared' && trim($formula->textContent) !== '') {

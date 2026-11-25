@@ -167,7 +167,24 @@ class PhaserResultService
             ]);
         }
 
-        $items = $assessment['items'];
+        $pool = $assessment['items'];
+        $perAttempt = (int) ($bankAssessment['itemsPerAttempt'] ?? count($pool));
+        $selectedIds = Arr::get($payload, 'item_ids');
+        if ($selectedIds === null) {
+            // Older clients submit the original fixed set of questions.
+            $items = array_slice($pool, 0, $perAttempt);
+        } else {
+            $poolById = collect($pool)->keyBy('id');
+            if (! is_array($selectedIds) || ! array_is_list($selectedIds)
+                || count($selectedIds) !== $perAttempt
+                || collect($selectedIds)->contains(fn ($id) => ! is_string($id) || ! $poolById->has($id))
+                || count(array_unique($selectedIds)) !== $perAttempt) {
+                throw ValidationException::withMessages([
+                    'payload.item_ids' => 'The selected assessment questions are invalid.',
+                ]);
+            }
+            $items = array_map(fn (string $id) => $poolById->get($id), $selectedIds);
+        }
         $itemIds = array_map(static fn (array $item): string => (string) $item['id'], $items);
 
         foreach ($itemIds as $itemId) {

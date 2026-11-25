@@ -67,8 +67,9 @@ class ActivityController extends Controller
         if ($payload['is_active'] && in_array($payload['instructional_phase'], [ActivityPhase::FORMATIVE->value, ActivityPhase::SUMMATIVE->value], true)) {
             $bank = QuestionBank::query()->where('topic_id', $payload['topic_id'])->where('phase', $payload['instructional_phase'])->first();
             $count = $bank?->questions()->count() ?? 0;
-            if ($count < 50 || $count > 100) {
-                throw ValidationException::withMessages(['is_active' => 'An FT/ST assessment can only be activated when its bank has 50 to 100 questions.']);
+            $required = $this->requiredQuestionCount($payload['instructional_phase']);
+            if ($count !== $required) {
+                throw ValidationException::withMessages(['is_active' => "This assessment needs {$required} bank questions before activation."]);
             }
         }
 
@@ -97,8 +98,9 @@ class ActivityController extends Controller
         if ($payload['is_active'] && in_array($payload['instructional_phase'], [ActivityPhase::FORMATIVE->value, ActivityPhase::SUMMATIVE->value], true)) {
             $bank = QuestionBank::query()->where('topic_id', $payload['topic_id'])->where('phase', $payload['instructional_phase'])->first();
             $count = $bank?->questions()->count() ?? 0;
-            if ($count < 50 || $count > 100) {
-                throw ValidationException::withMessages(['is_active' => 'An FT/ST assessment can only be activated when its bank has 50 to 100 questions.']);
+            $required = $this->requiredQuestionCount($payload['instructional_phase']);
+            if ($count !== $required) {
+                throw ValidationException::withMessages(['is_active' => "This assessment needs {$required} bank questions before activation."]);
             }
         }
 
@@ -158,7 +160,7 @@ class ActivityController extends Controller
     public function updateBank(Request $request, Activity $activity): RedirectResponse
     {
         abort_unless(in_array($activity->instructional_phase?->value, [ActivityPhase::FORMATIVE->value, ActivityPhase::SUMMATIVE->value], true), 404);
-        $validated = $request->validate(['questions_per_attempt' => ['required', 'integer', 'min:1', 'max:100']]);
+        $validated = $request->validate(['questions_per_attempt' => ['required', 'integer', 'min:1', 'max:'.$this->requiredQuestionCount($activity->instructional_phase->value)]]);
         $bank = QuestionBank::query()->firstOrCreate(['topic_id' => $activity->topic_id, 'phase' => $activity->instructional_phase->value]);
         $bank->update($validated);
         return back()->with('status', 'Assessment question count saved.');
@@ -194,8 +196,9 @@ class ActivityController extends Controller
         if (in_array($validated['question_type'], ['multiple_choice', 'visual_challenge'], true)) {
             $validated['correct_answer'] = (string) $choices->firstWhere('is_correct', true)['value'];
         }
-        if (! $question && $bank->questions()->count() >= 100) {
-            throw ValidationException::withMessages(['prompt' => 'A question bank can contain no more than 100 questions.']);
+        $required = $this->requiredQuestionCount($bank->phase);
+        if (! $question && $bank->questions()->count() >= $required) {
+            throw ValidationException::withMessages(['prompt' => "This question bank can contain no more than {$required} questions."]);
         }
 
         $saved = DB::transaction(function () use ($bank, $question, $validated, $payload, $choices): Question {
@@ -229,8 +232,13 @@ class ActivityController extends Controller
     private function deactivateInvalidBankActivities(QuestionBank $bank): void
     {
         $count = $bank->questions()->count();
-        if ($count < 50 || $count > 100) {
+        if ($count !== $this->requiredQuestionCount($bank->phase)) {
             Activity::query()->where('topic_id', $bank->topic_id)->where('instructional_phase', $bank->phase)->where('is_active', true)->update(['is_active' => false]);
         }
+    }
+
+    private function requiredQuestionCount(string $phase): int
+    {
+        return $phase === ActivityPhase::SUMMATIVE->value ? 100 : 50;
     }
 }

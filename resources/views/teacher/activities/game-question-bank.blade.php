@@ -1,9 +1,9 @@
 <section class="panel p-5">
     <h2 class="section-title">Student game questions</h2>
-    <p class="section-copy mb-4">Existing Science formative and summative questions. Saved changes apply when students reload the game.</p>
+    <p class="section-copy mb-4">Prewritten Science FT banks contain 50 questions each. The summative bank contains 100. Each test draws its questions from the bank when a student starts or retries. Saved edits apply when students reload the game.</p>
     @foreach ($gameAssessments as $lessonKey => $assessment)
         <details class="mt-3 rounded-xl border border-slate-200 p-4" open>
-            <summary class="cursor-pointer font-semibold">{{ $assessment['subtitle'] }} · {{ ucfirst($assessment['type']) }} · {{ count($assessment['items']) }} questions</summary>
+            <summary class="cursor-pointer font-semibold">{{ $assessment['subtitle'] }} · {{ ucfirst($assessment['type']) }} · {{ count($assessment['items']) }} in bank · {{ $assessment['itemsPerAttempt'] }} per attempt</summary>
             @foreach ($assessment['items'] as $item)
                 <details class="mt-3 rounded-lg border border-slate-200 p-3">
                     <summary class="cursor-pointer text-sm">{{ $loop->iteration }}. {{ $item['prompt'] }}</summary>

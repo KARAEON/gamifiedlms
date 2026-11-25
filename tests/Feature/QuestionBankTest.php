@@ -17,6 +17,20 @@ class QuestionBankTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_preloaded_game_banks_have_fifty_ft_and_one_hundred_summative_questions(): void
+    {
+        $assessments = app(\App\Services\GameQuestionBankService::class)->assessments();
+        foreach ($assessments as $assessment) {
+            $expected = $assessment['type'] === 'summative' ? 100 : 50;
+            $this->assertCount($expected, $assessment['items']);
+            $this->assertCount($expected, array_unique(array_column($assessment['items'], 'id')));
+            $this->assertCount($expected, array_unique(array_column($assessment['items'], 'prompt')));
+            foreach ($assessment['items'] as $item) {
+                $this->assertContains($item['answer'], $item['choices']);
+            }
+        }
+    }
+
     public function test_existing_game_questions_can_be_edited_and_loaded_by_students(): void
     {
         $teacher = User::factory()->teacher()->create();
@@ -115,6 +129,29 @@ class QuestionBankTest extends TestCase
         $this->assertDatabaseHas('activities', ['id' => $activity->id, 'is_active' => true]);
     }
 
+    public function test_summative_activity_requires_one_hundred_questions(): void
+    {
+        $teacher = User::factory()->teacher()->create();
+        $activity = Activity::factory()->create(['instructional_phase' => ActivityPhase::SUMMATIVE, 'is_active' => false]);
+        $bank = QuestionBank::query()->create(['topic_id' => $activity->topic_id, 'phase' => 'summative']);
+        Question::factory()->count(99)->create(['activity_id' => null, 'question_bank_id' => $bank->id]);
+        $payload = [
+            'topic_id' => $activity->topic_id,
+            'title' => $activity->title,
+            'activity_type' => $activity->activity_type->value,
+            'instructional_phase' => 'summative',
+            'instructions' => $activity->instructions,
+            'max_score' => 100,
+            'is_active' => 1,
+        ];
+
+        $this->actingAs($teacher)->patch(route('teacher.activities.update', $activity), $payload)
+            ->assertSessionHasErrors('is_active');
+        Question::factory()->create(['activity_id' => null, 'question_bank_id' => $bank->id]);
+        $this->actingAs($teacher)->patch(route('teacher.activities.update', $activity), $payload)->assertRedirect();
+        $this->assertDatabaseHas('activities', ['id' => $activity->id, 'is_active' => true]);
+    }
+
     public function test_attempt_scores_only_the_fixed_selected_question_ids(): void
     {
         $activity = Activity::factory()->create(['instructional_phase' => ActivityPhase::FORMATIVE]);
@@ -137,17 +174,25 @@ class QuestionBankTest extends TestCase
         $this->assertSame(100.0, (float) $attempt->accuracy);
     }
 
-    public function test_student_receives_configured_random_subset_and_retry_keeps_the_same_questions(): void
+    public function test_ft_and_summative_retries_draw_new_questions_from_the_fifty_question_bank(): void
     {
-        $activity = Activity::factory()->create(['instructional_phase' => ActivityPhase::FORMATIVE]);
-        $bank = QuestionBank::query()->create(['topic_id' => $activity->topic_id, 'phase' => 'formative', 'questions_per_attempt' => 10]);
-        Question::factory()->count(50)->create(['activity_id' => null, 'question_bank_id' => $bank->id]);
-        $student = User::factory()->student()->create();
+        foreach ([ActivityPhase::FORMATIVE, ActivityPhase::SUMMATIVE] as $phase) {
+            $activity = Activity::factory()->create(['instructional_phase' => $phase, 'allow_retry' => true]);
+            $bank = QuestionBank::query()->create(['topic_id' => $activity->topic_id, 'phase' => $phase->value, 'questions_per_attempt' => 10]);
+            $pool = Question::factory()->count(50)->create(['activity_id' => null, 'question_bank_id' => $bank->id])->pluck('id')->all();
+            $student = User::factory()->student()->create();
 
-        $component = Livewire::actingAs($student)->test(ActivityPlayer::class, ['activity' => $activity]);
-        $selected = $component->get('selectedQuestionIds');
-        $this->assertCount(10, $selected);
+            $component = Livewire::actingAs($student)->test(ActivityPlayer::class, ['activity' => $activity]);
+            $first = $component->get('selectedQuestionIds');
+            $this->assertCount(10, $first);
+            $this->assertEmpty(array_diff($first, $pool));
 
-        $component->call('retry')->assertSet('selectedQuestionIds', $selected);
+            $component->set('responses.'.$first[0], 'A')->call('retry');
+            $second = $component->get('selectedQuestionIds');
+            $this->assertCount(10, $second);
+            $this->assertNotSame($first, $second);
+            $this->assertEmpty(array_diff($second, $pool));
+            $this->assertSame(array_fill_keys($second, ''), $component->get('responses'));
+        }
     }
 }

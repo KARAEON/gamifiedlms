@@ -1,6 +1,6 @@
 <x-app-layout :title="$questionBankMode ? 'Question Bank' : 'Activity Management'">
     <div class="space-y-6">
-        <x-staff.page-heading :title="$questionBankMode ? 'Question Bank' : 'Activities'" :description="$questionBankMode ? 'Add and edit questions for formative and summative assessments, and set the number of questions per attempt.' : 'Build purposeful practice aligned with your lessons and competencies.'" eyebrow="Teaching and learning">
+        <x-staff.page-heading :title="$questionBankMode ? 'Question Bank' : 'Activities'" :description="$questionBankMode ? 'FT banks hold 50 questions and summative banks hold 100. Each student and retry gets a shuffled selection.' : 'Build purposeful practice aligned with your lessons and competencies.'" eyebrow="Teaching and learning">
 <button type="button" class="btn-primary" data-open-dialog="create-activity">Create Activity</button>
 </x-staff.page-heading>
         @if ($questionBankMode)
@@ -67,7 +67,7 @@
                                     <x-staff.field name="title" label="Activity title" :value="$activity->title" required />
                                     <label class="block">Topic<select name="topic_id" class="input-field mt-1" required>@foreach ($topics as $topic)<option value="{{ $topic->id }}" @selected($activity->topic_id === $topic->id)>{{ $topic->title }} ({{ $topic->lesson?->title }})</option>@endforeach</select></label>
                                     <div class="grid gap-3 sm:grid-cols-2"><label>Activity type<select name="activity_type" class="input-field mt-1">@foreach ($types as $value => $label)<option value="{{ $value }}" @selected($activity->activity_type->value === $value)>{{ $label }}</option>@endforeach</select></label>
-                                    <label>Instructional phase<select name="instructional_phase" class="input-field mt-1">@foreach ($phases as $value => $label)<option value="{{ $value }}" @selected($activity->instructional_phase->value === $value)>{{ $label }}</option>@endforeach</select></label></div>
+                                    <label>Instructional phase<select name="instructional_phase" class="input-field mt-1">@foreach ($phases as $value => $label)@continue($questionBankMode && ! in_array($value, ['formative', 'summative'], true))<option value="{{ $value }}" @selected($activity->instructional_phase->value === $value)>{{ $label }}</option>@endforeach</select></label></div>
                                     <label class="block">Instructions<textarea name="instructions" class="input-field mt-1" rows="3">{{ $activity->instructions }}</textarea></label>
                                 </fieldset>
                                 <fieldset class="space-y-3"><legend class="font-semibold mb-2">Scoring and availability</legend><div class="grid gap-3 sm:grid-cols-2">
@@ -80,16 +80,17 @@
                         </x-staff.dialog>
                         @if (in_array($activity->instructional_phase->value, ['formative', 'summative'], true))
                             @php($bank = $banks->get($activity->topic_id.'-'.$activity->instructional_phase->value))
+                            @php($required = $activity->instructional_phase->value === 'summative' ? 100 : 50)
                             <details class="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3" @if ($questionBankMode) open @endif>
                                 <summary class="cursor-pointer text-sm font-semibold text-slate-700">
                                     {{ strtoupper(substr($activity->instructional_phase->value, 0, 2)) }} Question Bank
-                                    <span class="font-normal text-slate-500">({{ $bank?->questions_count ?? 0 }}/50–100 questions)</span>
+                                    <span class="font-normal text-slate-500">({{ $bank?->questions_count ?? 0 }}/{{ $required }} questions)</span>
                                 </summary>
                                 <form method="POST" action="{{ route('teacher.activities.question-bank.update', $activity) }}" class="mt-3 flex flex-wrap items-end gap-2">
                                     @csrf @method('PATCH')
-                                    <label class="text-xs font-medium">Questions per attempt<input class="input-field mt-1 w-32" type="number" min="1" max="100" name="questions_per_attempt" value="{{ $bank?->questions_per_attempt ?? 10 }}" required></label>
+                                    <label class="text-xs font-medium">Questions per attempt<input class="input-field mt-1 w-32" type="number" min="1" max="{{ $required }}" name="questions_per_attempt" value="{{ $bank?->questions_per_attempt ?? 10 }}" required></label>
                                     <button class="btn-secondary px-3 py-2 text-xs">Save count</button>
-                                    <span class="text-xs text-slate-500">{{ ($bank?->questions_count ?? 0) >= 50 && ($bank?->questions_count ?? 0) <= 100 ? 'Ready for activation' : 'Add questions until the bank contains 50–100 items.' }}</span>
+                                    <span class="text-xs text-slate-500">{{ ($bank?->questions_count ?? 0) === $required ? 'Ready for activation' : "Add questions until the bank contains {$required} items." }}</span>
                                 </form>
 
                                 <details class="mt-3 rounded-lg border border-slate-200 bg-white p-3">
@@ -184,6 +185,7 @@
                     </select>
                     <select name="instructional_phase" class="input-field" required>
                         @foreach ($phases as $value => $label)
+                            @continue($questionBankMode && ! in_array($value, ['formative', 'summative'], true))
                             <option value="{{ $value }}">{{ $label }}</option>
                         @endforeach
                     </select>

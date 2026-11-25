@@ -22,6 +22,35 @@ class StudentPhaserResultTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_formative_game_scores_the_selected_five_questions_from_the_larger_pool(): void
+    {
+        [$student] = $this->buildStudent();
+        $items = array_slice(app(\App\Services\GameQuestionBankService::class)->assessments()['q1-m1-l1']['items'], 5, 5);
+        $ids = array_column($items, 'id');
+        $answers = array_column($items, 'answer', 'id');
+
+        $this->actingAs($student)->postJson(route('student.phaser-results.store'), [
+            'submission_uuid' => 'ff8f22a4-2798-4522-958e-4b52aa4e0195',
+            'entry_type' => 'assessment',
+            'lesson_key' => 'q1-m1-l1',
+            'game_key' => 'ft-q1-mixtures-l1',
+            'payload' => ['item_ids' => $ids, 'answers' => $answers],
+        ])->assertCreated();
+
+        $result = PhaserGameResult::query()->sole();
+        $this->assertSame(5.0, (float) $result->score);
+        $this->assertSame(5.0, (float) $result->max_score);
+        $this->assertSame($ids, array_column($result->payload['derived']['graded_items'], 'id'));
+
+        $this->actingAs($student)->postJson(route('student.phaser-results.store'), [
+            'submission_uuid' => 'a8e71228-a51a-410b-9837-a75af998fd77',
+            'entry_type' => 'assessment',
+            'lesson_key' => 'q1-m1-l1',
+            'game_key' => 'ft-q1-mixtures-l1',
+            'payload' => ['item_ids' => [$ids[0], $ids[0], $ids[1], $ids[2], $ids[3]], 'answers' => $answers],
+        ])->assertUnprocessable()->assertJsonValidationErrors('payload.item_ids');
+    }
+
     public function test_only_formative_test_score_appears_in_science_written_works_and_export(): void
     {
         Carbon::setTestNow('2026-11-26 12:00:00');
@@ -99,6 +128,11 @@ class StudentPhaserResultTest extends TestCase
             $quarterSheet = $zip->getFromName('xl/worksheets/sheet2.xml');
             $workbook = $zip->getFromName('xl/workbook.xml');
             $this->assertFalse($zip->getFromName('xl/worksheets/sheet11.xml'));
+            for ($sheet = 1; $sheet <= 7; $sheet++) {
+                $sheetXml = $zip->getFromName('xl/worksheets/sheet'.$sheet.'.xml');
+                $this->assertIsString($sheetXml);
+                $this->assertStringNotContainsString('<sheetProtection', $sheetXml);
+            }
             $zip->close();
             $this->assertIsString($inputSheet);
             $this->assertIsString($quarterSheet);

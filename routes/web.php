@@ -23,6 +23,7 @@ use App\Http\Controllers\Teacher\AiInsightController as TeacherAiInsightControll
 use App\Http\Controllers\Teacher\AnalyticsController as TeacherAnalyticsController;
 use App\Http\Controllers\Teacher\DashboardController as TeacherDashboardController;
 use App\Http\Controllers\Teacher\GradingController as TeacherGradingController;
+use App\Http\Controllers\Teacher\GradeExportTemplateController as TeacherGradeExportTemplateController;
 use App\Http\Controllers\Teacher\InsightsController as TeacherInsightsController;
 use App\Http\Controllers\Teacher\LessonController as TeacherLessonController;
 use App\Http\Controllers\Teacher\ProfileController as TeacherProfileController;
@@ -83,7 +84,13 @@ Route::middleware(['auth', 'role:teacher'])->prefix('teacher')->as('teacher.')->
     Route::patch('/students/{student}/archive', [TeacherStudentController::class, 'archive'])->name('students.archive');
     Route::get('/scores', [TeacherScoreController::class, 'index'])->name('scores.index');
     Route::get('/grading', [TeacherGradingController::class, 'index'])->name('grading.index');
+    Route::get('/grading/export', [TeacherGradingController::class, 'export'])->name('grading.export');
     Route::post('/grading', [TeacherGradingController::class, 'store'])->name('grading.store');
+    Route::get('/grading/templates', [TeacherGradeExportTemplateController::class, 'index'])->name('grading.templates.index');
+    Route::post('/grading/templates', [TeacherGradeExportTemplateController::class, 'store'])->name('grading.templates.store');
+    Route::put('/grading/templates/{template}', [TeacherGradeExportTemplateController::class, 'update'])->name('grading.templates.update');
+    Route::get('/grading/templates/{template}/download', [TeacherGradeExportTemplateController::class, 'download'])->name('grading.templates.download');
+    Route::delete('/grading/templates/{template}', [TeacherGradeExportTemplateController::class, 'destroy'])->name('grading.templates.destroy');
 
     Route::get('/sections', [TeacherSectionController::class, 'index'])->name('sections.index');
     Route::post('/sections', [TeacherSectionController::class, 'store'])->name('sections.store');

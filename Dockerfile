@@ -34,6 +34,8 @@ RUN apt-get update \
     && sed -ri 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-available/000-default.conf \
     && rm -rf /var/lib/apt/lists/*
 
+RUN printf 'upload_max_filesize=12M\npost_max_size=16M\n' > /usr/local/etc/php/conf.d/grade-template-uploads.ini
+
 WORKDIR /var/www/html
 COPY . .
 COPY --from=game-assets /app/PhaserGameupd/public/assets/ ./public/assets/

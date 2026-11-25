@@ -6,6 +6,13 @@ import { closeOpenModal, coverImage, createBackArrow, createPixelButton, showMod
 
 const CARD_WIDTH = 820;
 const CARD_HEIGHT = 380;
+const readableStyle = (size, color, align = 'center') => ({
+  fontFamily: 'Arial, sans-serif',
+  fontSize: `${size}px`,
+  fontStyle: 'bold',
+  color,
+  align,
+});
 
 export default class AssessmentScene extends Phaser.Scene {
   constructor() {
@@ -163,12 +170,12 @@ export default class AssessmentScene extends Phaser.Scene {
 
     const kind = this.add.text(640, 216, item.kind.toUpperCase(), textStyle(20, '#d7b6ff'));
     kind.setOrigin(0.5);
-    const prompt = this.add.text(640, 294, item.prompt.toUpperCase(), textStyle(28, '#2f2a2a'));
+    const prompt = this.add.text(640, 294, item.prompt, readableStyle(30, '#2f2a2a'));
     prompt.setOrigin(0.5);
     prompt.setWordWrapWidth(700);
-    prompt.setLineSpacing(-2);
+    prompt.setLineSpacing(5);
 
-    this.feedbackText = this.add.text(640, 586, 'CHOOSE THE BEST ANSWER.', textStyle(24, '#66e5ff'));
+    this.feedbackText = this.add.text(640, 586, 'Choose the best answer.', readableStyle(23, '#66e5ff'));
     this.feedbackText.setOrigin(0.5);
     this.feedbackText.setWordWrapWidth(850);
 
@@ -178,7 +185,7 @@ export default class AssessmentScene extends Phaser.Scene {
       const column = index % 2;
       const x = item.choices.length <= 2 ? 640 : 440 + column * 400;
       const y = item.choices.length <= 2 ? 390 + index * 76 : 390 + row * 76;
-      this.createChoice(choice, x, y, item.choices.length <= 2 ? 520 : 360, 58);
+      this.createChoice(choice, x, y, item.choices.length <= 2 ? 520 : 360, 66);
     });
 
     this.updateHud();
@@ -189,10 +196,10 @@ export default class AssessmentScene extends Phaser.Scene {
     const container = this.add.container(x, y);
     container.setDepth(8);
     const graphics = this.add.graphics();
-    const label = this.add.text(0, -1, choice.toUpperCase(), textStyle(choice.length > 48 ? 15 : 19, '#2f2a2a'));
+    const label = this.add.text(0, -1, choice, readableStyle(choice.length > 48 ? 18 : 21, '#2f2a2a'));
     label.setOrigin(0.5);
     label.setWordWrapWidth(width - 28);
-    label.setLineSpacing(-3);
+    label.setLineSpacing(2);
     const zone = this.add.zone(0, 0, width, height).setInteractive({ useHandCursor: true });
     zone.on('pointerover', () => {
       if (!this.answered) {
@@ -234,7 +241,7 @@ export default class AssessmentScene extends Phaser.Scene {
       this.score += 1;
     }
     this.choiceViews.forEach((view) => this.drawChoice(view));
-    this.feedbackText.setText(`${correct ? 'CORRECT' : 'REVIEW'}: ${item.feedback}`.toUpperCase());
+    this.feedbackText.setText(`${correct ? 'Correct' : 'Review'}: ${item.feedback}`);
     this.createNextButton();
     this.updateHud();
     this.updateTestState();

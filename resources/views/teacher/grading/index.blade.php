@@ -45,6 +45,28 @@
         <section class="panel p-5" data-no-reveal="true">
 <h2 class="section-title">{{ $sections->firstWhere('id', $selectedSectionId)?->name ?? 'Select a section' }} &middot; {{ $selectedSubject }} &middot; Quarter {{ $selectedQuarter }}</h2>
 <p class="section-copy mb-4">Game scores supply Written Works. Save each learner's assessment entries using the row action.</p>
+            <form method="GET" action="{{ route('teacher.grading.export') }}" class="mb-5 rounded-2xl border border-brand-100 bg-brand-50/50 p-4">
+                <input type="hidden" name="section_id" value="{{ $selectedSectionId }}">
+                <input type="hidden" name="subject" value="{{ $selectedSubject }}">
+                <input type="hidden" name="quarter" value="{{ $selectedQuarter }}">
+                <div class="flex flex-wrap items-end gap-3">
+                    <div class="min-w-56 flex-1">
+                        <label for="grade-export-template" class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Excel template</label>
+                        <select id="grade-export-template" name="template_id" class="input-field">
+                            <option value="">Standard gradebook</option>
+                            @foreach ($exportTemplates as $template)
+                                <option value="{{ $template->id }}">{{ $template->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="min-w-56 flex-1">
+                        <label for="grade-export-filename" class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Excel file name</label>
+                        <input id="grade-export-filename" name="filename" class="input-field" value="{{ \Illuminate\Support\Str::slug(($sections->firstWhere('id', $selectedSectionId)?->name ?? 'class').'-'.$selectedSubject.'-q'.$selectedQuarter.'-grades') }}" maxlength="80">
+                    </div>
+                    <button type="submit" class="btn-primary whitespace-nowrap">Export Excel (.xlsx)</button>
+                </div>
+                <a href="{{ route('teacher.grading.templates.index') }}" class="mt-3 inline-block text-sm font-semibold text-brand-800 underline">Upload or replace Excel templates</a>
+            </form>
             <div class="mb-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
                 Manual grading for <strong>Performance Tasks</strong> is itemized below. Enter up to 10 items and their HPS values. The system will compute <strong>Total</strong>, <strong>PS</strong>, and <strong>WS</strong> automatically.
             </div>
@@ -124,7 +146,20 @@
                                 <td class="py-3">
                                         <input form="{{ $formId }}" type="number" step="0.01" min="0" name="quarterly_assessment_hps" value="{{ $row['entry']?->quarterly_assessment_hps }}" class="input-field" placeholder="QA HPS">
                                 </td>
-                                <td class="py-3">{{ $row['computed']['quarterly_grade'] ?? '—' }}</td>
+                                <td class="py-3">
+                                    @if ($row['computed']['quarterly_grade'] !== null)
+                                        {{ $row['computed']['quarterly_grade'] }}
+                                    @else
+                                        @php
+                                            $missingGradeParts = [];
+                                            if ($row['computed']['written_works']['weighted_score'] === null) $missingGradeParts[] = 'Written Works game score';
+                                            if ($row['computed']['performance_tasks']['weighted_score'] === null) $missingGradeParts[] = 'Performance Task score and HPS';
+                                            if ($row['computed']['quarterly_assessment']['weighted_score'] === null) $missingGradeParts[] = 'QA score and HPS';
+                                        @endphp
+                                        <span class="block text-slate-400">—</span>
+                                        <span class="block min-w-40 text-xs text-slate-600">Needs {{ implode(', ', $missingGradeParts) }}</span>
+                                    @endif
+                                </td>
                                 <td class="py-3">
                                         <button form="{{ $formId }}" type="submit" class="btn-primary whitespace-nowrap">Save</button>
                                 </td>

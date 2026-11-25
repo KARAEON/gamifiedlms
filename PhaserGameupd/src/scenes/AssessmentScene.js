@@ -28,7 +28,7 @@ export default class AssessmentScene extends Phaser.Scene {
     this.returnScrollY = Number.isFinite(data.returnScrollY) ? data.returnScrollY : 0;
     this.minigameResult = data.minigameResult ?? null;
     this.minigameScore = Number.isFinite(data.minigameScore) ? data.minigameScore : 0;
-    this.assessment = getAssessmentForLesson(this.lessonId);
+    this.assessment = window.GLMS_PHASER?.assessments?.[this.lessonId] ?? getAssessmentForLesson(this.lessonId);
     this.currentModal = null;
   }
 

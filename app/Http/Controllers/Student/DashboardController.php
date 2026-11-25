@@ -18,6 +18,7 @@ class DashboardController extends Controller
             'phaserContext' => [
                 'submitUrl' => route('student.phaser-results.store'),
                 'csrfToken' => csrf_token(),
+                'assessments' => app(\App\Services\GameQuestionBankService::class)->assessments(),
                 ...$phaserLessonAccessService->runtimeAccessForSection($student->studentProfile?->section_id),
                 'lockedMessage' => PhaserLessonAccessService::LOCKED_MESSAGE,
             ],

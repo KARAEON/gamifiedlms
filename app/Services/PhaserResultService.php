@@ -149,6 +149,10 @@ class PhaserResultService
     {
         $lesson = $this->lessonConfig($lessonKey);
         $assessment = Arr::get($lesson, 'assessment');
+        $bankAssessment = app(GameQuestionBankService::class)->assessments()[$lessonKey] ?? null;
+        if ($assessment && $bankAssessment) {
+            $assessment['items'] = $bankAssessment['items'];
+        }
 
         if (! is_array($assessment) || ($assessment['game_key'] ?? null) !== $gameKey) {
             throw ValidationException::withMessages([

@@ -17,6 +17,25 @@ class QuestionBankTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_existing_game_questions_can_be_edited_and_loaded_by_students(): void
+    {
+        $teacher = User::factory()->teacher()->create();
+        $this->actingAs($teacher)->get(route('teacher.question-bank.index'))
+            ->assertOk()->assertSee('What kind of mixture looks the same throughout?');
+        $data = [
+            'prompt' => 'Updated mixture question',
+            'choices' => ['Uniform', 'Non-uniform'],
+            'answer' => 'Uniform',
+            'feedback' => 'Uniform mixtures look the same throughout.',
+        ];
+        $this->actingAs($teacher)->patch(route('teacher.question-bank.game.update', ['q1-m1-l1', 'l1-1']), $data)
+            ->assertSessionHasNoErrors()->assertRedirect(route('teacher.question-bank.index'));
+        $this->assertSame('Uniform', app(\App\Services\GameQuestionBankService::class)->assessments()['q1-m1-l1']['items'][0]['answer']);
+        $this->actingAs(User::factory()->student()->create())->get(route('student.dashboard'))
+            ->assertOk()->assertSee('Updated mixture question');
+        $this->patch(route('teacher.question-bank.game.update', ['q1-m1-l1', 'l1-1']), $data)->assertForbidden();
+    }
+
     public function test_question_bank_page_lists_assessments_and_restricts_access_to_teachers(): void
     {
         $teacher = User::factory()->teacher()->create();

@@ -1,0 +1,529 @@
+{
+  "q1-m1-l1": {
+    "id": "ft-q1-mixtures-l1",
+    "lessonId": "q1-m1-l1",
+    "type": "formative",
+    "title": "FORMATIVE TEST",
+    "subtitle": "MIXTURES LESSON 1",
+    "topic": "Q1 MATTER - MIXTURES",
+    "passPercent": 80,
+    "fallback": "AI fallback placeholder: if fewer than 80% of learners pass this FT, recommend reteaching uniform and non-uniform mixture basics before moving on.",
+    "items": [
+      {
+        "id": "l1-1",
+        "kind": "identification",
+        "prompt": "What kind of mixture looks the same throughout?",
+        "choices": [
+          "Uniform Mixture",
+          "Non-uniform Mixture",
+          "Pure Solid"
+        ],
+        "answer": "Uniform Mixture",
+        "feedback": "Uniform mixtures look the same throughout."
+      },
+      {
+        "id": "l1-2",
+        "kind": "identification",
+        "prompt": "Salt water is an example of what mixture?",
+        "choices": [
+          "Uniform Mixture",
+          "Non-uniform Mixture",
+          "Layered Mixture"
+        ],
+        "answer": "Uniform Mixture",
+        "feedback": "Salt dissolves in water, so salt water appears uniform."
+      },
+      {
+        "id": "l1-3",
+        "kind": "identification",
+        "prompt": "Fruit salad is a non-uniform mixture because...",
+        "choices": [
+          "Its parts are visible",
+          "It has no parts",
+          "It looks like one liquid"
+        ],
+        "answer": "Its parts are visible",
+        "feedback": "Fruit salad has parts that can still be seen."
+      },
+      {
+        "id": "l1-4",
+        "kind": "flashcard",
+        "prompt": "Which description matches a non-uniform mixture?",
+        "choices": [
+          "Components can be seen separately",
+          "Looks the same throughout",
+          "Has only one substance"
+        ],
+        "answer": "Components can be seen separately",
+        "feedback": "Non-uniform mixtures have visibly different parts."
+      },
+      {
+        "id": "l1-5",
+        "kind": "flashcard",
+        "prompt": "Which set makes a correct match?",
+        "choices": [
+          "Uniform - Salt Water - Same throughout",
+          "Uniform - Fruit Salad - Visible parts",
+          "Non-uniform - Salt Water - Same throughout"
+        ],
+        "answer": "Uniform - Salt Water - Same throughout",
+        "feedback": "Salt water is uniform and looks the same throughout."
+      }
+    ]
+  },
+  "q1-m1-l2": {
+    "id": "ft-q1-mixtures-l2",
+    "lessonId": "q1-m1-l2",
+    "type": "formative",
+    "title": "FORMATIVE TEST",
+    "subtitle": "MIXTURES LESSON 2",
+    "topic": "Q1 MATTER - MIXTURES",
+    "passPercent": 80,
+    "fallback": "AI fallback placeholder: if fewer than 80% of learners pass this FT, reteach sorting by appearance and real-life use.",
+    "items": [
+      {
+        "id": "l2-1",
+        "kind": "classification",
+        "prompt": "Where should Salt Water be sorted?",
+        "choices": [
+          "Uniform Mixture",
+          "Non-uniform Mixture"
+        ],
+        "answer": "Uniform Mixture",
+        "feedback": "Salt water looks the same throughout."
+      },
+      {
+        "id": "l2-2",
+        "kind": "classification",
+        "prompt": "Where should Fruit Salad be sorted?",
+        "choices": [
+          "Uniform Mixture",
+          "Non-uniform Mixture"
+        ],
+        "answer": "Non-uniform Mixture",
+        "feedback": "Fruit salad has visible parts."
+      },
+      {
+        "id": "l2-3",
+        "kind": "use",
+        "prompt": "What is a common use of Juice?",
+        "choices": [
+          "Beverage",
+          "Construction",
+          "Fuel"
+        ],
+        "answer": "Beverage",
+        "feedback": "Juice is commonly used as a beverage."
+      },
+      {
+        "id": "l2-4",
+        "kind": "classification",
+        "prompt": "Cereal with milk is non-uniform because...",
+        "choices": [
+          "Cereal pieces are visible",
+          "It has no visible parts",
+          "It is a clear liquid"
+        ],
+        "answer": "Cereal pieces are visible",
+        "feedback": "The cereal and milk can be seen separately."
+      },
+      {
+        "id": "l2-5",
+        "kind": "use",
+        "prompt": "Sand and water was matched with which use in the game?",
+        "choices": [
+          "Construction",
+          "Drinking",
+          "Fuel"
+        ],
+        "answer": "Construction",
+        "feedback": "Sand is connected to construction uses."
+      }
+    ]
+  },
+  "q1-m1-l3": {
+    "id": "ft-q1-mixtures-l3",
+    "lessonId": "q1-m1-l3",
+    "type": "formative",
+    "title": "FORMATIVE TEST",
+    "subtitle": "MIXTURES LESSON 3",
+    "topic": "Q1 MATTER - MIXTURES",
+    "passPercent": 80,
+    "fallback": "AI fallback placeholder: if fewer than 80% of learners pass this FT, reteach comparing samples by visible parts and same-throughout appearance.",
+    "items": [
+      {
+        "id": "l3-1",
+        "kind": "compare",
+        "prompt": "Salt Water vs Sand and Water: which looks the same throughout?",
+        "choices": [
+          "Salt Water",
+          "Sand and Water"
+        ],
+        "answer": "Salt Water",
+        "feedback": "Salt water is uniform."
+      },
+      {
+        "id": "l3-2",
+        "kind": "compare",
+        "prompt": "Lemonade vs Vegetable Salad: which has visible parts?",
+        "choices": [
+          "Lemonade",
+          "Vegetable Salad"
+        ],
+        "answer": "Vegetable Salad",
+        "feedback": "Vegetable salad has visible parts."
+      },
+      {
+        "id": "l3-3",
+        "kind": "compare",
+        "prompt": "Milk vs Cereal with Milk: which is non-uniform?",
+        "choices": [
+          "Milk",
+          "Cereal with Milk"
+        ],
+        "answer": "Cereal with Milk",
+        "feedback": "Cereal pieces remain visible."
+      },
+      {
+        "id": "l3-4",
+        "kind": "compare",
+        "prompt": "Juice vs Fruit Salad: which is uniform?",
+        "choices": [
+          "Juice",
+          "Fruit Salad"
+        ],
+        "answer": "Juice",
+        "feedback": "Juice appears evenly mixed."
+      },
+      {
+        "id": "l3-5",
+        "kind": "compare",
+        "prompt": "Vinegar vs Oil and Water: which statement is correct?",
+        "choices": [
+          "Both are uniform",
+          "Vinegar is uniform; oil and water is non-uniform",
+          "Oil and water is uniform; vinegar is non-uniform"
+        ],
+        "answer": "Vinegar is uniform; oil and water is non-uniform",
+        "feedback": "Oil and water separates into layers."
+      }
+    ]
+  },
+  "q1-m1-l4": {
+    "id": "ft-q1-mixtures-l4",
+    "lessonId": "q1-m1-l4",
+    "type": "formative",
+    "title": "FORMATIVE TEST",
+    "subtitle": "MIXTURES LESSON 4",
+    "topic": "Q1 MATTER - MIXTURES",
+    "passPercent": 80,
+    "fallback": "AI fallback placeholder: if fewer than 80% of learners pass this FT, reteach defending a classification with correct evidence.",
+    "items": [
+      {
+        "id": "l4-1",
+        "kind": "evidence",
+        "prompt": "Halo-halo should be defended as...",
+        "choices": [
+          "Uniform because it looks the same",
+          "Non-uniform because its parts are visible",
+          "Uniform because it separates"
+        ],
+        "answer": "Non-uniform because its parts are visible",
+        "feedback": "Halo-halo has visible ingredients."
+      },
+      {
+        "id": "l4-2",
+        "kind": "evidence",
+        "prompt": "Soy sauce is uniform because...",
+        "choices": [
+          "It looks the same throughout",
+          "Its parts are visible",
+          "It separates into layers"
+        ],
+        "answer": "It looks the same throughout",
+        "feedback": "Soy sauce has a consistent appearance."
+      },
+      {
+        "id": "l4-3",
+        "kind": "evidence",
+        "prompt": "Oil and water is non-uniform because...",
+        "choices": [
+          "It separates into layers",
+          "It is blended evenly",
+          "It has no visible parts"
+        ],
+        "answer": "It separates into layers",
+        "feedback": "Oil and water forms visible layers."
+      },
+      {
+        "id": "l4-4",
+        "kind": "evidence",
+        "prompt": "Which evidence supports a uniform mixture?",
+        "choices": [
+          "The materials are blended evenly",
+          "The parts are visible",
+          "It separates over time"
+        ],
+        "answer": "The materials are blended evenly",
+        "feedback": "Blended evenly supports uniform classification."
+      },
+      {
+        "id": "l4-5",
+        "kind": "evidence",
+        "prompt": "A strong defense should include...",
+        "choices": [
+          "Classification and evidence",
+          "Only the material name",
+          "Only the use"
+        ],
+        "answer": "Classification and evidence",
+        "feedback": "Science claims need evidence."
+      }
+    ]
+  },
+  "q1-m1-l5": {
+    "id": "st-q1-mixtures",
+    "lessonId": "q1-m1-l5",
+    "type": "summative",
+    "title": "SUMMATIVE TEST",
+    "subtitle": "MIXTURES COMPETENCY",
+    "topic": "Q1 MATTER - MIXTURES",
+    "passPercent": 80,
+    "fallback": "AI fallback placeholder: if fewer than 80% of learners pass this summative test, generate reteaching for the full Mixtures competency covering lessons 1 to 5.",
+    "items": [
+      {
+        "id": "st-1",
+        "kind": "identification",
+        "prompt": "Identify: a mixture that looks the same throughout.",
+        "choices": [
+          "Uniform Mixture",
+          "Non-uniform Mixture",
+          "Element"
+        ],
+        "answer": "Uniform Mixture",
+        "feedback": "Uniform mixtures look the same throughout."
+      },
+      {
+        "id": "st-2",
+        "kind": "identification",
+        "prompt": "Identify: a mixture whose parts can be seen.",
+        "choices": [
+          "Non-uniform Mixture",
+          "Uniform Mixture",
+          "Solution only"
+        ],
+        "answer": "Non-uniform Mixture",
+        "feedback": "Non-uniform mixtures have visible parts."
+      },
+      {
+        "id": "st-3",
+        "kind": "classification",
+        "prompt": "Classify Salt Water.",
+        "choices": [
+          "Uniform",
+          "Non-uniform"
+        ],
+        "answer": "Uniform",
+        "feedback": "Salt water appears evenly mixed."
+      },
+      {
+        "id": "st-4",
+        "kind": "classification",
+        "prompt": "Classify Fruit Salad.",
+        "choices": [
+          "Uniform",
+          "Non-uniform"
+        ],
+        "answer": "Non-uniform",
+        "feedback": "Fruit pieces remain visible."
+      },
+      {
+        "id": "st-5",
+        "kind": "classification",
+        "prompt": "Classify Sand and Water.",
+        "choices": [
+          "Uniform",
+          "Non-uniform"
+        ],
+        "answer": "Non-uniform",
+        "feedback": "Sand and water can be seen separately."
+      },
+      {
+        "id": "st-6",
+        "kind": "classification",
+        "prompt": "Classify Juice.",
+        "choices": [
+          "Uniform",
+          "Non-uniform"
+        ],
+        "answer": "Uniform",
+        "feedback": "Juice can appear evenly mixed."
+      },
+      {
+        "id": "st-7",
+        "kind": "use",
+        "prompt": "What is a real-life use of Fruit Salad?",
+        "choices": [
+          "Food",
+          "Fuel",
+          "Cleaning"
+        ],
+        "answer": "Food",
+        "feedback": "Fruit salad is a food mixture."
+      },
+      {
+        "id": "st-8",
+        "kind": "use",
+        "prompt": "What is a real-life use of Juice?",
+        "choices": [
+          "Beverage",
+          "Construction",
+          "Fuel"
+        ],
+        "answer": "Beverage",
+        "feedback": "Juice is used as a beverage."
+      },
+      {
+        "id": "st-9",
+        "kind": "compare",
+        "prompt": "Which has visible parts: Lemonade or Vegetable Salad?",
+        "choices": [
+          "Lemonade",
+          "Vegetable Salad"
+        ],
+        "answer": "Vegetable Salad",
+        "feedback": "Vegetable salad has visible parts."
+      },
+      {
+        "id": "st-10",
+        "kind": "compare",
+        "prompt": "Which is uniform: Vinegar or Oil and Water?",
+        "choices": [
+          "Vinegar",
+          "Oil and Water"
+        ],
+        "answer": "Vinegar",
+        "feedback": "Vinegar looks the same throughout."
+      },
+      {
+        "id": "st-11",
+        "kind": "evidence",
+        "prompt": "Best evidence for oil and water being non-uniform:",
+        "choices": [
+          "It separates into layers",
+          "It is blended evenly",
+          "No parts are visible"
+        ],
+        "answer": "It separates into layers",
+        "feedback": "Layering is evidence of a non-uniform mixture."
+      },
+      {
+        "id": "st-12",
+        "kind": "evidence",
+        "prompt": "Best evidence for soy sauce being uniform:",
+        "choices": [
+          "It looks the same throughout",
+          "It has visible parts",
+          "It separates"
+        ],
+        "answer": "It looks the same throughout",
+        "feedback": "Soy sauce is consistent in appearance."
+      },
+      {
+        "id": "st-13",
+        "kind": "creation",
+        "prompt": "Energy Juice should be described as...",
+        "choices": [
+          "Uniform and used as a beverage",
+          "Non-uniform and used for construction",
+          "Non-uniform and layered"
+        ],
+        "answer": "Uniform and used as a beverage",
+        "feedback": "Energy Juice is a uniform beverage mixture."
+      },
+      {
+        "id": "st-14",
+        "kind": "creation",
+        "prompt": "Trail Snack Mix should be described as...",
+        "choices": [
+          "Non-uniform and used as a snack",
+          "Uniform and used as a drink",
+          "Uniform and used for cleaning"
+        ],
+        "answer": "Non-uniform and used as a snack",
+        "feedback": "Trail snack mix has visible parts."
+      },
+      {
+        "id": "st-15",
+        "kind": "creation",
+        "prompt": "Color Paint Mix shows...",
+        "choices": [
+          "Separation into layers",
+          "Perfectly blended liquid",
+          "No visible parts"
+        ],
+        "answer": "Separation into layers",
+        "feedback": "Oil and water can separate into layers."
+      },
+      {
+        "id": "st-16",
+        "kind": "identification",
+        "prompt": "Identification: the observable property used to classify many mixtures.",
+        "choices": [
+          "Appearance",
+          "Mass only",
+          "Sound"
+        ],
+        "answer": "Appearance",
+        "feedback": "Learners observe appearance to classify mixtures."
+      },
+      {
+        "id": "st-17",
+        "kind": "evidence",
+        "prompt": "A good science defense includes...",
+        "choices": [
+          "Claim and evidence",
+          "Guess only",
+          "Color only"
+        ],
+        "answer": "Claim and evidence",
+        "feedback": "A conclusion is stronger when supported by evidence."
+      },
+      {
+        "id": "st-18",
+        "kind": "classification",
+        "prompt": "Classify Cereal with Milk.",
+        "choices": [
+          "Non-uniform",
+          "Uniform"
+        ],
+        "answer": "Non-uniform",
+        "feedback": "Cereal pieces are visible."
+      },
+      {
+        "id": "st-19",
+        "kind": "identification",
+        "prompt": "Identification: another word for evenly mixed in these lessons.",
+        "choices": [
+          "Uniform",
+          "Layered",
+          "Separated"
+        ],
+        "answer": "Uniform",
+        "feedback": "Uniform means evenly mixed in appearance."
+      },
+      {
+        "id": "st-20",
+        "kind": "creation",
+        "prompt": "When inventing a mixture, you should explain...",
+        "choices": [
+          "Ingredients, type, appearance, and use",
+          "Only the name",
+          "Only the score"
+        ],
+        "answer": "Ingredients, type, appearance, and use",
+        "feedback": "A complete presentation explains the mixture clearly."
+      }
+    ]
+  }
+}

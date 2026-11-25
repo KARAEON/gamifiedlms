@@ -3,6 +3,9 @@
         <x-staff.page-heading :title="$questionBankMode ? 'Question Bank' : 'Activities'" :description="$questionBankMode ? 'Add and edit questions for formative and summative assessments, and set the number of questions per attempt.' : 'Build purposeful practice aligned with your lessons and competencies.'" eyebrow="Teaching and learning">
 <button type="button" class="btn-primary" data-open-dialog="create-activity">Create Activity</button>
 </x-staff.page-heading>
+        @if ($questionBankMode)
+            @include('teacher.activities.game-question-bank')
+        @endif
 
         <section class="filter-panel">
             <div class="mb-4">

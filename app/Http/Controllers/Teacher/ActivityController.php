@@ -49,6 +49,7 @@ class ActivityController extends Controller
 
         return view('teacher.activities.index', [
             'questionBankMode' => $questionBankMode,
+            'gameAssessments' => $questionBankMode ? app(\App\Services\GameQuestionBankService::class)->assessments() : [],
             'activities' => $activities,
             'banks' => $banks,
             'topics' => Topic::query()->with('lesson')->orderBy('title')->get(),

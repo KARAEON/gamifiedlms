@@ -17,6 +17,22 @@ class QuestionBankTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_question_bank_page_lists_assessments_and_restricts_access_to_teachers(): void
+    {
+        $teacher = User::factory()->teacher()->create();
+        $assessment = Activity::factory()->create(['instructional_phase' => ActivityPhase::FORMATIVE]);
+        $game = Activity::factory()->create(['instructional_phase' => ActivityPhase::GAMIFIED]);
+
+        $this->actingAs($teacher)->get(route('teacher.question-bank.index'))
+            ->assertOk()
+            ->assertSee('Question Bank')
+            ->assertSee($assessment->title)
+            ->assertDontSee($game->title);
+
+        $this->actingAs(User::factory()->student()->create())
+            ->get(route('teacher.question-bank.index'))->assertForbidden();
+    }
+
     public function test_teacher_can_create_and_edit_a_question_with_choices_and_metadata(): void
     {
         $teacher = User::factory()->teacher()->create();

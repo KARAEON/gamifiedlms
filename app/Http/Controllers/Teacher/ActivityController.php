@@ -21,10 +21,15 @@ class ActivityController extends Controller
 {
     public function index(Request $request): View
     {
+        $questionBankMode = $request->routeIs('teacher.question-bank.index');
         $query = Activity::query()
             ->with(['topic.lesson'])
             ->withCount('questions')
             ->orderByDesc('created_at');
+
+        if ($questionBankMode) {
+            $query->whereIn('instructional_phase', ['formative', 'summative']);
+        }
 
         if ($request->filled('activity_type')) {
             $query->where('activity_type', (string) $request->query('activity_type'));
@@ -43,6 +48,7 @@ class ActivityController extends Controller
         ->withCount('questions')->with('questions.choices')->get()->keyBy(fn ($bank) => $bank->topic_id.'-'.$bank->phase);
 
         return view('teacher.activities.index', [
+            'questionBankMode' => $questionBankMode,
             'activities' => $activities,
             'banks' => $banks,
             'topics' => Topic::query()->with('lesson')->orderBy('title')->get(),

@@ -105,6 +105,7 @@ Route::middleware(['auth', 'role:teacher'])->prefix('teacher')->as('teacher.')->
     Route::patch('/topics/{topic}', [TeacherTopicController::class, 'update'])->name('topics.update');
 
     Route::get('/activities', [TeacherActivityController::class, 'index'])->name('activities.index');
+    Route::get('/question-bank', [TeacherActivityController::class, 'index'])->name('question-bank.index');
     Route::post('/activities', [TeacherActivityController::class, 'store'])->name('activities.store');
     Route::patch('/activities/{activity}', [TeacherActivityController::class, 'update'])->name('activities.update');
     Route::post('/activities/{activity}/questions', [TeacherActivityController::class, 'addQuestion'])->name('activities.questions.store');

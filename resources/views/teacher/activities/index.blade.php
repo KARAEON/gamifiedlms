@@ -1,6 +1,6 @@
-<x-app-layout title="Activity Management">
+<x-app-layout :title="$questionBankMode ? 'Question Bank' : 'Activity Management'">
     <div class="space-y-6">
-        <x-staff.page-heading title="Activities" description="Build purposeful practice aligned with your lessons and competencies." eyebrow="Teaching and learning">
+        <x-staff.page-heading :title="$questionBankMode ? 'Question Bank' : 'Activities'" :description="$questionBankMode ? 'Add and edit questions for formative and summative assessments, and set the number of questions per attempt.' : 'Build purposeful practice aligned with your lessons and competencies.'" eyebrow="Teaching and learning">
 <button type="button" class="btn-primary" data-open-dialog="create-activity">Create Activity</button>
 </x-staff.page-heading>
 
@@ -19,6 +19,7 @@
                 <select name="instructional_phase" class="input-field">
                     <option value="">All workflow phases</option>
                     @foreach ($phases as $value => $label)
+                        @continue($questionBankMode && ! in_array($value, ['formative', 'summative'], true))
                         <option value="{{ $value }}" @selected(request('instructional_phase') === $value)>{{ $label }}</option>
                     @endforeach
                 </select>
@@ -35,7 +36,7 @@
 
 
         <section class="panel p-5">
-            <h2 class="text-lg font-semibold text-slate-900">Activities</h2>
+            <h2 class="text-lg font-semibold text-slate-900">{{ $questionBankMode ? 'Assessment question banks' : 'Activities' }}</h2>
             <div class="mt-4 space-y-3">
                 @forelse ($activities as $activity)
                     <article class="rounded-2xl border border-slate-200 p-4">
@@ -76,7 +77,7 @@
                         </x-staff.dialog>
                         @if (in_array($activity->instructional_phase->value, ['formative', 'summative'], true))
                             @php($bank = $banks->get($activity->topic_id.'-'.$activity->instructional_phase->value))
-                            <details class="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
+                            <details class="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3" @if ($questionBankMode) open @endif>
                                 <summary class="cursor-pointer text-sm font-semibold text-slate-700">
                                     {{ strtoupper(substr($activity->instructional_phase->value, 0, 2)) }} Question Bank
                                     <span class="font-normal text-slate-500">({{ $bank?->questions_count ?? 0 }}/50–100 questions)</span>
@@ -135,7 +136,7 @@
                         @endif
                     </article>
                 @empty
-                    <x-staff.empty-state title="No activities in this view" description="Reset your filters or create an activity aligned with a topic." />
+                    <x-staff.empty-state :title="$questionBankMode ? 'No assessment question banks yet' : 'No activities in this view'" :description="$questionBankMode ? 'Create an activity with the Formative or Summative phase, then add questions to its bank.' : 'Reset your filters or create an activity aligned with a topic.'" />
                 @endforelse
             </div>
             <div class="mt-4">

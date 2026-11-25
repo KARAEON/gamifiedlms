@@ -18,7 +18,7 @@
         'Overview' => [['dashboard', 'Dashboard']],
         'Classes' => [['sections', 'Sections'], ['students', 'Students']],
         'Teaching' => [['lessons', 'Lessons and Topics'], ['activities', 'Activities'], ['workflow', 'Instructional Flow']],
-        'Assessment' => [['scores', 'FT Scores'], ['grading', 'Grading']],
+        'Assessment' => [['question-bank', 'Question Bank'], ['scores', 'FT Scores'], ['grading', 'Grading']],
         'Insights' => [['analytics', 'Analytics'], ['insights', 'Decision Support'], ['reports', 'Reports']],
     ] : [
         'School management' => [['dashboard', 'Overview'], ['school-term', 'School Term'], ['reports', 'Reports'], ['policies', 'Policies'], ['audit', 'Audit Trail']],
@@ -27,7 +27,7 @@
     $staffIcons = [
         'dashboard' => 'compass', 'sections' => 'sections', 'students' => 'learners',
         'lessons' => 'book', 'activities' => 'crystal', 'workflow' => 'map',
-        'scores' => 'trophy', 'grading' => 'scroll', 'analytics' => 'chart',
+        'question-bank' => 'book', 'scores' => 'trophy', 'grading' => 'scroll', 'analytics' => 'chart',
         'insights' => 'spark', 'reports' => 'quill', 'school-term' => 'scroll',
         'policies' => 'shield', 'audit' => 'chart',
     ];

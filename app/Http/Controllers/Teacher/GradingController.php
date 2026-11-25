@@ -163,7 +163,7 @@ class GradingController extends Controller
 
         $safeBase = Str::slug($validated['filename'] ?? "{$section->name}-{$subject}-q{$quarter}-grades") ?: 'student-grades';
         $path = tempnam(storage_path('framework/cache'), 'grades-');
-        $source = null;
+        $source = resource_path('templates/class-record.xlsx');
         $temporarySource = false;
         if ($template?->file_data !== null) {
             $source = tempnam(storage_path('framework/cache'), 'template-');
@@ -174,10 +174,8 @@ class GradingController extends Controller
         } elseif ($template?->file_path) {
             $source = Storage::disk('local')->path($template->file_path);
         }
-        $created = $path !== false && ($template
-            ? ($source && $this->fillUploadedWorkbook($source, $path, $rows,
-                $classRecords, $section->name, $teacher->name, $subject, $quarter))
-            : $this->writeXlsx($path, $rows, null, $section->name, $subject, $quarter));
+        $created = $path !== false && $source && $this->fillUploadedWorkbook($source, $path, $rows,
+            $classRecords, $section->name, $teacher->name, $subject, $quarter);
         if ($temporarySource && $source) {
             unlink($source);
         }
@@ -264,6 +262,14 @@ class GradingController extends Controller
                 ]);
             }
             $this->fillClassRecordSheets($zip, $classRecords, $section, $teacher, $subject, $quarter);
+            foreach ($workbook->getElementsByTagNameNS($mainNs, 'workbookView') as $view) {
+                $view->setAttribute('activeTab', (string) $quarter);
+            }
+            foreach ($sheets->getElementsByTagNameNS($mainNs, 'sheet') as $index => $classSheet) {
+                if ($index >= 1 && $index <= 4) {
+                    $classSheet->setAttribute('name', strtoupper($subject).'_Q'.$index);
+                }
+            }
         }
         $sheetName = 'GLMS Grades';
         for ($number = 2; in_array($sheetName, $existingNames, true); $number++) {
@@ -413,6 +419,23 @@ class GradingController extends Controller
                 $put('B63', 'CLASS LIST (51–100)');
             }
 
+            if ($sheetNumber === $selectedQuarter + 1) {
+                $put('F10', collect($records)->max('grade.written_works.hps_total') ?: null);
+                foreach (range(0, 9) as $item) {
+                    $put($this->columnName(19 + $item).'10',
+                        collect($records)->max('grade.performance_task_hps_items.'.$item) ?: null);
+                }
+                $put('AF10', collect($records)->max('grade.quarterly_assessment.hps') ?: null);
+            }
+            foreach ($document->getElementsByTagNameNS($namespace, 'sheetView') as $view) {
+                $view->setAttribute('topLeftCell', 'A1');
+                $view->setAttribute('tabSelected', $sheetNumber === $selectedQuarter + 1 ? '1' : '0');
+                foreach ($view->getElementsByTagNameNS($namespace, 'selection') as $selection) {
+                    $selection->setAttribute('activeCell', 'A1');
+                    $selection->setAttribute('sqref', 'A1');
+                }
+            }
+
             for ($index = 0; $index < 100; $index++) {
                 $record = $records[$index] ?? null;
                 $row = $index < 50 ? 12 + $index : 63 + $index - 50;
@@ -427,6 +450,7 @@ class GradingController extends Controller
                     $grade = $record['grade'] ?? null;
                     $put('AJ'.$row, $grade['yearly_summary']['q'.$quarter] ?? null);
                     if ($quarter === $selectedQuarter) {
+                        $put('F'.$row, ($grade['written_works']['hps_total'] ?? null) ? $grade['written_works']['total'] : null);
                         $put('P'.$row, ($grade['written_works']['hps_total'] ?? null) ? $grade['written_works']['total'] : null);
                         $put('Q'.$row, $grade['written_works']['percentage_score'] ?? null);
                         $put('R'.$row, $grade['written_works']['weighted_score'] ?? null);
@@ -451,19 +475,13 @@ class GradingController extends Controller
                 $put('V'.$summaryRow, $grade['yearly_summary']['final_grade'] ?? null);
                 $put('Z'.$summaryRow, $grade['yearly_summary']['remark'] ?? null);
             }
-            $remainingMasters = [];
-            foreach ($document->getElementsByTagNameNS($namespace, 'f') as $formula) {
-                if ($formula->getAttribute('t') === 'shared' && trim($formula->textContent) !== '') {
-                    $remainingMasters[$formula->getAttribute('si')] = true;
-                }
-            }
-            foreach ($document->getElementsByTagNameNS($namespace, 'f') as $formula) {
-                if ($formula->getAttribute('t') !== 'shared'
-                    || isset($remainingMasters[$formula->getAttribute('si')])) {
+            foreach (iterator_to_array($document->getElementsByTagNameNS($namespace, 'f')) as $formula) {
+                if ($formula->getAttribute('t') !== 'shared') {
                     continue;
                 }
                 $master = $sharedMasters[$formula->getAttribute('si')] ?? null;
                 if (! $master) {
+                    $formula->parentNode->removeChild($formula);
                     continue;
                 }
                 $targetRow = (int) preg_replace('/^[A-Z]+/', '', $formula->parentNode->getAttribute('r'));

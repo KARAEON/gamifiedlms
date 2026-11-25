@@ -53,7 +53,7 @@
                     <div class="min-w-56 flex-1">
                         <label for="grade-export-template" class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Excel template</label>
                         <select id="grade-export-template" name="template_id" class="input-field">
-                            <option value="">Standard gradebook</option>
+                            <option value="">Class record (quarter sheets and summary)</option>
                             @foreach ($exportTemplates as $template)
                                 <option value="{{ $template->id }}">{{ $template->name }}</option>
                             @endforeach

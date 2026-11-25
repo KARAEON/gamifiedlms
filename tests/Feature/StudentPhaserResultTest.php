@@ -95,11 +95,25 @@ class StudentPhaserResultTest extends TestCase
             $export->assertOk();
             $zip = new ZipArchive();
             $this->assertTrue($zip->open($export->baseResponse->getFile()->getPathname()));
-            $sheet = $zip->getFromName('xl/worksheets/sheet1.xml');
+            $inputSheet = $zip->getFromName('xl/worksheets/sheet1.xml');
+            $quarterSheet = $zip->getFromName('xl/worksheets/sheet2.xml');
+            $workbook = $zip->getFromName('xl/workbook.xml');
+            $this->assertFalse($zip->getFromName('xl/worksheets/sheet11.xml'));
             $zip->close();
-            $this->assertIsString($sheet);
-            $this->assertStringContainsString($student->name, $sheet);
-            $this->assertStringContainsString('<c r="B5"><v>'.(string) $result->score.'</v></c>', $sheet);
+            $this->assertIsString($inputSheet);
+            $this->assertIsString($quarterSheet);
+            $this->assertIsString($workbook);
+            $this->assertStringContainsString($student->name, $inputSheet);
+            $this->assertStringContainsString('SCIENCE_Q1', $workbook);
+            $this->assertStringContainsString('GLMS Grades', $workbook);
+            $this->assertStringNotContainsString('Wileover F Gordove', $inputSheet);
+
+            $quarterDocument = new \DOMDocument();
+            $this->assertTrue($quarterDocument->loadXML($quarterSheet));
+            $xpath = new \DOMXPath($quarterDocument);
+            $xpath->registerNamespace('s', 'http://schemas.openxmlformats.org/spreadsheetml/2006/main');
+            $this->assertSame((string) $result->score, $xpath->evaluate('string(//s:c[@r="P12"]/s:v)'));
+            $this->assertSame((string) $result->accuracy, $xpath->evaluate('string(//s:c[@r="Q12"]/s:v)'));
         } finally {
             Carbon::setTestNow();
         }

@@ -7,6 +7,7 @@ import { supplyControl, supplyGlyph, supplyPanel, supplyPalette, supplyText, sup
 import { supplyCartSortingGame } from '../config/content.js';
 import { playAreaMusic } from '../systems/music.js';
 import { getPostGameAssessmentLabel, startPostGameAssessment } from '../systems/assessmentFlow.js';
+import { submitMinigameResult } from '../systems/resultSubmission.js';
 import { markSceneReady, setTestState } from '../systems/testSeam.js';
 import {
   createBottomFeedback,
@@ -38,6 +39,7 @@ export default class SupplyCartScene extends Phaser.Scene {
   }
 
   create() {
+    this.__glmsSubmissions = {};
     this.score = 0;
     this.timeRemaining = supplyCartSortingGame.timerSeconds;
     this.lastTimerSecond = Math.ceil(this.timeRemaining);
@@ -48,6 +50,7 @@ export default class SupplyCartScene extends Phaser.Scene {
     this.dragJustEnded = false;
     this.sortAttempts = 0;
     this.correctSorts = 0;
+    this.correctUses = 0;
     this.completedItemCount = 0;
     this.combo = 0;
     this.bestCombo = 0;
@@ -391,6 +394,7 @@ export default class SupplyCartScene extends Phaser.Scene {
     const isCorrect = choice === item.use;
 
     if (isCorrect) {
+      this.correctUses += 1;
       this.score += supplyCartSortingGame.score.correctUse;
       this.combo += 1;
       this.bestCombo = Math.max(this.bestCombo, this.combo);
@@ -529,6 +533,18 @@ export default class SupplyCartScene extends Phaser.Scene {
     }
 
     this.result = won ? 'win' : 'lose';
+    submitMinigameResult(this, {
+      lessonKey: this.lessonId,
+      gameKey: supplyCartSortingGame.id,
+      payloadBuilder: () => ({
+        correct_sort_count: this.correctSorts,
+        sort_attempt_count: this.sortAttempts,
+        correct_use_count: this.correctUses,
+        completed_item_count: this.completedItemCount,
+        best_combo: this.bestCombo,
+        time_remaining_seconds: this.timeRemaining,
+      }),
+    });
     this.updateHudText();
     this.updateTestState();
 

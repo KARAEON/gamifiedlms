@@ -102,11 +102,13 @@ class StudentController extends Controller
         $student->load('studentProfile.section');
         $attempts = $student->attempts()->with('activity.topic.lesson')->latest('completed_at')->paginate(10);
         $scoreRecords = $student->scoreRecords()->with('topic.lesson')->latest('attempted_at')->take(10)->get();
+        $gameResults = $student->phaserGameResults()->latest('completed_at')->take(10)->get();
 
         return view('teacher.students.show', [
             'student' => $student,
             'attempts' => $attempts,
             'scoreRecords' => $scoreRecords,
+            'gameResults' => $gameResults,
             'sections' => $request->user()->handledSections()->orderBy('name')->get(),
         ]);
     }

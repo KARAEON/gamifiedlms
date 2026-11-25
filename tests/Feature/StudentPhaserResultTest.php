@@ -12,6 +12,7 @@ use App\Services\GradeComputationService;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
+use ZipArchive;
 
 class StudentPhaserResultTest extends TestCase
 {
@@ -59,6 +60,20 @@ class StudentPhaserResultTest extends TestCase
                 ->assertOk()
                 ->assertSee((string) $result->score)
                 ->assertSee((string) $result->max_score);
+
+            $export = $this->actingAs($teacher)->get(route('teacher.grading.export', [
+                'section_id' => $section->id,
+                'subject' => 'Science',
+                'quarter' => 1,
+            ]));
+            $export->assertOk();
+            $zip = new ZipArchive();
+            $this->assertTrue($zip->open($export->baseResponse->getFile()->getPathname()));
+            $sheet = $zip->getFromName('xl/worksheets/sheet1.xml');
+            $zip->close();
+            $this->assertIsString($sheet);
+            $this->assertStringContainsString($student->name, $sheet);
+            $this->assertStringContainsString('<c r="B5"><v>'.(string) $result->score.'</v></c>', $sheet);
         } finally {
             Carbon::setTestNow();
         }

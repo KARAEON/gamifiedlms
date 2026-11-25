@@ -5,6 +5,7 @@ import { createMixtureIcon } from '../ui/assetIcons.js';
 import { mixMatchMixturesGame } from '../config/content.js';
 import { GAME_WIDTH } from '../config/gameConfig.js';
 import { getPostGameAssessmentLabel, startPostGameAssessment } from '../systems/assessmentFlow.js';
+import { submitMinigameResult } from '../systems/resultSubmission.js';
 import { markSceneReady, setTestState, TEST_MODE } from '../systems/testSeam.js';
 import {
   createBottomFeedback,
@@ -36,11 +37,13 @@ export default class MixMatchScene extends Phaser.Scene {
   }
 
   create() {
+    this.__glmsSubmissions = {};
     this.score = 0;
     this.timeRemaining = mixMatchMixturesGame.timerSeconds;
     this.result = null;
     this.selectedCards = [];
     this.matchedSetCount = 0;
+    this.fastMatchCount = 0;
     this.isResolving = false;
     this.selectionStartedAt = 0;
     this.lastTimerSecond = Math.ceil(this.timeRemaining);
@@ -310,6 +313,7 @@ export default class MixMatchScene extends Phaser.Scene {
     });
 
     this.matchedSetCount += 1;
+    if (fastBonus > 0) this.fastMatchCount += 1;
     this.score += mixMatchMixturesGame.score.correct + fastBonus;
     this.selectedCards = [];
     this.isResolving = false;
@@ -367,6 +371,16 @@ export default class MixMatchScene extends Phaser.Scene {
     }
 
     this.result = won ? 'win' : 'lose';
+    submitMinigameResult(this, {
+      lessonKey: this.lessonId,
+      gameKey: mixMatchMixturesGame.id,
+      payloadBuilder: () => ({
+        matched_set_count: this.matchedSetCount,
+        fast_match_count: this.fastMatchCount,
+        finished_all: won,
+        time_remaining_seconds: this.timeRemaining,
+      }),
+    });
 
     if (won) {
       this.score += mixMatchMixturesGame.score.finishEarly;

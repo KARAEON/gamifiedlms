@@ -47,7 +47,7 @@ class TeacherPhaserScorePageTest extends TestCase
             'accuracy' => 100,
             'result_status' => 'win',
             'payload' => ['input' => [], 'derived' => []],
-            'completed_at' => now(),
+            'completed_at' => now()->subDays(45),
         ]);
 
         $this->actingAs($teacher)
@@ -57,5 +57,11 @@ class TeacherPhaserScorePageTest extends TestCase
             ->assertSee('Phaser Minigame')
             ->assertSee('Phaser Student')
             ->assertSee('Grade 6 - Actual');
+
+        $this->actingAs($teacher)
+            ->get(route('teacher.students.show', $student))
+            ->assertOk()
+            ->assertSee('Game Scores')
+            ->assertSee('MIX MATCH MEMORY QUEST');
     }
 }

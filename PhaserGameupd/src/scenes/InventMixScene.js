@@ -5,6 +5,7 @@ import { createMinigameHeader } from '../ui/minigameHeader.js';
 import { createGeneralAsset, createIngredientIcon } from '../ui/assetIcons.js';
 import { inventMixWorkshopGame } from '../config/content.js';
 import { getPostGameAssessmentLabel, startPostGameAssessment } from '../systems/assessmentFlow.js';
+import { submitMinigameResult } from '../systems/resultSubmission.js';
 import { markSceneReady, setTestState } from '../systems/testSeam.js';
 import { createBottomFeedback, createSparkles } from '../ui/minigameUi.js';
 import { closeOpenModal, coverImage, createToggleRow, showModal, textStyle } from '../ui/ui.js';
@@ -32,6 +33,7 @@ export default class InventMixScene extends Phaser.Scene {
   }
 
   create() {
+    this.__glmsSubmissions = {};
     this.missionIndex = 0;
     this.phase = 'choose';
     this.result = null;
@@ -42,6 +44,7 @@ export default class InventMixScene extends Phaser.Scene {
     this.selectedUse = null;
     this.missionScore = 0;
     this.missionScores = Array(inventMixWorkshopGame.missions.length).fill(null);
+    this.missionSubmissions = Array(inventMixWorkshopGame.missions.length).fill(null);
     this.customMissionNames = inventMixWorkshopGame.missions.map((mission) => mission.name);
     this.nameInputActive = false;
     this.nameFieldMeta = null;
@@ -366,6 +369,14 @@ export default class InventMixScene extends Phaser.Scene {
 
     this.missionScore = this.calculateMissionScore();
     this.missionScores[this.missionIndex] = this.missionScore;
+    this.missionSubmissions[this.missionIndex] = {
+      mission_id: this.getCurrentMission().id,
+      classification: this.selectedClassification,
+      appearance: this.selectedAppearance,
+      use: this.selectedUse,
+      selected_ingredients: [...this.selectedIngredients],
+      custom_name: this.customMissionNames[this.missionIndex],
+    };
     this.missionResult = this.missionScore === inventMixWorkshopGame.missionMaxScore
       ? 'perfect'
       : this.missionScore > 0
@@ -379,6 +390,7 @@ export default class InventMixScene extends Phaser.Scene {
   retryMission() {
     closeOpenModal(this);
     this.missionScores[this.missionIndex] = null;
+    this.missionSubmissions[this.missionIndex] = null;
     this.renderMission(true);
   }
 
@@ -401,6 +413,11 @@ export default class InventMixScene extends Phaser.Scene {
     const totalScore = this.getTotalScore();
     const won = totalScore >= inventMixWorkshopGame.winScore;
     this.result = won ? 'win' : 'lose';
+    submitMinigameResult(this, {
+      lessonKey: this.lessonId,
+      gameKey: inventMixWorkshopGame.id,
+      payloadBuilder: () => ({ missions: this.missionSubmissions.filter(Boolean) }),
+    });
     this.phase = 'final';
     this.updateTestState();
 

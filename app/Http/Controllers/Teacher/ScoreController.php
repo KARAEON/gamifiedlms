@@ -32,8 +32,8 @@ class ScoreController extends Controller
             'activity_id' => $request->query('activity_id'),
             'activity_type' => $request->query('activity_type'),
             'instructional_phase' => $request->query('instructional_phase'),
-            'date_from' => $request->query('date_from', now()->subDays(30)->toDateString()),
-            'date_to' => $request->query('date_to', now()->toDateString()),
+            'date_from' => $request->query('date_from', ''),
+            'date_to' => $request->query('date_to', ''),
         ];
 
         $allowedSectionIds = $this->allowedSectionIds($request->user());

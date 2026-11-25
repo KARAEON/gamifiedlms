@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { getAssessmentForLesson } from '../config/content.js';
+import { submitAssessmentResult } from '../systems/resultSubmission.js';
 import { GAME_HEIGHT, GAME_WIDTH } from '../config/gameConfig.js';
 import { markSceneReady, setTestState } from '../systems/testSeam.js';
 import { closeOpenModal, coverImage, createBackArrow, createPixelButton, showModal, textStyle, titleStyle } from '../ui/ui.js';
@@ -32,8 +33,10 @@ export default class AssessmentScene extends Phaser.Scene {
   }
 
   create() {
+    this.__glmsSubmissions = {};
     this.itemIndex = 0;
     this.score = 0;
+    this.answers = {};
     this.selectedChoice = null;
     this.answered = false;
     this.result = null;
@@ -235,6 +238,7 @@ export default class AssessmentScene extends Phaser.Scene {
 
     const item = this.getCurrentItem();
     this.selectedChoice = choice;
+    this.answers[item.id] = choice;
     this.answered = true;
     const correct = choice === item.answer;
     if (correct) {
@@ -276,6 +280,13 @@ export default class AssessmentScene extends Phaser.Scene {
 
   showResult() {
     this.result = this.getPercent() >= this.assessment.passPercent ? 'pass' : 'fail';
+    if (/^q1-m1-l[1-5]$/.test(this.lessonId)) {
+      submitAssessmentResult(this, {
+        lessonKey: this.lessonId,
+        gameKey: this.assessment.id,
+        payloadBuilder: () => ({ answers: { ...this.answers } }),
+      });
+    }
     this.phase = 'result';
     this.updateTestState();
     showModal(this, {

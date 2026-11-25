@@ -5,6 +5,7 @@ import { createMinigameHeader } from '../ui/minigameHeader.js';
 import { createGeneralAsset, createMixtureIcon } from '../ui/assetIcons.js';
 import { scienceCourtGame } from '../config/content.js';
 import { getPostGameAssessmentLabel, startPostGameAssessment } from '../systems/assessmentFlow.js';
+import { submitMinigameResult } from '../systems/resultSubmission.js';
 import { markSceneReady, setTestState } from '../systems/testSeam.js';
 import { createBottomFeedback, createSparkles } from '../ui/minigameUi.js';
 import { closeOpenModal, colors, coverImage, createToggleRow, showModal, textStyle } from '../ui/ui.js';
@@ -35,12 +36,14 @@ export default class ScienceCourtScene extends Phaser.Scene {
   }
 
   create() {
+    this.__glmsSubmissions = {};
     this.caseIndex = 0;
     this.phase = 'defense';
     this.result = null;
     this.selectedClassification = null;
     this.selectedEvidence = [];
     this.caseScores = Array(scienceCourtGame.cases.length).fill(null);
+    this.caseSubmissions = Array(scienceCourtGame.cases.length).fill(null);
     this.caseScore = 0;
     this.verdict = null;
     this.classificationViews = [];
@@ -361,6 +364,11 @@ export default class ScienceCourtScene extends Phaser.Scene {
 
     this.caseScore = this.calculateCaseScore();
     this.caseScores[this.caseIndex] = this.caseScore;
+    this.caseSubmissions[this.caseIndex] = {
+      case_id: currentCase.id,
+      classification: this.selectedClassification,
+      evidence_ids: [...this.selectedEvidence],
+    };
     this.verdict = this.getVerdict(this.caseScore);
     this.phase = 'verdict';
     this.submitButtonMeta = null;
@@ -377,6 +385,7 @@ export default class ScienceCourtScene extends Phaser.Scene {
   retryCase() {
     closeOpenModal(this);
     this.caseScores[this.caseIndex] = null;
+    this.caseSubmissions[this.caseIndex] = null;
     this.renderCase();
   }
 
@@ -399,6 +408,11 @@ export default class ScienceCourtScene extends Phaser.Scene {
     const totalScore = this.getTotalScore();
     const won = totalScore >= scienceCourtGame.winScore;
     this.result = won ? 'win' : 'lose';
+    submitMinigameResult(this, {
+      lessonKey: this.lessonId,
+      gameKey: scienceCourtGame.id,
+      payloadBuilder: () => ({ cases: this.caseSubmissions.filter(Boolean) }),
+    });
     this.phase = 'result';
     this.updateTestState();
 

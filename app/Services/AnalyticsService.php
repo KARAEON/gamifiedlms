@@ -24,29 +24,24 @@ class AnalyticsService
             ->with(['topic.lesson', 'activity'])
             ->orderByDesc('attempted_at');
 
-        $overallAverage = round((float) (clone $recordsQuery)->avg('accuracy'), 2);
-        $completedActivities = (int) (clone $recordsQuery)->distinct('activity_id')->count('activity_id');
-        $recentResults = (clone $recordsQuery)->take(6)->get();
+        $records = $recordsQuery->get()->concat(app(GameAnalyticsRecords::class)->records(['student_id' => $student->id]));
+        $overallAverage = round((float) $records->avg('accuracy'), 2);
+        $completedActivities = $records->pluck('activity_id')->unique()->count();
+        $recentResults = $records->sortByDesc('attempted_at')->take(6)->values();
 
-        $topicPerformance = (clone $recordsQuery)
-            ->select(
-                'topic_id',
-                DB::raw('AVG(accuracy) as avg_accuracy'),
-                DB::raw('COUNT(*) as total_attempts')
-            )
-            ->groupBy('topic_id')
-            ->with('topic.lesson')
-            ->get();
+        $topicPerformance = $records->groupBy('topic_id')->map(function (Collection $items) {
+            $row = clone $items->first();
+            $row->setAttribute('avg_accuracy', (float) $items->avg('accuracy'));
+            $row->setAttribute('total_attempts', $items->count());
+            return $row;
+        })->values();
 
         $strongestTopics = $topicPerformance->sortByDesc('avg_accuracy')->take(3)->values();
         $weakestTopics = $topicPerformance->sortBy('avg_accuracy')->take(3)->values();
 
-        $progressTrend = (clone $recordsQuery)
-            ->where('attempted_at', '>=', now()->subDays(30))
-            ->selectRaw('DATE(attempted_at) as date, AVG(accuracy) as avg_accuracy')
-            ->groupBy('date')
-            ->orderBy('date')
-            ->get();
+        $progressTrend = $records->filter(fn ($record) => $record->attempted_at >= now()->subDays(30))
+            ->groupBy(fn ($record) => $record->attempted_at->toDateString())->sortKeys()
+            ->map(fn (Collection $items, string $date) => (object) ['date' => $date, 'avg_accuracy' => (float) $items->avg('accuracy')])->values();
 
         $attemptedActivityIds = (clone $recordsQuery)->pluck('activity_id')->unique();
 
@@ -75,11 +70,19 @@ class AnalyticsService
      */
     public function teacherAnalytics(array $filters = []): array
     {
+        [$start, $end] = $this->resolveDateWindow($filters);
+        $filters['date_from'] = $start->toDateString();
+        $filters['date_to'] = $end->toDateString();
+        if (auth()->user()?->role?->value === 'teacher') {
+            $filters['section_ids'] = auth()->user()->handledSections()->pluck('sections.id')->all();
+        }
         $recordsQuery = $this->filteredScoreRecords($filters);
-        $records = $recordsQuery->with(['student.studentProfile.section', 'section', 'topic.lesson', 'activity'])->get();
+        $records = $recordsQuery->with(['student.studentProfile.section', 'section', 'topic.lesson', 'lesson', 'activity'])->get()
+            ->concat(app(GameAnalyticsRecords::class)->records($filters));
 
-        $studentsCount = User::query()->where('role', 'student')->where('is_active', true)->count();
-        $sectionsCount = Section::query()->count();
+        $studentsCount = User::query()->where('role', 'student')->where('is_active', true)
+            ->when(isset($filters['section_ids']), fn ($q) => $q->whereHas('studentProfile', fn ($p) => $p->whereIn('section_id', $filters['section_ids'])))->count();
+        $sectionsCount = Section::query()->when(isset($filters['section_ids']), fn ($q) => $q->whereIn('id', $filters['section_ids']))->count();
         $avgClassPerformance = round((float) ($records->avg('accuracy') ?? 0), 2);
 
         [$currentStart, $currentEnd] = $this->resolveDateWindow($filters);
@@ -87,23 +90,20 @@ class AnalyticsService
         $previousStart = (clone $currentStart)->subDays($windowDays);
         $previousEnd = (clone $currentStart)->subDay();
 
-        $previousQuery = $this->filteredScoreRecords(array_merge($filters, [
+        $previousFilters = array_merge($filters, [
             'date_from' => $previousStart->toDateString(),
             'date_to' => $previousEnd->toDateString(),
-        ]));
-        $previousAvg = round((float) (clone $previousQuery)->avg('accuracy'), 2);
-        $previousCount = (clone $previousQuery)->count();
+        ]);
+        $previousRecords = $this->filteredScoreRecords($previousFilters)->get()
+            ->concat(app(GameAnalyticsRecords::class)->records($previousFilters));
+        $previousAvg = round((float) $previousRecords->avg('accuracy'), 2);
+        $previousCount = $previousRecords->count();
 
-        $attemptsQuery = Attempt::query();
-        $this->applyAttemptFilters($attemptsQuery, $filters);
-
-        $mostActiveStudents = (clone $attemptsQuery)
-            ->select('student_id', DB::raw('COUNT(*) as total_attempts'))
-            ->groupBy('student_id')
-            ->orderByDesc('total_attempts')
-            ->take(8)
-            ->with('student.studentProfile.section')
-            ->get();
+        $mostActiveStudents = $records->groupBy('student_id')->map(function (Collection $items) {
+            $student = new Attempt(['student_id' => $items->first()->student_id]);
+            $student->setAttribute('total_attempts', $items->count());
+            return $student->setRelation('student', $items->first()->student);
+        })->sortByDesc('total_attempts')->take(8)->values();
 
         $studentsNeedingIntervention = $records
             ->groupBy('student_id')
@@ -286,6 +286,9 @@ class AnalyticsService
     protected function filteredScoreRecords(array $filters): Builder
     {
         $query = ScoreRecord::query();
+        if (isset($filters['section_ids'])) {
+            $query->whereIn('section_id', $filters['section_ids']);
+        }
 
         if (! empty($filters['date_from'])) {
             $query->whereDate('attempted_at', '>=', Carbon::parse((string) $filters['date_from']));
@@ -325,22 +328,17 @@ class AnalyticsService
      */
     public function strongestWeakestTopicsForStudent(User $student): Collection
     {
-        return ScoreRecord::query()
-            ->where('student_id', $student->id)
-            ->select('topic_id', DB::raw('AVG(accuracy) as avg_accuracy'), DB::raw('COUNT(*) as attempts'))
-            ->with('topic.lesson')
-            ->groupBy('topic_id')
-            ->get()
-            ->sortByDesc('avg_accuracy')
-            ->values()
-            ->map(function (ScoreRecord $record): array {
+        return ScoreRecord::query()->where('student_id', $student->id)->with('topic.lesson')->get()
+            ->concat(app(GameAnalyticsRecords::class)->records(['student_id' => $student->id]))
+            ->groupBy('topic_id')->map(function (Collection $items): array {
+                $record = $items->first();
                 return [
                     'topic' => $record->topic?->title,
                     'lesson' => $record->topic?->lesson?->title,
-                    'accuracy' => round((float) $record->avg_accuracy, 2),
-                    'attempts' => (int) $record->attempts,
+                    'accuracy' => round((float) $items->avg('accuracy'), 2),
+                    'attempts' => $items->count(),
                 ];
-            });
+            })->sortByDesc('accuracy')->values();
     }
 
     /**
@@ -557,7 +555,7 @@ class AnalyticsService
         $points = $trend->values();
 
         return $points->map(function (array $point, int $index) use ($points, $window): array {
-            $slice = $points->slice(max(0, $index - ($window - 1)), $window);
+            $slice = $points->slice(max(0, $index - ($window - 1)), min($window, $index + 1));
             $movingAverage = round((float) $slice->avg('value'), 2);
 
             return [

@@ -22,7 +22,7 @@ class AdminAnalyticsService
         $recordsQuery = $this->filteredRecordsQuery($filters);
         $records = $recordsQuery
             ->with(['section', 'topic.lesson', 'activity'])
-            ->get();
+            ->get()->concat(app(GameAnalyticsRecords::class)->records($filters));
 
         $totalStudents = User::query()->where('role', UserRole::STUDENT)->where('is_active', true)->count();
         $totalTeachers = User::query()->where('role', UserRole::TEACHER)->where('is_active', true)->count();

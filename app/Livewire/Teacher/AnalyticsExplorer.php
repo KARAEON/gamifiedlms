@@ -65,12 +65,14 @@ class AnalyticsExplorer extends Component
 
     public function render(AnalyticsService $analyticsService)
     {
+        $sectionIds = auth()->user()->handledSections()->pluck('sections.id');
+        $gameRecords = app(\App\Services\GameAnalyticsRecords::class)->records(['section_ids' => $sectionIds->all()]);
         return view('livewire.teacher.analytics-explorer', [
             'analytics' => $analyticsService->teacherAnalytics($this->filters()),
-            'students' => User::query()->where('role', 'student')->orderBy('name')->get(['id', 'name']),
-            'sections' => Section::query()->orderBy('name')->get(['id', 'name']),
-            'lessons' => Lesson::query()->orderBy('title')->get(['id', 'title']),
-            'topics' => Topic::query()->orderBy('title')->get(['id', 'title']),
+            'students' => User::query()->where('role', 'student')->whereHas('studentProfile', fn ($q) => $q->whereIn('section_id', $sectionIds))->orderBy('name')->get(['id', 'name']),
+            'sections' => Section::query()->whereIn('id', $sectionIds)->orderBy('name')->get(['id', 'name']),
+            'lessons' => Lesson::query()->orderBy('title')->get(['id', 'title'])->concat($gameRecords->pluck('lesson')->unique('id'))->values(),
+            'topics' => Topic::query()->orderBy('title')->get(['id', 'title'])->concat($gameRecords->pluck('topic')->unique('id'))->values(),
         ]);
     }
 

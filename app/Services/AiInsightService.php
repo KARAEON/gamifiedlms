@@ -4,6 +4,9 @@ namespace App\Services;
 
 use App\Enums\UserRole;
 use App\Models\ScoreRecord;
+use App\Models\PhaserGameResult;
+use App\Models\Topic;
+use App\Models\Lesson;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
@@ -38,7 +41,8 @@ class AiInsightService
     {
         [$dateFrom, $dateTo] = $this->resolveDateWindow($filters);
 
-        $records = $this->recordsQuery($teacher, $dateFrom, $dateTo)->get();
+        $records = $this->recordsQuery($teacher, $dateFrom, $dateTo)->get()
+            ->concat($this->gameRecords($teacher, $dateFrom, $dateTo));
         $roster = $this->buildRoster($records);
         $topicInsights = $this->buildTopicInsights($records);
         $context = $this->buildContext($teacher, $roster, $topicInsights, $dateFrom, $dateTo);
@@ -47,11 +51,27 @@ class AiInsightService
         $source = 'fallback';
         $warning = null;
 
-        try {
-            $finalData = $this->callOllamaForAnalysis($context);
-            $source = 'ollama';
-        } catch (\Throwable $exception) {
-            $warning = 'Ollama unavailable or returned invalid output. Fallback analysis used.';
+        if ($roster->isNotEmpty()) {
+            foreach (['ollama', 'groq'] as $provider) {
+                if ($provider === 'ollama' && ! config('services.ollama.enabled', true)) {
+                    continue;
+                }
+                if ($provider === 'groq' && ! config('services.groq.key')) {
+                    continue;
+                }
+                try {
+                    $finalData = $provider === 'ollama'
+                        ? $this->callOllamaForAnalysis($context)
+                        : $this->callGroqForAnalysis($context);
+                    $source = $provider;
+                    break;
+                } catch (\Throwable $exception) {
+                    // Continue to the next provider; never expose credentials or response bodies.
+                }
+            }
+            if ($source === 'fallback') {
+                $warning = 'AI is unavailable. Showing recommendations calculated from recorded scores.';
+            }
         }
 
         return [
@@ -82,6 +102,28 @@ class AiInsightService
         return [$dateFrom->startOfDay(), $dateTo->endOfDay()];
     }
 
+    private function gameRecords(User $teacher, Carbon $dateFrom, Carbon $dateTo): Collection
+    {
+        $sectionIds = $teacher->handledSections()->pluck('sections.id');
+        return PhaserGameResult::query()->with(['student.studentProfile.section', 'section'])
+            ->where('entry_type', 'assessment')->where('phase', 'formative')
+            ->whereHas('student', fn (Builder $query) => $query->where('role', UserRole::STUDENT->value)->where('is_active', true))
+            ->whereBetween('completed_at', [$dateFrom, $dateTo])
+            ->whereIn('section_id', $sectionIds)
+            ->get()->map(function (PhaserGameResult $result): ScoreRecord {
+                $record = new ScoreRecord([
+                    'student_id' => $result->student_id, 'section_id' => $result->section_id,
+                    'topic_id' => 'game:'.$result->lesson_key, 'accuracy' => $result->accuracy,
+                    'score' => $result->score, 'max_score' => $result->max_score,
+                    'attempted_at' => $result->completed_at,
+                ]);
+                $topic = new Topic(['title' => $result->topic_title]);
+                $topic->setRelation('lesson', new Lesson(['title' => $result->lesson_title]));
+                return $record->setRelation('student', $result->student)
+                    ->setRelation('section', $result->section)->setRelation('topic', $topic);
+            });
+    }
+
     /**
      * @return Builder<ScoreRecord>
      */
@@ -104,6 +146,8 @@ class AiInsightService
                 $builder->whereIn('section_id', $allowedSectionIds)
                     ->orWhereHas('student.studentProfile', fn (Builder $studentBuilder): Builder => $studentBuilder->whereIn('section_id', $allowedSectionIds));
             });
+        } else {
+            $query->whereRaw('1 = 0');
         }
 
         return $query;
@@ -291,7 +335,7 @@ class AiInsightService
             throw new RuntimeException('Ollama configuration is missing.');
         }
 
-        $response = Http::timeout($timeout)->acceptJson()->post($url, [
+        $response = Http::connectTimeout(3)->timeout($timeout)->acceptJson()->post($url, [
             'model' => $model,
             'prompt' => $this->buildPrompt($context),
             'stream' => false,
@@ -314,10 +358,33 @@ class AiInsightService
     /**
      * @param  array<string, mixed>  $context
      */
+    private function callGroqForAnalysis(array $context): array
+    {
+        $studentName = (string) $context['Critical_Student_ID'];
+        $context['Critical_Student_ID'] = 'Priority learner';
+        $context['Class_Name'] = 'Assigned class';
+        $response = Http::withToken((string) config('services.groq.key'))
+            ->connectTimeout(3)->timeout((int) config('services.groq.timeout', 18))
+            ->acceptJson()->post((string) config('services.groq.url'), [
+                'model' => config('services.groq.model'),
+                'messages' => [['role' => 'user', 'content' => $this->buildPrompt($context)]],
+                'temperature' => 0.1,
+                'max_completion_tokens' => 1800,
+                'response_format' => ['type' => 'json_object'],
+            ]);
+        if (! $response->successful()) {
+            throw new RuntimeException('Hosted AI request failed.');
+        }
+        $analysis = $this->sanitizeModelOutput($this->parseJsonObjectFromText(
+            (string) $response->json('choices.0.message.content', '')
+        ));
+        return array_map(fn (string $value) => str_ireplace('Priority learner', $studentName, $value), $analysis);
+    }
+
     private function buildPrompt(array $context): string
     {
         $systemPrompt = <<<'PROMPT'
-You are a Grade 6 science instructional data analyst.
+You are a Grade 6 instructional data analyst. Use only the supplied evidence; do not invent scores, diagnoses, or learning history.
 
 Return only one valid JSON object with exactly these keys:
 - "class_analysis"

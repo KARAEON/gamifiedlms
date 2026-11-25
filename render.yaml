@@ -16,6 +16,12 @@ services:
         value: production
       - key: APP_DEBUG
         value: "false"
+      # Ollama on a developer's localhost is not reachable from Render.
+      # Set GROQ_API_KEY in the Render service's Environment settings.
+      - key: OLLAMA_ENABLED
+        value: "false"
+      - key: GROQ_MODEL
+        value: openai/gpt-oss-20b
       - key: APP_URL
         value: https://gamifiedlms.onrender.com
       - key: APP_KEY

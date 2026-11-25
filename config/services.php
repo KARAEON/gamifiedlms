@@ -36,9 +36,17 @@ return [
     ],
 
     'ollama' => [
+        'enabled' => env('OLLAMA_ENABLED', true),
         'url' => env('OLLAMA_URL', 'http://localhost:11434/api/generate'),
         'model' => env('OLLAMA_MODEL', 'llama3.1'),
-        'timeout' => (int) env('OLLAMA_TIMEOUT', 45),
+        'timeout' => (int) env('OLLAMA_TIMEOUT', 12),
+    ],
+
+    'groq' => [
+        'key' => env('GROQ_API_KEY'),
+        'url' => env('GROQ_URL', 'https://api.groq.com/openai/v1/chat/completions'),
+        'model' => env('GROQ_MODEL', 'openai/gpt-oss-20b'),
+        'timeout' => (int) env('GROQ_TIMEOUT', 18),
     ],
 
 ];

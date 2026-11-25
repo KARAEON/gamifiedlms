@@ -46,7 +46,7 @@
             </div>
 
             <div class="mt-3 flex flex-wrap items-center gap-2 text-xs">
-                <span x-show="source" x-cloak :class="source === 'ollama' ? 'badge border-emerald-200 bg-emerald-50 text-emerald-700' : 'badge border-amber-200 bg-amber-50 text-amber-700'" x-text="source === 'ollama' ? 'Narrative mode: Enhanced' : 'Narrative mode: Standard'"></span>
+                <span x-show="source" x-cloak class="badge" x-text="source === 'groq' ? 'AI analysis: Groq' : source === 'ollama' ? 'AI analysis: Ollama' : 'Score-based recommendations'"></span>
                 <span x-show="window?.date_from && window?.date_to" x-cloak class="badge border-slate-200 bg-slate-50 text-slate-600" x-text="`Window: ${window?.date_from ?? ''} to ${window?.date_to ?? ''}`"></span>
             </div>
 
@@ -73,7 +73,7 @@
                         <tr>
                             <th scope="col">Student</th>
                             <th scope="col">Section</th>
-                            <th scope="col">Science Avg</th>
+                            <th scope="col">Average accuracy</th>
                             <th scope="col">Attempts</th>
                             <th scope="col">Risk</th>
                             <th scope="col">Failing Topics</th>

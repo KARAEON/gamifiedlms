@@ -12,6 +12,10 @@ class AiInsightController extends Controller
 {
     public function __invoke(Request $request, AiInsightService $aiInsightService): JsonResponse
     {
+        $request->validate([
+            'date_from' => ['nullable', 'date'],
+            'date_to' => ['nullable', 'date'],
+        ]);
         try {
             $payload = $aiInsightService->generateForTeacher($request->user(), [
                 'date_from' => $request->query('date_from'),
